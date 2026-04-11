@@ -1,0 +1,37 @@
+검토 문서 완료
+항목	값
+경로	docs/01-research/korean-groupware-approval-review.md
+분량	478줄
+조사 서비스	8종 (두레이, 다우오피스, WEHAGO, 네이버웍스, 카카오워크, 플로우, 온나라, 비즈플레이)
+참고 URL	약 55개
+섹션	12개 (Exec Summary → 비교표 → 도메인 모델 → MUST/SHOULD → 양식 15종 → 폼빌더 → 자동결재선 → Supabase 데이터모델 → 기술고려사항 → 리스크 → References)
+핵심 발견
+#	포인트
+1	한국형 결재의 차별 3종 세트 = 전결/대결/후결 + 자동결재선 규칙엔진 + 양식 빌더
+2	전자문서법·전자서명법(2021 개정) 기준, PDF 보존·해시·세션 본인확인만 갖추면 서면과 동등 효력
+3	Supabase 난이도 높은 지점 = 부서·단계별 RLS + 병렬결재 동시성 + 결재선 스냅샷 보존
+4	공공(CSAP) 진입장벽 → 초기 타깃은 민간 SMB 권장
+다음에 할 수 있는 것
+문서 리뷰: 제가 핵심 섹션 요약 드리기 — "요약해" 한 마디
+PRD 단계: /pdca plan 전자결재시스템 → 사용자 스토리 + 스코프 확정
+Plan Plus: /plan-plus → 브레인스토밍 기반 의도 탐색 포함 기획
+스키마 바로 시작: 문서 9번 섹션의 데이터모델 초안을 apply_migration으로 바로 내리기
+대기합니다. 다음 지시 주세요.
+
+세션 재시작 필요
+현재 세션의 툴 목록은 세션 시작 시점에 고정됩니다. 방금 추가한 context7 MCP가 claude mcp list에는 뜨지만 이 세션의 툴 레지스트리에는 아직 없어요. mcp__context7__* 툴을 쓰려면 Claude Code를 재시작해야 합니다.
+
+단계	액션
+1	VSCode 명령 팔레트 (Cmd+Shift+P) → Claude Code: Restart (또는 창 닫았다 다시 열기)
+2	재시작 후 /mcp 로 context7 ✓ connected 확인
+3	저한테 "이어서" — 바로 섹션 10 갱신 착수
+재시작 후 제가 할 일 (미리 고정)
+mcp__context7__resolve-library-id로 SvelteKit / @supabase/ssr ID 해석
+query-docs로 최신 패턴 3개 조회: (a) hooks.server.ts + safeGetSession (b) +layout.server.ts → client hydration (c) Form Actions 패턴
+검토 문서 수정:
+Exec Summary 5번째 불릿: Next.js → SvelteKit
+섹션 10 제목 + 6개 하위 항목 전부 SvelteKit/Svelte 5 런스 기준으로 재작성
+10.6 라우팅 구조를 SvelteKit 파일 규칙(+page.svelte, +page.server.ts, +layout.svelte)으로 교체
+변경 diff 요약 보고
+대기합니다.
+

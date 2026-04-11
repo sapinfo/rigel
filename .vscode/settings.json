@@ -1,0 +1,29 @@
+{
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "svelte.enable-ts-plugin": true,
+  "editor.formatOnSave": true,
+  "[svelte]": {
+    "editor.defaultFormatter": "svelte.svelte-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "tailwindCSS.includeLanguages": {
+    "svelte": "html"
+  },
+  "files.exclude": {
+    "**/.svelte-kit": true,
+    "**/node_modules": true
+  },
+  "search.exclude": {
+    "**/.svelte-kit": true,
+    "**/build": true,
+    "**/.vite": true
+  }
+}

@@ -1,0 +1,926 @@
+{
+  "version": "2.0",
+  "lastUpdated": "2026-04-11T18:26:01.900Z",
+  "activeFeatures": [
+    "approval-mvp",
+    "Rigel",
+    "routes",
+    "login",
+    "signup",
+    "create-tenant",
+    "[token]",
+    "[tenantSlug]",
+    "inbox",
+    "logout",
+    "schemas",
+    "client",
+    "[formCode]",
+    "queries",
+    "server",
+    "[id]",
+    "admin",
+    "forms",
+    "new",
+    "members",
+    "org"
+  ],
+  "primaryFeature": "approval-mvp",
+  "features": {
+    "approval-mvp": {
+      "name": "approval-mvp",
+      "displayName": "전자결재 MVP",
+      "phase": "do",
+      "method": "plan-plus",
+      "planPath": "docs/01-plan/features/approval-mvp.plan.md",
+      "designPath": "docs/02-design/features/approval-mvp.design.md",
+      "startedAt": "2026-04-11T13:28:26.710Z",
+      "planCompletedAt": "2026-04-11T15:00:00.000Z",
+      "designCompletedAt": "2026-04-11T15:30:00.000Z",
+      "doStartedAt": "2026-04-11T16:00:00.000Z",
+      "currentMilestone": "M8",
+      "milestonesCompleted": [
+        "M1",
+        "M2",
+        "M3",
+        "M4",
+        "M5",
+        "M6",
+        "M7",
+        "M8"
+      ],
+      "scope": {
+        "strategy": "phased-v1",
+        "currentMilestone": "v1.0",
+        "tenancy": "multi-tenant-path-based",
+        "stack": "SvelteKit2+Svelte5+SupabaseSSR"
+      }
+    },
+    "Rigel": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T15:43:13.234Z",
+        "lastUpdated": "2026-04-11T17:32:09.980Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/lib/components/ApprovalPanel.svelte"
+    },
+    "routes": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T15:45:03.219Z",
+        "lastUpdated": "2026-04-11T16:11:34.710Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/+page.svelte"
+    },
+    "login": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T15:45:26.779Z",
+        "lastUpdated": "2026-04-11T16:14:35.464Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/login/+page.svelte"
+    },
+    "signup": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T16:09:36.774Z",
+        "lastUpdated": "2026-04-11T18:25:52.992Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/signup/+page.svelte"
+    },
+    "create-tenant": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T16:10:29.116Z",
+        "lastUpdated": "2026-04-11T16:15:10.731Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/onboarding/create-tenant/+page.svelte"
+    },
+    "[token]": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T16:10:58.090Z",
+        "lastUpdated": "2026-04-11T18:26:01.900Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/invite/[token]/+page.svelte"
+    },
+    "[tenantSlug]": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T16:11:44.668Z",
+        "lastUpdated": "2026-04-11T17:09:20.611Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/+layout.svelte"
+    },
+    "inbox": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T16:12:02.220Z",
+        "lastUpdated": "2026-04-11T17:56:49.909Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/approval/inbox/+page.server.ts"
+    },
+    "logout": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T16:12:08.488Z",
+        "lastUpdated": "2026-04-11T16:12:08.488Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/logout/+page.server.ts"
+    },
+    "schemas": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T16:51:45.241Z",
+        "lastUpdated": "2026-04-11T18:04:27.669Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/lib/server/schemas/formSchema.ts"
+    },
+    "client": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T16:52:02.471Z",
+        "lastUpdated": "2026-04-11T16:52:02.471Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/lib/client/uploadAttachment.ts"
+    },
+    "[formCode]": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T17:08:16.871Z",
+        "lastUpdated": "2026-04-11T17:24:13.949Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/approval/drafts/new/[formCode]/+page.svelte"
+    },
+    "queries": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T17:30:51.608Z",
+        "lastUpdated": "2026-04-11T17:30:51.608Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/lib/server/queries/profiles.ts"
+    },
+    "server": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T17:31:02.283Z",
+        "lastUpdated": "2026-04-11T17:31:02.283Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/lib/server/downloadUrl.ts"
+    },
+    "[id]": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T17:33:38.159Z",
+        "lastUpdated": "2026-04-11T18:05:49.128Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/admin/forms/[id]/+page.svelte"
+    },
+    "admin": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T18:03:23.313Z",
+        "lastUpdated": "2026-04-11T18:03:39.337Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/admin/+page.server.ts"
+    },
+    "forms": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T18:03:55.958Z",
+        "lastUpdated": "2026-04-11T18:04:11.850Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/admin/forms/+page.svelte"
+    },
+    "new": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T18:04:52.457Z",
+        "lastUpdated": "2026-04-11T18:07:38.343Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/admin/forms/new/+page.server.ts"
+    },
+    "members": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T18:06:17.615Z",
+        "lastUpdated": "2026-04-11T18:06:42.215Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/admin/members/+page.svelte"
+    },
+    "org": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-11T18:07:00.044Z",
+        "lastUpdated": "2026-04-11T18:07:22.082Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/admin/org/+page.svelte"
+    }
+  },
+  "pipeline": {
+    "currentPhase": 3,
+    "level": "Dynamic",
+    "phaseHistory": [
+      {
+        "phase": "plan",
+        "feature": "approval-mvp",
+        "completedAt": "2026-04-11T15:00:00.000Z"
+      },
+      {
+        "phase": "design",
+        "feature": "approval-mvp",
+        "completedAt": "2026-04-11T15:30:00.000Z"
+      },
+      {
+        "phase": "do",
+        "feature": "approval-mvp",
+        "startedAt": "2026-04-11T16:00:00.000Z"
+      }
+    ]
+  },
+  "session": {
+    "startedAt": "2026-04-11T13:28:26.710Z",
+    "onboardingCompleted": true,
+    "lastActivity": "2026-04-11T18:26:01.900Z"
+  },
+  "history": [
+    {
+      "at": "2026-04-11T15:00:00.000Z",
+      "event": "plan-plus-completed",
+      "feature": "approval-mvp"
+    },
+    {
+      "at": "2026-04-11T15:30:00.000Z",
+      "event": "design-completed",
+      "feature": "approval-mvp"
+    },
+    {
+      "at": "2026-04-11T16:00:00.000Z",
+      "event": "do-started",
+      "feature": "approval-mvp"
+    },
+    {
+      "timestamp": "2026-04-11T15:43:13.234Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T15:43:19.978Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T15:43:30.855Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T15:43:37.329Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T15:44:25.524Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T15:44:33.409Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T15:44:47.147Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T15:45:03.219Z",
+      "feature": "routes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T15:45:08.040Z",
+      "feature": "routes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T15:45:16.983Z",
+      "feature": "routes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T15:45:26.779Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T15:46:08.507Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T15:48:08.407Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T15:48:15.227Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:09:10.940Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:09:24.572Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:09:36.774Z",
+      "feature": "signup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:09:49.678Z",
+      "feature": "signup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:09:58.363Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:10:16.011Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:10:29.116Z",
+      "feature": "create-tenant",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:10:43.969Z",
+      "feature": "create-tenant",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:10:58.090Z",
+      "feature": "[token]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:11:16.798Z",
+      "feature": "[token]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:11:27.560Z",
+      "feature": "routes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:11:34.710Z",
+      "feature": "routes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:11:44.668Z",
+      "feature": "[tenantSlug]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:11:54.897Z",
+      "feature": "[tenantSlug]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:12:02.220Z",
+      "feature": "inbox",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:12:08.488Z",
+      "feature": "logout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:13:19.659Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:13:28.673Z",
+      "feature": "signup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:13:42.027Z",
+      "feature": "signup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:14:24.289Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:14:35.464Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:14:53.912Z",
+      "feature": "create-tenant",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:15:10.731Z",
+      "feature": "create-tenant",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:15:25.713Z",
+      "feature": "[token]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:15:49.537Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:51:45.241Z",
+      "feature": "schemas",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:52:02.471Z",
+      "feature": "client",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:52:19.394Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:52:34.576Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:52:41.657Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:52:55.443Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T16:53:11.212Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:08:16.871Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:08:40.885Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:08:56.931Z",
+      "feature": "[tenantSlug]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:09:12.018Z",
+      "feature": "[tenantSlug]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:09:20.611Z",
+      "feature": "[tenantSlug]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:09:46.827Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:09:52.423Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:10:17.344Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:10:24.130Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:10:30.972Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:10:42.428Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:19:14.130Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:24:13.949Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:30:51.609Z",
+      "feature": "queries",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:31:02.283Z",
+      "feature": "server",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:31:13.002Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:31:24.674Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:31:34.812Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:31:47.377Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:32:09.980Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:32:39.772Z",
+      "feature": "inbox",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:33:01.327Z",
+      "feature": "inbox",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:33:38.159Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:33:58.186Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:55:57.464Z",
+      "feature": "inbox",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:56:09.035Z",
+      "feature": "inbox",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:56:37.036Z",
+      "feature": "inbox",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T17:56:49.909Z",
+      "feature": "inbox",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:03:23.313Z",
+      "feature": "admin",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:03:33.386Z",
+      "feature": "admin",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:03:39.337Z",
+      "feature": "admin",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:03:55.958Z",
+      "feature": "forms",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:04:11.850Z",
+      "feature": "forms",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:04:27.669Z",
+      "feature": "schemas",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:04:52.457Z",
+      "feature": "new",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:05:13.122Z",
+      "feature": "new",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:05:32.811Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:05:49.128Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:06:17.616Z",
+      "feature": "members",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:06:42.215Z",
+      "feature": "members",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:07:00.044Z",
+      "feature": "org",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:07:22.082Z",
+      "feature": "org",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:07:38.343Z",
+      "feature": "new",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:17:42.439Z",
+      "feature": "[token]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:25:36.446Z",
+      "feature": "signup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:25:43.335Z",
+      "feature": "signup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:25:52.992Z",
+      "feature": "signup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-11T18:26:01.900Z",
+      "feature": "[token]",
+      "phase": "do",
+      "action": "updated"
+    }
+  ]
+}

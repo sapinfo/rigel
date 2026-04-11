@@ -1,0 +1,13 @@
+node_modules
+.DS_Store
+.svelte-kit
+build
+.env
+.env.*
+!.env.example
+package-lock.json.bak
+*.log
+.vite
+.output
+# VSCode: workspace configs committed, user-local debug profile ignored
+.vscode/.chrome-debug-profile
