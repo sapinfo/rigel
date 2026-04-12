@@ -5,10 +5,11 @@
 ## 프로젝트 정체성
 
 - **Rigel**: 한국형 SMB용 multi-tenant 전자결재 SaaS
-- **현재 상태**: **v1.1.0** Korean Exceptions 완료 (git tag `v1.1.0`, commit `cb703d7`)
+- **현재 상태**: **v1.2.0** 병렬/PDF/해시/서명 완료 (commit `8b60fb6`)
   - v1.0.0 (`d957381`): Shippable Core (25 smoke, match 100%)
   - v1.1.0 (`cb703d7`): 전결/대결/후결/부재자동 (13/15 smoke, match 94%)
-- **Phased 로드맵**: v1.0 ✅ → v1.1 ✅ → v1.2(병렬/PDF/해시) → v1.3(Realtime/이메일/모바일) → v2(빌더)
+  - v1.2.0 (`8b60fb6`): 병렬결재/PDF/해시/서명 (33+ Vitest, match 90%)
+- **Phased 로드맵**: v1.0 ✅ → v1.1 ✅ → v1.2 ✅ → v1.3(Realtime/이메일/모바일) → v2(빌더)
 
 ## Stack (변경 금지)
 
@@ -120,7 +121,7 @@ src/
             ├── forms/ members/ org/      # v1.0 관리
             ├── delegations/              # v1.1 전결 규칙 CRUD
             └── absences/                 # v1.1 멤버 부재 관리
-supabase/migrations/                # 0001~0030 + linter fixes
+supabase/migrations/                # 0001~0037
 ```
 
 ## PDCA 문서 위치
@@ -132,13 +133,15 @@ supabase/migrations/                # 0001~0030 + linter fixes
 | Design | `docs/02-design/features/approval-mvp.design.md` — **RLS 규칙 §2.0, Risk Table §14** |
 | Analysis | `docs/03-analysis/approval-mvp.analysis.md` — 25 smoke tests + gap 100% |
 
-### v1.1 (completed, cb703d7)
+### v1.1 (archived)
 | 단계 | 파일 |
 |---|---|
-| Plan | `docs/01-plan/features/전자결재-v1.1-korean-exceptions.plan.md` |
-| Design | `docs/02-design/features/전자결재-v1.1-korean-exceptions.design.md` |
-| Analysis | `docs/03-analysis/전자결재-v1.1-korean-exceptions.analysis.md` — Match 94% |
-| Report | `docs/04-report/features/전자결재-v1.1-korean-exceptions.report.md` |
+| All | `docs/archive/2026-04/전자결재-v1.1-korean-exceptions/` — Match 94% |
+
+### v1.2 (archived)
+| 단계 | 파일 |
+|---|---|
+| All | `docs/archive/2026-04/전자결재-v1.2-parallel-pdf-hash-signature/` — Match 90% |
 
 ### 공통
 | 자료 | 파일 |

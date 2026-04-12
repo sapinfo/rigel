@@ -2,7 +2,24 @@
 
 | Feature | Status | Match | Archived | Path |
 |---|---|---|---|---|
+| 전자결재-v1.2-parallel-pdf-hash-signature | completed | 90% | 2026-04-11 | [전자결재-v1.2-parallel-pdf-hash-signature/](./전자결재-v1.2-parallel-pdf-hash-signature/) |
 | 전자결재-v1.1-korean-exceptions | completed | 94% | 2026-04-11 | [전자결재-v1.1-korean-exceptions/](./전자결재-v1.1-korean-exceptions/) |
+
+## 전자결재-v1.2-parallel-pdf-hash-signature
+
+v1.1.0 (`cb703d7`) → **v1.2.0** (`8b60fb6`)
+
+병렬결재·PDF출력·본문해시·서명이미지 — 감사 가능한 한국형 결재 완성
+
+**산출물**:
+- [plan.md](./전자결재-v1.2-parallel-pdf-hash-signature/전자결재-v1.2-parallel-pdf-hash-signature.plan.md) — Plan Plus
+- [design.md](./전자결재-v1.2-parallel-pdf-hash-signature/전자결재-v1.2-parallel-pdf-hash-signature.design.md) — DB/RPC/PDF/Hash/Signature 명세
+- [analysis.md](./전자결재-v1.2-parallel-pdf-hash-signature/전자결재-v1.2-parallel-pdf-hash-signature.analysis.md) — Match Rate 90%, gap 10건 (5 intentional)
+- [report.md](./전자결재-v1.2-parallel-pdf-hash-signature/전자결재-v1.2-parallel-pdf-hash-signature.report.md) — 완료 보고서
+
+**핵심 메트릭**: 7 migrations (0031~0037) · 33+ Vitest · smoke S40~S46 · puppeteer PDF · RFC 8785 JCS
+
+---
 
 ## 전자결재-v1.1-korean-exceptions
 
