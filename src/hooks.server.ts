@@ -2,6 +2,17 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { type Handle, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+import { warmUpPdfRenderer } from '$lib/server/pdf/renderDocument';
+
+// v1.2 M17: puppeteer Chromium warm-up at boot time.
+// R19 mitigation: Vitest / SSR build 는 global.process.env 로 가드.
+// Vitest 는 VITEST env 를 자동 설정하며, SvelteKit 의 SSR build 단계에서는
+// 이 파일이 실행되지 않음 (서버 런타임에서만 import 됨). 따라서 이 top-level 호출은
+// 실제 서버 프로세스 시작 시 1회만 실행됨.
+if (!process.env.VITEST && process.env.NODE_ENV !== 'test') {
+  // fire-and-forget — 실패해도 첫 요청 시 재시도
+  void warmUpPdfRenderer();
+}
 
 /**
  * Inject Supabase server client into event.locals.
