@@ -105,8 +105,8 @@ BEGIN
   v_tenant_id   := v_doc.tenant_id;
   v_current_group := v_doc.current_step_index;
 
-  -- 문서 제목: doc_number 사용
-  v_doc_title := v_doc.doc_number;
+  -- 문서 제목: form title → doc_number fallback
+  v_doc_title := coalesce(v_doc.form_schema_snapshot->>'title', v_doc.doc_number);
 
   -- ── 액션별 수신자 + 알림 유형 결정 ──────────────────────────────
 
