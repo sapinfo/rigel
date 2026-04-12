@@ -2,6 +2,7 @@
 
 | Feature | Status | Match | Archived | Path |
 |---|---|---|---|---|
+| 전자결재-v2.0-builder | completed | 78% | 2026-04-12 | [전자결재-v2.0-builder/](./전자결재-v2.0-builder/) |
 | 전자결재-v1.3-realtime-notification | completed | 91% | 2026-04-12 | [전자결재-v1.3-realtime-notification/](./전자결재-v1.3-realtime-notification/) |
 | 전자결재-v1.2-parallel-pdf-hash-signature | completed | 90% | 2026-04-11 | [전자결재-v1.2-parallel-pdf-hash-signature/](./전자결재-v1.2-parallel-pdf-hash-signature/) |
 | 전자결재-v1.1-korean-exceptions | completed | 94% | 2026-04-11 | [전자결재-v1.1-korean-exceptions/](./전자결재-v1.1-korean-exceptions/) |
