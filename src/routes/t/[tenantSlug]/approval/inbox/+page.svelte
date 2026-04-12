@@ -25,6 +25,24 @@
     return `/t/${data.currentTenant.slug}/approval/documents/${id}`;
   }
 
+  // 검색 + 페이징
+  let searchQuery = $state('');
+  let currentPage = $state(1);
+  const perPage = 20;
+
+  const filteredRows = $derived(
+    searchQuery.trim()
+      ? data.rows.filter((r) =>
+          r.doc_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          r.form_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          r.drafter_name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      : data.rows
+  );
+
+  const totalPages = $derived(Math.ceil(filteredRows.length / perPage));
+  const pagedRows = $derived(filteredRows.slice((currentPage - 1) * perPage, currentPage * perPage));
+
   // v2.2 M3: 일괄 결재
   let selectedIds = $state<Set<string>>(new Set());
   let batchComment = $state('');
@@ -59,6 +77,15 @@
   </div>
 
   <InboxTabs active={data.tab} counts={data.counts} {baseHref} />
+
+  <!-- 검색 -->
+  <div class="flex items-center gap-2">
+    <input type="text" bind:value={searchQuery} placeholder="문서번호, 양식명, 기안자 검색" class="flex-1 rounded border px-3 py-1.5 text-sm" oninput={() => currentPage = 1} />
+    {#if searchQuery}
+      <button type="button" onclick={() => { searchQuery = ''; currentPage = 1; }} class="text-xs text-gray-500">초기화</button>
+    {/if}
+    <span class="text-xs text-gray-400">{filteredRows.length}건</span>
+  </div>
 
   <!-- 일괄 결재 결과 -->
   {#if form?.batchResult}
@@ -108,13 +135,13 @@
     <input type="hidden" name="comment" value={batchComment} />
   </form>
 
-  {#if data.rows.length === 0}
+  {#if pagedRows.length === 0}
     <div class="rounded-lg border bg-white p-12 text-center text-sm text-gray-500">
-      해당 탭에 문서가 없습니다.
+      {searchQuery ? '검색 결과가 없습니다.' : '해당 탭에 문서가 없습니다.'}
     </div>
   {:else}
     <ul class="flex flex-col gap-1">
-      {#each data.rows as row (row.id)}
+      {#each pagedRows as row (row.id)}
         <li>
           <div class="flex items-center gap-2 rounded border bg-white px-4 py-3 text-sm hover:bg-gray-50">
             <!-- 체크박스 (pending 탭만) -->
@@ -145,11 +172,23 @@
       {/each}
     </ul>
 
-    <!-- 전체 선택 (pending 탭) -->
-    {#if data.tab === 'pending' && data.rows.length > 1}
-      <button type="button" onclick={toggleAll} class="text-xs text-gray-500 hover:underline">
-        {selectedIds.size === data.rows.length ? '전체 선택 해제' : '전체 선택'}
-      </button>
-    {/if}
+    <!-- 전체 선택 + 페이지네이션 -->
+    <div class="flex items-center justify-between">
+      {#if data.tab === 'pending' && pagedRows.length > 1}
+        <button type="button" onclick={toggleAll} class="text-xs text-gray-500 hover:underline">
+          {selectedIds.size === pagedRows.length ? '전체 선택 해제' : '전체 선택'}
+        </button>
+      {:else}
+        <span></span>
+      {/if}
+
+      {#if totalPages > 1}
+        <div class="flex items-center gap-1">
+          <button type="button" disabled={currentPage <= 1} onclick={() => currentPage--} class="rounded border px-2 py-0.5 text-xs disabled:opacity-30">이전</button>
+          <span class="text-xs text-gray-500">{currentPage} / {totalPages}</span>
+          <button type="button" disabled={currentPage >= totalPages} onclick={() => currentPage++} class="rounded border px-2 py-0.5 text-xs disabled:opacity-30">다음</button>
+        </div>
+      {/if}
+    </div>
   {/if}
 </div>

@@ -37,10 +37,10 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		.eq('tenant_id', currentTenant.id)
 		.eq('is_published', true);
 
-	// 멤버 (line_json 표시용)
+	// 멤버 (line_json 표시용) — job_title_id FK join
 	const { data: memberRows } = await locals.supabase
 		.from('tenant_members')
-		.select('user_id, job_title')
+		.select('user_id, job_title_id')
 		.eq('tenant_id', currentTenant.id);
 
 	const profileMap = await fetchProfilesByIds(
@@ -48,12 +48,18 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		(memberRows ?? []).map((r) => r.user_id as string)
 	);
 
+	const { data: jtRows } = await locals.supabase
+		.from('job_titles')
+		.select('id, name')
+		.eq('tenant_id', currentTenant.id);
+	const jtMap = new Map((jtRows ?? []).map((j) => [j.id as string, j.name as string]));
+
 	const members = (memberRows ?? []).map((r) => {
 		const p = profileMap.get(r.user_id as string);
 		return {
 			id: r.user_id as string,
 			displayName: p?.display_name ?? '(알 수 없음)',
-			jobTitle: (r.job_title as string | null) ?? null
+			jobTitle: r.job_title_id ? (jtMap.get(r.job_title_id as string) ?? null) : null
 		};
 	});
 

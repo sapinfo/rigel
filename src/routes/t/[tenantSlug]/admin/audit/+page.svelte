@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
+  import { page } from '$app/state';
+
   let { data } = $props();
 
   const totalPages = Math.ceil(data.totalCount / data.perPage);
@@ -18,11 +21,23 @@
     disagreed: '합의부동의'
   };
 
+  const actionOptions = Object.entries(actionLabels);
+
   function fmt(iso: string): string {
     return new Date(iso).toLocaleString('ko-KR', {
       year: 'numeric', month: '2-digit', day: '2-digit',
-      hour: '2-digit', minute: '2-digit', second: '2-digit'
+      hour: '2-digit', minute: '2-digit'
     });
+  }
+
+  function applyFilter(params: Record<string, string>) {
+    const u = new URL(page.url);
+    for (const [k, v] of Object.entries(params)) {
+      if (v) u.searchParams.set(k, v);
+      else u.searchParams.delete(k);
+    }
+    u.searchParams.set('page', '1');
+    goto(u.toString(), { replaceState: true });
   }
 </script>
 
@@ -32,6 +47,31 @@
     <span class="text-sm text-gray-500">총 {data.totalCount}건</span>
   </div>
 
+  <!-- 필터 -->
+  <div class="flex flex-wrap items-center gap-2">
+    <input
+      type="text"
+      value={data.search}
+      placeholder="사용자 이름/이메일 검색"
+      class="rounded border px-3 py-1.5 text-sm"
+      onchange={(e) => applyFilter({ q: e.currentTarget.value })}
+    />
+    <select
+      value={data.actionFilter}
+      class="rounded border px-3 py-1.5 text-sm"
+      onchange={(e) => applyFilter({ action: e.currentTarget.value })}
+    >
+      <option value="">전체 액션</option>
+      {#each actionOptions as [key, label] (key)}
+        <option value={key}>{label}</option>
+      {/each}
+    </select>
+    {#if data.actionFilter || data.search}
+      <button type="button" onclick={() => applyFilter({ action: '', q: '' })} class="text-xs text-gray-500 hover:underline">필터 초기화</button>
+    {/if}
+  </div>
+
+  <!-- 테이블 -->
   <table class="w-full rounded-lg border bg-white text-sm">
     <thead>
       <tr class="border-b bg-gray-50 text-left text-xs text-gray-500">
@@ -48,7 +88,7 @@
           <td class="px-3 py-2 text-xs text-gray-400">{fmt(log.createdAt)}</td>
           <td class="px-3 py-2">
             <span class="font-medium">{log.actorName}</span>
-            <span class="text-xs text-gray-400">{log.actorEmail}</span>
+            <span class="block text-xs text-gray-400">{log.actorEmail}</span>
           </td>
           <td class="px-3 py-2">
             <span class="rounded bg-gray-100 px-1.5 py-0.5 text-xs">{actionLabels[log.action] ?? log.action}</span>
@@ -63,27 +103,26 @@
             {/if}
           </td>
           <td class="max-w-48 truncate px-3 py-2 font-mono text-xs text-gray-400" title={JSON.stringify(log.payload)}>
-            {JSON.stringify(log.payload).slice(0, 60)}
+            {JSON.stringify(log.payload).slice(0, 50)}
           </td>
         </tr>
       {/each}
+      {#if data.rows.length === 0}
+        <tr>
+          <td colspan="5" class="px-3 py-8 text-center text-sm text-gray-400">로그가 없습니다.</td>
+        </tr>
+      {/if}
     </tbody>
   </table>
 
   <!-- 페이지네이션 -->
   {#if totalPages > 1}
-    <div class="flex items-center justify-center gap-1">
-      {#each Array.from({ length: totalPages }, (_, i) => i + 1) as p (p)}
-        <a
-          href="?page={p}"
-          class="rounded px-3 py-1 text-sm"
-          class:bg-blue-600={p === data.currentPage}
-          class:text-white={p === data.currentPage}
-          class:hover:bg-gray-100={p !== data.currentPage}
-        >
-          {p}
-        </a>
-      {/each}
+    <div class="flex items-center justify-center gap-2">
+      <a href="?page={Math.max(1, data.currentPage - 1)}&action={data.actionFilter}&q={data.search}"
+         class="rounded border px-3 py-1 text-xs" class:opacity-30={data.currentPage <= 1}>이전</a>
+      <span class="text-xs text-gray-500">{data.currentPage} / {totalPages}</span>
+      <a href="?page={Math.min(totalPages, data.currentPage + 1)}&action={data.actionFilter}&q={data.search}"
+         class="rounded border px-3 py-1 text-xs" class:opacity-30={data.currentPage >= totalPages}>다음</a>
     </div>
   {/if}
 </div>

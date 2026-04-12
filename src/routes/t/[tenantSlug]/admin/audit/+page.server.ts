@@ -4,20 +4,27 @@ import { fetchProfilesByIds } from '$lib/server/queries/profiles';
 export const load: PageServerLoad = async ({ locals, parent, url }) => {
 	const { currentTenant } = await parent();
 	const page = parseInt(url.searchParams.get('page') ?? '1', 10);
+	const actionFilter = url.searchParams.get('action') ?? '';
+	const search = url.searchParams.get('q') ?? '';
 	const perPage = 50;
 	const offset = (page - 1) * perPage;
 
-	const { data: logs, count } = await locals.supabase
+	let query = locals.supabase
 		.from('approval_audit_logs')
 		.select('id, actor_id, action, payload, created_at, document_id', { count: 'exact' })
 		.eq('tenant_id', currentTenant.id)
-		.order('created_at', { ascending: false })
-		.range(offset, offset + perPage - 1);
+		.order('created_at', { ascending: false });
+
+	if (actionFilter) {
+		query = query.eq('action', actionFilter);
+	}
+
+	const { data: logs, count } = await query.range(offset, offset + perPage - 1);
 
 	const actorIds = (logs ?? []).map((l) => l.actor_id as string);
 	const profileMap = await fetchProfilesByIds(locals.supabase, actorIds);
 
-	const rows = (logs ?? []).map((l) => ({
+	let rows = (logs ?? []).map((l) => ({
 		id: l.id as string,
 		actorName: profileMap.get(l.actor_id as string)?.display_name ?? '(알 수 없음)',
 		actorEmail: profileMap.get(l.actor_id as string)?.email ?? '',
@@ -27,10 +34,21 @@ export const load: PageServerLoad = async ({ locals, parent, url }) => {
 		createdAt: l.created_at as string
 	}));
 
+	// 클라이언트 사이드 이름/이메일 검색
+	if (search) {
+		const q = search.toLowerCase();
+		rows = rows.filter((r) =>
+			r.actorName.toLowerCase().includes(q) ||
+			r.actorEmail.toLowerCase().includes(q)
+		);
+	}
+
 	return {
 		rows,
 		totalCount: count ?? 0,
 		currentPage: page,
-		perPage
+		perPage,
+		actionFilter,
+		search
 	};
 };
