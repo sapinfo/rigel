@@ -83,9 +83,21 @@ export type FormField =
   | SelectField
   | AttachmentField;
 
+// ─── Form Schema v2 (조건부 필드, v2.0) ──────────────────
+export interface ConditionalRule {
+  if: {
+    fieldId: string;
+    operator: 'eq' | 'neq' | 'gte' | 'lte' | 'contains';
+    value: unknown;
+  };
+  show?: string[];
+  hide?: string[];
+}
+
 export interface FormSchema {
   version: 1;
   fields: FormField[];
+  conditionals?: ConditionalRule[];  // v2.0: 조건부 필드
 }
 
 // ─── Approval Line ────────────────────────────────
@@ -222,6 +234,43 @@ export interface InboxCounts {
   completed: number;
   rejected: number;
   drafts: number;
+}
+
+// ─── Job Titles (v2.0) ───────────────────────────────────
+export interface JobTitle {
+  id: string;
+  tenantId: string;
+  name: string;
+  level: number;
+  createdAt: string;
+}
+
+// ─── Approval Rules (v2.0) ───────────────────────────────
+export type RuleOperator = 'eq' | 'neq' | 'gte' | 'lte' | 'contains';
+
+export interface RuleCondition {
+  field: string;
+  operator: RuleOperator;
+  value: unknown;
+}
+
+export type LineRole = 'team_lead' | 'department_head' | 'ceo' | { userId: string };
+
+export interface LineTemplateStep {
+  role: LineRole;
+  stepType: StepType;
+  condition?: RuleCondition;
+}
+
+export interface ApprovalRule {
+  id: string;
+  tenantId: string;
+  formId: string | null;
+  name: string;
+  conditionJson: RuleCondition | null;
+  lineTemplateJson: LineTemplateStep[];
+  priority: number;
+  isActive: boolean;
 }
 
 // ─── Notifications (v1.3) ────────────────────────────────
