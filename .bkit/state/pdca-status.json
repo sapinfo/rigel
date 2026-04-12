@@ -35,34 +35,12 @@
   "primaryFeature": "결재선-v2.1-보강",
   "features": {
     "결재선-v2.1-보강": {
-      "name": "결재선-v2.1-보강",
-      "displayName": "결재선 v2.1 보강",
-      "phase": "completed",
-      "planPath": "docs/01-plan/features/결재선-v2.1-보강.plan.md",
-      "designPath": "docs/02-design/features/결재선-v2.1-보강.design.md",
-      "analysisPath": "docs/03-analysis/결재선-v2.1-보강.analysis.md",
-      "reportPath": "docs/04-report/features/결재선-v2.1-보강.report.md",
-      "startedAt": "2026-04-12T12:00:00.000Z",
-      "planCompletedAt": "2026-04-12T12:00:00.000Z",
-      "designCompletedAt": "2026-04-12T12:30:00.000Z",
-      "completedAt": "2026-04-12T14:00:00.000Z",
+      "phase": "archived",
       "matchRate": 93,
       "iterationCount": 1,
-      "currentMilestone": "M7",
-      "milestonesCompleted": ["M1","M2","M3","M4","M5","M6","M7"],
-      "scope": {
-        "strategy": "v2.1-ui-enhancement",
-        "stack": "SvelteKit2+Svelte5+SupabaseSSR",
-        "milestones": [
-          "M1-RuleBuilder",
-          "M2-Preview",
-          "M3-OrgTree",
-          "M4-JobTitles",
-          "M5-Simulator",
-          "M6-ConditionalsEditor",
-          "M7-HiddenFilter"
-        ]
-      }
+      "startedAt": "2026-04-12T12:00:00.000Z",
+      "archivedAt": "2026-04-12T15:00:00.000Z",
+      "archivedTo": "docs/archive/2026-04/결재선-v2.1-보강/"
     },
     "전자결재-v1.1-korean-exceptions": {
       "phase": "archived",

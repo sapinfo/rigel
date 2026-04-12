@@ -2,10 +2,27 @@
 
 | Feature | Status | Match | Archived | Path |
 |---|---|---|---|---|
+| 결재선-v2.1-보강 | completed | 93% | 2026-04-12 | [결재선-v2.1-보강/](./결재선-v2.1-보강/) |
 | 전자결재-v2.0-builder | completed | 78% | 2026-04-12 | [전자결재-v2.0-builder/](./전자결재-v2.0-builder/) |
 | 전자결재-v1.3-realtime-notification | completed | 91% | 2026-04-12 | [전자결재-v1.3-realtime-notification/](./전자결재-v1.3-realtime-notification/) |
 | 전자결재-v1.2-parallel-pdf-hash-signature | completed | 90% | 2026-04-11 | [전자결재-v1.2-parallel-pdf-hash-signature/](./전자결재-v1.2-parallel-pdf-hash-signature/) |
 | 전자결재-v1.1-korean-exceptions | completed | 94% | 2026-04-11 | [전자결재-v1.1-korean-exceptions/](./전자결재-v1.1-korean-exceptions/) |
+
+## 결재선-v2.1-보강
+
+v2.0 (match 78%) → **v2.1** (match 93%)
+
+결재선 규칙 관리 GUI + OrgChart 트리 + 기안 시 프리뷰 + 시뮬레이터
+
+**산출물**:
+- [plan.md](./결재선-v2.1-보강/결재선-v2.1-보강.plan.md)
+- [design.md](./결재선-v2.1-보강/결재선-v2.1-보강.design.md)
+- [analysis.md](./결재선-v2.1-보강/결재선-v2.1-보강.analysis.md)
+- [report.md](./결재선-v2.1-보강/결재선-v2.1-보강.report.md)
+
+**핵심 메트릭**: 3 migrations (0046~0048) · 3 신규 컴포넌트 · 7 마일스톤 · RuleBuilder GUI · OrgTree 재귀 snippet
+
+---
 
 ## 전자결재-v1.3-realtime-notification
 
