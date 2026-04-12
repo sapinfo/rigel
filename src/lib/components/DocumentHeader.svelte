@@ -15,6 +15,7 @@
   const statusLabel: Record<DocumentStatus, string> = {
     draft: '임시저장',
     in_progress: '진행중',
+    pending_post_facto: '후결 진행중',
     completed: '완료',
     rejected: '반려',
     withdrawn: '회수'
@@ -47,6 +48,8 @@
       class:text-yellow-800={status === 'draft'}
       class:bg-blue-100={status === 'in_progress'}
       class:text-blue-800={status === 'in_progress'}
+      class:bg-orange-100={status === 'pending_post_facto'}
+      class:text-orange-800={status === 'pending_post_facto'}
       class:bg-green-100={status === 'completed'}
       class:text-green-800={status === 'completed'}
       class:bg-red-100={status === 'rejected'}

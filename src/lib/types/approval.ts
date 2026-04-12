@@ -100,6 +100,7 @@ export interface ApprovalLineItem {
 export type DocumentStatus =
   | 'draft'
   | 'in_progress'
+  | 'pending_post_facto' // v1.1 M13: 후결 진행 중
   | 'completed'
   | 'rejected'
   | 'withdrawn';
@@ -132,6 +133,8 @@ export interface ApprovalStep {
   status: StepStatus;
   actedAt: string | null;
   comment: string | null;
+  // v1.1 M12: 대리 수행자 (NULL = 본인 직접 승인)
+  actedByProxyUserId: string | null;
 }
 
 export interface ApprovalAttachment {
@@ -152,7 +155,12 @@ export type AuditAction =
   | 'approve'
   | 'reject'
   | 'withdraw'
-  | 'comment';
+  | 'comment'
+  // v1.1 M11~M14 확장
+  | 'delegated' // M11: 전결 규칙 매칭으로 step 자동 skip
+  | 'approved_by_proxy' // M12: 부재 대리인이 승인
+  | 'submitted_post_facto' // M13: 후결 상신
+  | 'auto_delegated'; // M14: 부재 등록 시 trigger/cron이 pending step 재배정
 
 export interface ApprovalAuditLog {
   id: string;
@@ -162,6 +170,8 @@ export interface ApprovalAuditLog {
   action: AuditAction;
   payload: Record<string, unknown>;
   createdAt: string;
+  // v1.1 M12: 대리 수행자 (NULL = 본인 직접 수행)
+  actedByProxyUserId: string | null;
 }
 
 // ─── Org ──────────────────────────────────────────

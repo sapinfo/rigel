@@ -22,7 +22,12 @@
     approve: '승인',
     reject: '반려',
     withdraw: '회수',
-    comment: '코멘트'
+    comment: '코멘트',
+    // v1.1 M11~M14
+    delegated: '전결',
+    approved_by_proxy: '대리 승인',
+    submitted_post_facto: '후결 상신',
+    auto_delegated: '자동 위임'
   };
 
   const actionColor: Record<AuditAction, string> = {
@@ -31,7 +36,12 @@
     approve: 'text-green-600',
     reject: 'text-red-600',
     withdraw: 'text-gray-600',
-    comment: 'text-gray-700'
+    comment: 'text-gray-700',
+    // v1.1 M11~M14
+    delegated: 'text-purple-600',
+    approved_by_proxy: 'text-orange-600',
+    submitted_post_facto: 'text-orange-600',
+    auto_delegated: 'text-purple-600'
   };
 
   function fmt(iso: string): string {

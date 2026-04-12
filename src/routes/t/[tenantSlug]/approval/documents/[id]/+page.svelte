@@ -63,10 +63,25 @@
     <!-- 각 step의 상태/코멘트 추가 정보 -->
     <ul class="mt-4 flex flex-col gap-2">
       {#each data.steps as s (s.id)}
+        {@const isDelegated = s.status === 'skipped' && (s.comment ?? '').startsWith('[전결]')}
+        {@const isProxyActed = s.acted_by_proxy_user_id !== null}
         <li class="rounded border bg-gray-50 px-3 py-2 text-sm">
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <span class="w-6 text-gray-500">{s.step_index + 1}</span>
-            <span class="flex-1 truncate font-medium">{s.approver_name}</span>
+            <span class="min-w-0 flex-1 truncate font-medium">{s.approver_name}</span>
+
+            <!-- v1.1 M14: 대리/전결 배지 -->
+            {#if isDelegated}
+              <span class="rounded bg-purple-100 px-2 py-0.5 text-xs text-purple-700">
+                전결
+              </span>
+            {/if}
+            {#if isProxyActed}
+              <span class="rounded bg-orange-100 px-2 py-0.5 text-xs text-orange-700">
+                대리
+              </span>
+            {/if}
+
             <span
               class="rounded px-2 py-0.5 text-xs"
               class:bg-yellow-100={s.status === 'pending'}
@@ -101,6 +116,7 @@
       canApprove={data.canApprove}
       canWithdraw={data.canWithdraw}
       canComment={data.canComment}
+      isProxyApproval={data.isProxyApproval}
     />
   {/if}
 

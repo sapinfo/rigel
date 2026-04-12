@@ -9,6 +9,7 @@ import type {
   ApprovalLineItem
 } from '$lib/types/approval';
 import { fetchProfilesByIds } from '$lib/server/queries/profiles';
+import { fetchActiveProxyFor } from '$lib/server/queries/absences';
 import { createDownloadUrls } from '$lib/server/downloadUrl';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -56,7 +57,7 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
   // 3. steps
   const { data: stepRows } = await locals.supabase
     .from('approval_steps')
-    .select('id, step_index, step_type, approver_user_id, status, acted_at, comment')
+    .select('id, step_index, step_type, approver_user_id, status, acted_at, comment, acted_by_proxy_user_id')
     .eq('document_id', doc.id as string)
     .order('step_index', { ascending: true });
 
@@ -98,13 +99,30 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
     (s) => (s.step_index as number) === currentStepIndex
   );
 
-  const canApprove =
-    status === 'in_progress' &&
-    currentStep?.approver_user_id === userId &&
+  // v1.1 M12: 현재 사용자가 대리할 수 있는 원 approver 목록
+  const activeProxyFor = await fetchActiveProxyFor(
+    locals.supabase,
+    currentTenant.id,
+    userId,
+    doc.form_id as string
+  );
+
+  // v1.1 M13: pending_post_facto 도 actionable
+  const isActionableStatus = status === 'in_progress' || status === 'pending_post_facto';
+  const isCurrentStepActionable =
+    isActionableStatus &&
     (currentStep?.status as StepStatus) === 'pending' &&
     (currentStep?.step_type as StepType) === 'approval';
 
-  const canWithdraw = status === 'in_progress' && doc.drafter_id === userId;
+  const isOwnApproval = isCurrentStepActionable && currentStep?.approver_user_id === userId;
+  const isProxyApproval =
+    isCurrentStepActionable &&
+    currentStep?.approver_user_id !== userId &&
+    activeProxyFor.has(currentStep?.approver_user_id as string);
+
+  const canApprove = isOwnApproval || isProxyApproval;
+
+  const canWithdraw = isActionableStatus && doc.drafter_id === userId;
 
   // 누구든 문서를 볼 수 있으면 코멘트 가능 (RLS가 이미 보장)
   const canComment = true;
@@ -123,7 +141,8 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
       approver_email: p?.email ?? '',
       status: s.status as StepStatus,
       acted_at: (s.acted_at as string | null) ?? null,
-      comment: (s.comment as string | null) ?? null
+      comment: (s.comment as string | null) ?? null,
+      acted_by_proxy_user_id: (s.acted_by_proxy_user_id as string | null) ?? null
     };
   });
 
@@ -175,7 +194,8 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
     approvalLineReadonly,
     canApprove,
     canWithdraw,
-    canComment
+    canComment,
+    isProxyApproval
   };
 };
 

@@ -9,6 +9,7 @@
   const statusLabel: Record<DocumentStatus, string> = {
     draft: '임시저장',
     in_progress: '진행중',
+    pending_post_facto: '후결 진행중',
     completed: '완료',
     rejected: '반려',
     withdrawn: '회수'

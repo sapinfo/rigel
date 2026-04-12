@@ -5,9 +5,15 @@
     canApprove: boolean;
     canWithdraw: boolean;
     canComment: boolean;
+    isProxyApproval?: boolean;
   };
 
-  let { canApprove, canWithdraw, canComment }: Props = $props();
+  let {
+    canApprove,
+    canWithdraw,
+    canComment,
+    isProxyApproval = false
+  }: Props = $props();
 
   let approveComment = $state('');
   let rejectReason = $state('');
@@ -22,7 +28,14 @@
 <div class="flex flex-col gap-4">
   {#if canApprove}
     <section class="rounded-lg border bg-white p-4">
-      <h3 class="mb-3 text-sm font-semibold">결재 처리</h3>
+      <h3 class="mb-3 text-sm font-semibold">
+        {isProxyApproval ? '대리 결재 처리' : '결재 처리'}
+      </h3>
+      {#if isProxyApproval}
+        <p class="mb-2 rounded bg-orange-50 px-3 py-2 text-xs text-orange-700">
+          원 승인자의 부재로 대리 승인이 가능합니다. 승인 기록에 대리 표시가 남습니다.
+        </p>
+      {/if}
       <textarea
         bind:value={approveComment}
         placeholder="코멘트 (선택)"
@@ -47,9 +60,11 @@
           <button
             type="submit"
             disabled={submitting}
-            class="w-full rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+            class="w-full rounded px-4 py-2 text-sm font-medium text-white disabled:opacity-50 {isProxyApproval
+              ? 'bg-orange-600 hover:bg-orange-700'
+              : 'bg-green-600 hover:bg-green-700'}"
           >
-            {submitting ? '처리 중…' : '승인'}
+            {submitting ? '처리 중…' : isProxyApproval ? '대리 승인' : '승인'}
           </button>
         </form>
         <button

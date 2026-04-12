@@ -29,13 +29,14 @@ async function loadPendingDocs(
   const docIds = (steps ?? []).map((s) => s.document_id as string);
   if (docIds.length === 0) return [];
 
+  // v1.1 M13: pending_post_facto 도 결재함에 포함 (현재 단계 결재자 시야)
   const { data: docs } = await supabase
     .from('approval_documents')
     .select(
       'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id'
     )
     .in('id', docIds)
-    .eq('status', 'in_progress')
+    .in('status', ['in_progress', 'pending_post_facto'])
     .order('submitted_at', { ascending: false });
 
   // 내 step이 실제로 current step과 일치하는 문서만
@@ -59,7 +60,7 @@ async function loadCountsExcludingPending(
       .select('id', { count: 'exact', head: true })
       .eq('tenant_id', tenantId)
       .eq('drafter_id', userId)
-      .eq('status', 'in_progress'),
+      .in('status', ['in_progress', 'pending_post_facto']),
     supabase
       .from('approval_documents')
       .select('id', { count: 'exact', head: true })
@@ -131,6 +132,7 @@ async function loadDocumentsForTab(
     }
 
     case 'in_progress': {
+      // v1.1 M13: pending_post_facto 도 진행 중으로 분류
       const { data } = await supabase
         .from('approval_documents')
         .select(
@@ -138,7 +140,7 @@ async function loadDocumentsForTab(
         )
         .eq('tenant_id', tenantId)
         .eq('drafter_id', userId)
-        .eq('status', 'in_progress')
+        .in('status', ['in_progress', 'pending_post_facto'])
         .order('submitted_at', { ascending: false });
       return (data as unknown as DocRow[]) ?? [];
     }

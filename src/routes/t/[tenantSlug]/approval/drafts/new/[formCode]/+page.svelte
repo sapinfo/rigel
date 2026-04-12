@@ -19,6 +19,10 @@
   // 임시저장된 문서 ID (저장 후 서버가 반환)
   let documentId = $state<string | null>(null);
 
+  // v1.1 M13: 후결 토글
+  let isPostFacto = $state(false);
+  let postFactoReason = $state('');
+
   // 제출 상태
   let submittingSave = $state(false);
   let submittingSubmit = $state(false);
@@ -69,6 +73,45 @@
     />
   </section>
 
+  <!-- v1.1 M13: 후결 토글 -->
+  <section class="rounded-lg border bg-white p-6">
+    <label class="flex items-start gap-3">
+      <input
+        type="checkbox"
+        bind:checked={isPostFacto}
+        class="mt-0.5 h-4 w-4 rounded border-gray-300"
+      />
+      <span class="flex flex-col gap-1">
+        <span class="text-sm font-medium">후결로 기안 (사후 결재)</span>
+        <span class="text-xs text-gray-500">
+          긴급 사안으로 실행 후 결재를 받아야 하는 경우 체크하세요.
+          사유가 감사 로그에 기록됩니다.
+        </span>
+      </span>
+    </label>
+
+    {#if isPostFacto}
+      <div class="mt-3 flex flex-col gap-1">
+        <label class="flex flex-col gap-1">
+          <span class="text-sm font-medium">
+            후결 사유 <span class="text-red-500">*</span>
+          </span>
+          <textarea
+            bind:value={postFactoReason}
+            rows="3"
+            maxlength="1000"
+            placeholder="긴급 상황 또는 사후 결재가 필요한 사유를 입력하세요"
+            class="rounded border px-3 py-2 text-sm"
+            required
+          ></textarea>
+        </label>
+        {#if form?.errors?.fields?.reason}
+          <p class="text-xs text-red-600">{form.errors.fields.reason}</p>
+        {/if}
+      </div>
+    {/if}
+  </section>
+
   <!-- 에러 표시 -->
   {#if form?.errors?.form}
     <p class="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -108,16 +151,24 @@
       </button>
     </form>
 
-    <!-- 상신 -->
+    <!-- 상신 (일반 / 후결 동적 분기) -->
     <form
       method="POST"
-      action="?/submit"
-      use:enhance={({ formData }) => {
+      action={isPostFacto ? '?/submitPostFacto' : '?/submit'}
+      use:enhance={({ formData, cancel }) => {
+        if (isPostFacto && postFactoReason.trim().length === 0) {
+          cancel();
+          return;
+        }
         formData.set('formId', data.form.id);
         formData.set('content', JSON.stringify(content));
         formData.set('approvalLine', JSON.stringify(approvalLine));
         formData.set('attachmentIds', JSON.stringify(collectAttachmentIds()));
-        if (documentId) formData.set('documentId', documentId);
+        if (isPostFacto) {
+          formData.set('reason', postFactoReason);
+        } else if (documentId) {
+          formData.set('documentId', documentId);
+        }
         submittingSubmit = true;
         return async ({ update }) => {
           await update();
@@ -127,10 +178,21 @@
     >
       <button
         type="submit"
-        disabled={submittingSubmit || submittingSave || approvalLine.length === 0}
-        class="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+        disabled={submittingSubmit ||
+          submittingSave ||
+          approvalLine.length === 0 ||
+          (isPostFacto && postFactoReason.trim().length === 0)}
+        class="rounded px-4 py-2 text-sm text-white disabled:opacity-50 {isPostFacto
+          ? 'bg-orange-600 hover:bg-orange-700'
+          : 'bg-blue-600 hover:bg-blue-700'}"
       >
-        {submittingSubmit ? '상신 중…' : '상신'}
+        {submittingSubmit
+          ? isPostFacto
+            ? '후결 상신 중…'
+            : '상신 중…'
+          : isPostFacto
+            ? '후결 상신'
+            : '상신'}
       </button>
     </form>
   </div>

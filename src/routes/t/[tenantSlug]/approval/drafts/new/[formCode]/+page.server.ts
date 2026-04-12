@@ -120,6 +120,15 @@ const submitDraftFormSchema = z.object({
   documentId: z.string().uuid().optional().nullable()
 });
 
+// v1.1 M13: 후결 상신용 schema (문서 ID 없음 — 신규 기안만, reason 필수)
+const submitPostFactoFormSchema = z.object({
+  formId: z.string().uuid(),
+  content: z.record(z.string(), z.unknown()),
+  approvalLine: approvalLineSchema,
+  attachmentIds: z.array(z.string().uuid()).default([]),
+  reason: z.string().trim().min(1, '후결 사유는 필수입니다').max(1000)
+});
+
 export const actions: Actions = {
   saveDraft: async ({ request, locals, params }) => {
     if (!locals.user) return fail(401);
@@ -198,6 +207,47 @@ export const actions: Actions = {
     }
 
     // M6: 문서 상세 페이지는 M7. 당분간 결재함 placeholder로 리디렉트.
+    redirect(303, `/t/${currentTenant.slug}/approval/inbox`);
+  },
+
+  // v1.1 M13: 후결 상신
+  submitPostFacto: async ({ request, locals, params }) => {
+    if (!locals.user) return fail(401);
+    const currentTenant = await resolveTenant(
+      locals.supabase,
+      locals.user.id,
+      params.tenantSlug
+    );
+    if (!currentTenant) return fail(404);
+
+    const fd = await request.formData();
+    const parsed = submitPostFactoFormSchema.safeParse({
+      formId: fd.get('formId')?.toString(),
+      content: parseJson(fd.get('content'), {} as Record<string, unknown>),
+      approvalLine: parseJson(fd.get('approvalLine'), [] as unknown[]),
+      attachmentIds: parseJson(fd.get('attachmentIds'), [] as string[]),
+      reason: fd.get('reason')?.toString() ?? ''
+    });
+
+    if (!parsed.success) {
+      return fail(400, { errors: zodErrors(parsed) });
+    }
+
+    const { data: doc, error: rpcErr } = await locals.supabase
+      .rpc('fn_submit_post_facto', {
+        p_tenant_id: currentTenant.id,
+        p_form_id: parsed.data.formId,
+        p_content: parsed.data.content,
+        p_approval_line: parsed.data.approvalLine,
+        p_reason: parsed.data.reason,
+        p_attachment_ids: parsed.data.attachmentIds
+      })
+      .single();
+
+    if (rpcErr) {
+      return fail(400, { errors: formError(rpcErr.message || '후결 상신 실패') });
+    }
+
     redirect(303, `/t/${currentTenant.slug}/approval/inbox`);
   }
 };
