@@ -223,3 +223,21 @@ export interface InboxCounts {
   rejected: number;
   drafts: number;
 }
+
+// ─── Notifications (v1.3) ────────────────────────────────
+export type NotificationType =
+  | 'approval_requested'
+  | 'approved'
+  | 'rejected'
+  | 'commented'
+  | 'withdrawn';
+
+export interface Notification {
+  id: string;
+  documentId: string;
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  read: boolean;
+  createdAt: string;
+}

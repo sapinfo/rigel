@@ -43,5 +43,13 @@ export const load: LayoutServerLoad = async ({ locals, params }) => {
     name: f.name as string
   }));
 
-  return { currentTenant, forms };
+  // v1.3: unread notification count for SSR
+  const { count: unreadCount } = await locals.supabase
+    .from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', locals.user.id)
+    .eq('tenant_id', currentTenant.id)
+    .eq('read', false);
+
+  return { currentTenant, forms, unreadCount: unreadCount ?? 0 };
 };
