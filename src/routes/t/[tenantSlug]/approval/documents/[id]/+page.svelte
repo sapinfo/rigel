@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { enhance } from '$app/forms';
   import DocumentHeader from '$lib/components/DocumentHeader.svelte';
   import FormRenderer from '$lib/components/FormRenderer.svelte';
   import ApprovalLine from '$lib/components/ApprovalLine.svelte';
@@ -89,6 +90,33 @@
         canComment={data.canComment}
         isProxyApproval={data.isProxyApproval}
       />
+    {/if}
+
+    <!-- v2.2 M5: 재기안 / M6: 독촉 -->
+    {#if data.document.drafter_id === data.user?.id}
+      <div class="flex items-center gap-2">
+        {#if data.document.status === 'rejected'}
+          <form method="POST" action="?/resubmit" use:enhance={({ }) => {
+            return async ({ result }) => {
+              if (result.type === 'success' && result.data?.resubmitRedirect) {
+                window.location.href = result.data.resubmitRedirect as string;
+              }
+            };
+          }}>
+            <button type="submit" class="rounded border bg-blue-50 px-3 py-1.5 text-sm text-blue-700 hover:bg-blue-100">재기안</button>
+          </form>
+        {/if}
+        {#if data.document.status === 'in_progress' || data.document.status === 'pending_post_facto'}
+          <form method="POST" action="?/remind" use:enhance={() => {
+            return async ({ update }) => { await update({ reset: false }); };
+          }}>
+            <button type="submit" class="rounded border px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50">결재 독촉</button>
+          </form>
+          {#if form?.reminded}
+            <span class="text-xs text-green-600">독촉 알림을 보냈습니다</span>
+          {/if}
+        {/if}
+      </div>
     {/if}
 
     <!-- 이력 -->

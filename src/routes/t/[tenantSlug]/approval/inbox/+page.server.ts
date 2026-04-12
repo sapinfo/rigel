@@ -33,7 +33,7 @@ async function loadPendingDocs(
   const { data: docs } = await supabase
     .from('approval_documents')
     .select(
-      'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id'
+      'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency'
     )
     .in('id', docIds)
     .in('status', ['in_progress', 'pending_post_facto'])
@@ -99,6 +99,7 @@ type DocRow = {
   completed_at: string | null;
   updated_at: string;
   form_id: string;
+  urgency: string;
 };
 
 type FormLookup = Map<string, { name: string; code: string }>;
@@ -136,7 +137,7 @@ async function loadDocumentsForTab(
       const { data } = await supabase
         .from('approval_documents')
         .select(
-          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id'
+          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency'
         )
         .eq('tenant_id', tenantId)
         .eq('drafter_id', userId)
@@ -149,7 +150,7 @@ async function loadDocumentsForTab(
       const { data } = await supabase
         .from('approval_documents')
         .select(
-          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id'
+          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency'
         )
         .eq('tenant_id', tenantId)
         .eq('drafter_id', userId)
@@ -162,7 +163,7 @@ async function loadDocumentsForTab(
       const { data } = await supabase
         .from('approval_documents')
         .select(
-          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id'
+          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency'
         )
         .eq('tenant_id', tenantId)
         .eq('drafter_id', userId)
@@ -175,7 +176,7 @@ async function loadDocumentsForTab(
       const { data } = await supabase
         .from('approval_documents')
         .select(
-          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id'
+          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency'
         )
         .eq('tenant_id', tenantId)
         .eq('drafter_id', userId)
@@ -232,9 +233,49 @@ export const load: PageServerLoad = async ({ locals, url, parent }) => {
       drafter_name: drafter?.display_name ?? '(알 수 없음)',
       submitted_at: d.submitted_at,
       completed_at: d.completed_at,
-      updated_at: d.updated_at
+      updated_at: d.updated_at,
+      urgency: d.urgency ?? '일반'
     };
   });
 
   return { tab, counts, rows };
+};
+
+// v2.2 M3: 일괄 결재
+export const actions = {
+  batchApprove: async ({ request, locals, params }: { request: Request; locals: App.Locals; params: Record<string, string> }) => {
+    if (!locals.user) return { batchResult: [] };
+
+    const fd = await request.formData();
+    const ids = JSON.parse(fd.get('documentIds')?.toString() ?? '[]') as string[];
+    const comment = fd.get('comment')?.toString() ?? '';
+
+    const results: { id: string; ok: boolean; error?: string }[] = [];
+    for (const docId of ids) {
+      const { error } = await locals.supabase.rpc('fn_approve_step', {
+        p_document_id: docId,
+        p_comment: comment || null
+      });
+      results.push({ id: docId, ok: !error, error: error?.message });
+    }
+    return { batchResult: results };
+  },
+
+  batchReject: async ({ request, locals, params }: { request: Request; locals: App.Locals; params: Record<string, string> }) => {
+    if (!locals.user) return { batchResult: [] };
+
+    const fd = await request.formData();
+    const ids = JSON.parse(fd.get('documentIds')?.toString() ?? '[]') as string[];
+    const comment = fd.get('comment')?.toString() ?? '';
+
+    const results: { id: string; ok: boolean; error?: string }[] = [];
+    for (const docId of ids) {
+      const { error } = await locals.supabase.rpc('fn_reject_step', {
+        p_document_id: docId,
+        p_comment: comment || '일괄 반려'
+      });
+      results.push({ id: docId, ok: !error, error: error?.message });
+    }
+    return { batchResult: results };
+  }
 };

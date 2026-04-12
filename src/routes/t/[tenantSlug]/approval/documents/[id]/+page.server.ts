@@ -311,5 +311,89 @@ export const actions: Actions = {
 
     if (err) return fail(400, { actionError: err.message || '코멘트 실패' });
     return { ok: true };
+  },
+
+  // v2.2 M5: 재기안
+  resubmit: async ({ request, locals, params }) => {
+    if (!locals.user) return fail(401);
+    const currentTenant = await resolveTenant(locals.supabase, locals.user.id, params.tenantSlug);
+    if (!currentTenant) return fail(404);
+
+    // 기존 문서 조회 (rejected 상태 확인)
+    const { data: doc } = await locals.supabase
+      .from('approval_documents')
+      .select('id, form_id, content, status, drafter_id')
+      .eq('id', params.id)
+      .eq('tenant_id', currentTenant.id)
+      .single();
+
+    if (!doc || doc.status !== 'rejected') return fail(400, { actionError: '반려된 문서만 재기안할 수 있습니다' });
+    if (doc.drafter_id !== locals.user.id) return fail(403, { actionError: '본인이 기안한 문서만 재기안할 수 있습니다' });
+
+    // 새 draft 생성
+    const { data: newDoc, error: err } = await locals.supabase
+      .rpc('fn_save_draft', {
+        p_tenant_id: currentTenant.id,
+        p_form_id: doc.form_id,
+        p_content: doc.content
+      })
+      .single();
+
+    if (err) return fail(400, { actionError: err.message || '재기안 실패' });
+
+    const newId = (newDoc as unknown as { id: string }).id;
+    // 양식 코드 조회
+    const { data: formRow } = await locals.supabase
+      .from('approval_forms')
+      .select('code')
+      .eq('id', doc.form_id as string)
+      .single();
+
+    const code = (formRow?.code as string) ?? 'general';
+    return { resubmitRedirect: `/t/${currentTenant.slug}/approval/drafts/new/${code}` };
+  },
+
+  // v2.2 M6: 결재 독촉
+  remind: async ({ request, locals, params }) => {
+    if (!locals.user) return fail(401);
+    const currentTenant = await resolveTenant(locals.supabase, locals.user.id, params.tenantSlug);
+    if (!currentTenant) return fail(404);
+
+    // 문서 조회 + 현재 결재자 확인
+    const { data: doc } = await locals.supabase
+      .from('approval_documents')
+      .select('id, status, drafter_id, current_step_index')
+      .eq('id', params.id)
+      .eq('tenant_id', currentTenant.id)
+      .single();
+
+    if (!doc || !['in_progress', 'pending_post_facto'].includes(doc.status as string))
+      return fail(400, { actionError: '진행 중인 문서만 독촉할 수 있습니다' });
+    if (doc.drafter_id !== locals.user.id)
+      return fail(403, { actionError: '본인이 기안한 문서만 독촉할 수 있습니다' });
+
+    // 현재 결재자 조회
+    const { data: step } = await locals.supabase
+      .from('approval_steps')
+      .select('approver_user_id')
+      .eq('document_id', doc.id)
+      .eq('step_index', doc.current_step_index)
+      .eq('status', 'pending')
+      .limit(1)
+      .maybeSingle();
+
+    if (!step) return fail(400, { actionError: '현재 결재자를 찾을 수 없습니다' });
+
+    // 알림 생성 (v1.3 notifications 테이블 재사용)
+    await locals.supabase.from('notifications').insert({
+      tenant_id: currentTenant.id,
+      user_id: step.approver_user_id,
+      document_id: doc.id,
+      type: 'approval_requested',
+      title: '결재 독촉',
+      body: '기안자가 결재를 요청합니다. 확인해주세요.'
+    });
+
+    return { reminded: true };
   }
 };

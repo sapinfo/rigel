@@ -92,6 +92,22 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
     };
   });
 
+  // v2.2 M1: 즐겨찾기
+  const { data: favRows } = await locals.supabase
+    .from('approval_line_favorites')
+    .select('id, name, form_id, line_json')
+    .eq('tenant_id', currentTenant.id)
+    .eq('user_id', locals.user!.id)
+    .order('created_at', { ascending: false });
+
+  // v2.2 M2: 템플릿 (이 양식 또는 전체)
+  const { data: tplRows } = await locals.supabase
+    .from('approval_line_templates')
+    .select('id, name, form_id, line_json, is_default, priority')
+    .eq('tenant_id', currentTenant.id)
+    .or(`form_id.eq.${form.id},form_id.is.null`)
+    .order('priority', { ascending: true });
+
   return {
     form: {
       id: form.id as string,
@@ -101,7 +117,19 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
       schema: form.schema as unknown as FormSchema,
       defaultApprovalLine: (form.default_approval_line as unknown as ApprovalLineItem[]) ?? []
     },
-    members
+    members,
+    favorites: (favRows ?? []).map((f) => ({
+      id: f.id as string,
+      name: f.name as string,
+      formId: (f.form_id as string | null) ?? null,
+      lineJson: f.line_json as unknown as ApprovalLineItem[]
+    })),
+    templates: (tplRows ?? []).map((t) => ({
+      id: t.id as string,
+      name: t.name as string,
+      lineJson: t.line_json as unknown as ApprovalLineItem[],
+      isDefault: t.is_default as boolean
+    }))
   };
 };
 
@@ -262,7 +290,41 @@ export const actions: Actions = {
     redirect(303, `/t/${currentTenant.slug}/approval/inbox`);
   },
 
-  // v2.1 M2: 결��선 자동 구성 프리뷰
+  // v2.2 M1: 즐겨찾기 저장
+  saveFavorite: async ({ request, locals, params }) => {
+    if (!locals.user) return fail(401);
+    const currentTenant = await resolveTenant(locals.supabase, locals.user.id, params.tenantSlug);
+    if (!currentTenant) return fail(404);
+
+    const fd = await request.formData();
+    const name = fd.get('favName')?.toString()?.trim();
+    const lineJsonRaw = fd.get('lineJson')?.toString();
+    const formId = fd.get('formId')?.toString() || null;
+    if (!name || !lineJsonRaw) return fail(400, { errors: formError('이름과 결재선이 필요합니다') });
+
+    let lineJson;
+    try { lineJson = JSON.parse(lineJsonRaw); } catch { return fail(400); }
+
+    const { error: err } = await locals.supabase
+      .from('approval_line_favorites')
+      .insert({ tenant_id: currentTenant.id, user_id: locals.user.id, name, form_id: formId, line_json: lineJson });
+
+    if (err) return fail(500, { errors: formError(err.message) });
+    return { favSaved: true };
+  },
+
+  // v2.2 M1: 즐겨찾기 삭제
+  removeFavorite: async ({ request, locals }) => {
+    if (!locals.user) return fail(401);
+    const fd = await request.formData();
+    const id = fd.get('favId')?.toString();
+    if (!id) return fail(400);
+
+    await locals.supabase.from('approval_line_favorites').delete().eq('id', id).eq('user_id', locals.user.id);
+    return { favRemoved: true };
+  },
+
+  // v2.1 M2: 결재선 자동 구성 프리뷰
   resolvePreview: async ({ request, locals, params }) => {
     if (!locals.user) return fail(401);
     const currentTenant = await resolveTenant(

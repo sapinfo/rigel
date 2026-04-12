@@ -1,0 +1,71 @@
+<script lang="ts">
+  let { data } = $props();
+
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? '좋은 아침입니다' : hour < 18 ? '안녕하세요' : '수고하셨습니다';
+
+  const slug = data.currentTenant.slug;
+
+  const cards = [
+    { key: 'pending', label: '미결', count: data.counts.pending, href: `/t/${slug}/approval/inbox?tab=pending`, color: 'text-red-600' },
+    { key: 'inProgress', label: '상신진행', count: data.counts.inProgress, href: `/t/${slug}/approval/inbox?tab=in_progress`, color: 'text-blue-600' },
+    { key: 'completed', label: '완료', count: data.counts.completed, href: `/t/${slug}/approval/inbox?tab=completed`, color: 'text-green-600' },
+    { key: 'rejected', label: '반려', count: data.counts.rejected, href: `/t/${slug}/approval/inbox?tab=rejected`, color: 'text-red-500' },
+    { key: 'drafts', label: '임시저장', count: data.counts.drafts, href: `/t/${slug}/approval/inbox?tab=drafts`, color: 'text-gray-600' },
+    { key: 'urgent', label: '긴급 미결', count: data.urgentCount, href: `/t/${slug}/approval/inbox?tab=pending`, color: 'text-red-700' }
+  ];
+</script>
+
+<div class="space-y-6">
+  <!-- 인사말 -->
+  <div>
+    <h1 class="text-xl font-bold">{greeting}, {data.userName}님</h1>
+    <p class="text-sm text-gray-500">{data.currentTenant.name}</p>
+  </div>
+
+  <!-- 6카드 -->
+  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+    {#each cards as card (card.key)}
+      <a href={card.href} class="rounded-lg border bg-white p-4 transition hover:shadow">
+        <p class="text-2xl font-bold {card.color}">{card.count}</p>
+        <p class="text-xs text-gray-500">{card.label}</p>
+      </a>
+    {/each}
+  </div>
+
+  <!-- 즐겨찾기 -->
+  {#if data.favorites.length > 0}
+    <section class="rounded-lg border bg-white p-4">
+      <h2 class="mb-2 text-sm font-semibold">즐겨찾기 결재선</h2>
+      {#each data.favorites as fav (fav.id)}
+        <div class="flex items-center justify-between border-b py-1.5 last:border-b-0">
+          <span class="text-sm">{fav.name}</span>
+        </div>
+      {/each}
+    </section>
+  {/if}
+
+  <!-- 부재 현황 -->
+  {#if data.absentMembers.length > 0}
+    <section class="rounded-lg border bg-white p-4">
+      <h2 class="mb-2 text-sm font-semibold">부재 현황</h2>
+      {#each data.absentMembers as m, i (i)}
+        <p class="text-sm text-gray-600">{m.name} → 대결: {m.proxyName}</p>
+      {/each}
+    </section>
+  {/if}
+
+  <!-- 빠른 기안 -->
+  {#if data.forms.length > 0}
+    <section class="rounded-lg border bg-white p-4">
+      <h2 class="mb-2 text-sm font-semibold">새 기안</h2>
+      <div class="flex flex-wrap gap-2">
+        {#each data.forms as f (f.code)}
+          <a href="/t/{slug}/approval/drafts/new/{f.code}" class="rounded border px-3 py-1.5 text-sm hover:bg-gray-50">
+            {f.name}
+          </a>
+        {/each}
+      </div>
+    </section>
+  {/if}
+</div>
