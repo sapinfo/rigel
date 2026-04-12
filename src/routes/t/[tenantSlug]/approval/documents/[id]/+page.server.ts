@@ -317,6 +317,48 @@ export const actions: Actions = {
     return { ok: true };
   },
 
+  // v2.3 M3: 문서 이관 (관리자만)
+  transfer: async ({ request, locals, params }) => {
+    if (!locals.user) return fail(401);
+    const currentTenant = await resolveTenant(locals.supabase, locals.user.id, params.tenantSlug);
+    if (!currentTenant) return fail(404);
+
+    // admin 체크
+    const { data: membership } = await locals.supabase
+      .from('tenant_members')
+      .select('role')
+      .eq('tenant_id', currentTenant.id)
+      .eq('user_id', locals.user.id)
+      .maybeSingle();
+
+    if (!membership || !['owner', 'admin'].includes(membership.role as string)) {
+      return fail(403, { actionError: '관리자만 문서를 이관할 수 있습니다' });
+    }
+
+    const fd = await request.formData();
+    const newDrafterId = fd.get('newDrafterId')?.toString();
+    if (!newDrafterId) return fail(400, { actionError: '이관 대상 사용자를 선택하세요' });
+
+    const { error: err } = await locals.supabase
+      .from('approval_documents')
+      .update({ drafter_id: newDrafterId })
+      .eq('id', params.id)
+      .eq('tenant_id', currentTenant.id);
+
+    if (err) return fail(400, { actionError: err.message || '이관 실패' });
+
+    // 감사 로그
+    await locals.supabase.from('approval_audit_logs').insert({
+      tenant_id: currentTenant.id,
+      document_id: params.id,
+      actor_id: locals.user.id,
+      action: 'submit',
+      payload: { type: 'transfer', new_drafter_id: newDrafterId }
+    });
+
+    return { transferred: true };
+  },
+
   // v2.2 M4: 합의 동의
   agree: async ({ request, locals, params }) => {
     if (!locals.user) return fail(401);

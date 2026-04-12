@@ -1,6 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import DocumentHeader from '$lib/components/DocumentHeader.svelte';
+  import StampLine from '$lib/components/StampLine.svelte';
   import FormRenderer from '$lib/components/FormRenderer.svelte';
   import ApprovalLine from '$lib/components/ApprovalLine.svelte';
   import DocumentSteps from '$lib/components/DocumentSteps.svelte';
@@ -67,6 +68,19 @@
 
   <!-- 결재선 (read-only) -->
   <section class="rounded-lg border bg-white p-6">
+    <!-- v2.3 M1: StampLine (가로 도장) -->
+    <div class="mb-4">
+      <StampLine
+        steps={data.steps.map((s) => ({
+          name: s.approver_name,
+          title: '',
+          status: (s.status === 'approved' ? 'approved' : s.status === 'rejected' ? 'rejected' : s.status === 'skipped' ? 'skipped' : 'pending'),
+          stepType: s.step_type ?? 'approval'
+        }))}
+        drafterName={data.document.drafter_name}
+      />
+    </div>
+
     <ApprovalLine line={data.approvalLineReadonly} members={membersForLine} editable={false} />
     <DocumentSteps steps={data.steps} />
   </section>

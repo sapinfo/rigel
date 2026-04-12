@@ -151,9 +151,22 @@
           {/if}
         </div>
 
+        <a href={`/t/${data.currentTenant.slug}`} class="hover:underline">대시보드</a>
         <a href={`/t/${data.currentTenant.slug}/approval/inbox`} class="hover:underline">결재함</a>
         {#if data.currentTenant.role === 'owner' || data.currentTenant.role === 'admin'}
-          <a href={`/t/${data.currentTenant.slug}/admin/members`} class="hover:underline">관리</a>
+          <div class="group relative">
+            <button type="button" class="hover:underline">관리 ▾</button>
+            <div class="absolute right-0 top-full z-10 hidden min-w-40 rounded-lg border bg-white py-1 shadow-lg group-hover:block">
+              <a href={`/t/${data.currentTenant.slug}/admin/members`} class="block px-3 py-1.5 text-sm hover:bg-gray-50">멤버</a>
+              <a href={`/t/${data.currentTenant.slug}/admin/org`} class="block px-3 py-1.5 text-sm hover:bg-gray-50">조직 관리</a>
+              <a href={`/t/${data.currentTenant.slug}/admin/forms`} class="block px-3 py-1.5 text-sm hover:bg-gray-50">양식</a>
+              <a href={`/t/${data.currentTenant.slug}/admin/approval-rules`} class="block px-3 py-1.5 text-sm hover:bg-gray-50">결재선 규칙</a>
+              <a href={`/t/${data.currentTenant.slug}/admin/approval-templates`} class="block px-3 py-1.5 text-sm hover:bg-gray-50">결재선 템플릿</a>
+              <a href={`/t/${data.currentTenant.slug}/admin/delegations`} class="block px-3 py-1.5 text-sm hover:bg-gray-50">전결 규칙</a>
+              <a href={`/t/${data.currentTenant.slug}/admin/absences`} class="block px-3 py-1.5 text-sm hover:bg-gray-50">부재 관리</a>
+              <a href={`/t/${data.currentTenant.slug}/admin/audit`} class="block px-3 py-1.5 text-sm hover:bg-gray-50">감사 로그</a>
+            </div>
+          </div>
         {/if}
         <form method="POST" action="/logout" class="inline">
           <button type="submit" class="text-gray-500 hover:text-gray-900">로그아웃</button>
@@ -201,13 +214,14 @@
         </a>
       {/each}
       {#if data.currentTenant.role === 'owner' || data.currentTenant.role === 'admin'}
-        <a
-          href={`/t/${data.currentTenant.slug}/admin/members`}
-          class="block rounded px-3 py-2 text-sm hover:bg-gray-50"
-          onclick={closeMobileNav}
-        >
-          관리
-        </a>
+        <div class="text-xs font-medium text-gray-400 mt-2">관리</div>
+        {#each [
+          ['members', '멤버'], ['org', '조직 관리'], ['forms', '양식'],
+          ['approval-rules', '결재선 규칙'], ['approval-templates', '결재선 템플릿'],
+          ['delegations', '전결 규칙'], ['absences', '부재 관리'], ['audit', '감사 로그']
+        ] as [path, label] (path)}
+          <a href={`/t/${data.currentTenant.slug}/admin/${path}`} class="block rounded px-3 py-1.5 text-sm hover:bg-gray-50" onclick={closeMobileNav}>{label}</a>
+        {/each}
       {/if}
       <form method="POST" action="/logout">
         <button type="submit" class="block w-full rounded px-3 py-2 text-left text-sm text-gray-500 hover:bg-gray-50">

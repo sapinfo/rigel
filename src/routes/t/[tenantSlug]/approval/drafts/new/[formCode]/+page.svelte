@@ -3,6 +3,9 @@
   import { untrack } from 'svelte';
   import FormRenderer from '$lib/components/FormRenderer.svelte';
   import ApprovalLine from '$lib/components/ApprovalLine.svelte';
+  import StampLine from '$lib/components/StampLine.svelte';
+  import type { StampStep } from '$lib/components/StampLine.svelte';
+  import OrgTreePicker from '$lib/components/OrgTreePicker.svelte';
   import type { ApprovalLineItem } from '$lib/types/approval';
   import type { UploadedAttachment } from '$lib/client/uploadAttachment';
 
@@ -20,6 +23,8 @@
   let urgency = $state('일반');
   let isPostFacto = $state(false);
   let postFactoReason = $state('');
+  let retentionPeriod = $state('5년');
+  let securityLevel = $state('일반');
 
   // 임시저장된 문서 ID
   let documentId = $state<string | null>(null);
@@ -35,6 +40,9 @@
   // 제출 상태
   let submittingSave = $state(false);
   let submittingSubmit = $state(false);
+
+  // v2.3 M2: OrgTreePicker
+  let showOrgPicker = $state(false);
 
   // 즐겨찾기 저장 다이얼로그
   let showFavDialog = $state(false);
@@ -93,6 +101,28 @@
       {#if urgency === '긴급'}
         <span class="rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">긴급 문서</span>
       {/if}
+
+      <!-- 보관기한 -->
+      <label class="flex items-center gap-2">
+        <span class="text-sm text-gray-600">보관기한</span>
+        <select bind:value={retentionPeriod} class="rounded border px-2 py-1 text-sm">
+          <option value="1년">1년</option>
+          <option value="3년">3년</option>
+          <option value="5년">5년</option>
+          <option value="10년">10년</option>
+          <option value="영구">영구</option>
+        </select>
+      </label>
+
+      <!-- 보안등급 -->
+      <label class="flex items-center gap-2">
+        <span class="text-sm text-gray-600">보안등급</span>
+        <select bind:value={securityLevel} class="rounded border px-2 py-1 text-sm">
+          <option value="일반">일반</option>
+          <option value="대외비">대외비</option>
+          <option value="비밀">비밀</option>
+        </select>
+      </label>
 
       <!-- 후결 -->
       <label class="flex items-center gap-2">
@@ -216,27 +246,39 @@
       <p class="mb-3 text-xs text-amber-600">{previewError}</p>
     {/if}
 
-    <!-- StampLine 프리뷰 (M9) -->
+    <!-- StampLine 프리뷰 (v2.3 M1 — 컴포넌트) -->
     {#if approvalLine.length > 0}
-      <div class="mb-3 overflow-x-auto">
-        <div class="inline-flex text-center">
-          <div class="flex flex-col items-center border px-3 py-1.5 bg-blue-50">
-            <span class="text-[10px] text-gray-500">기안</span>
-            <span class="text-xs font-medium">나</span>
-          </div>
-          {#each approvalLine as item, i (i)}
-            {@const m = data.members.find(p => p.id === item.userId)}
-            <div class="flex flex-col items-center border-t border-b border-r px-3 py-1.5">
-              <span class="text-[10px] text-gray-500">{item.stepType === 'reference' ? '참조' : '결재'}</span>
-              <span class="text-xs font-medium">{m?.displayName ?? '(알 수 없음)'}</span>
-              <span class="text-[10px] text-gray-400">{m?.jobTitle ?? ''}</span>
-            </div>
-          {/each}
-        </div>
+      {@const stampSteps: StampStep[] = approvalLine.map((item) => {
+        const m = data.members.find(p => p.id === item.userId);
+        return { name: m?.displayName ?? '(알 수 없음)', title: m?.jobTitle ?? '', status: 'pending' as const, stepType: item.stepType };
+      })}
+      <div class="mb-3">
+        <StampLine steps={stampSteps} drafterName="나" />
+      </div>
+    {/if}
+
+    <!-- v2.3 M2: OrgTreePicker 토글 -->
+    {#if showOrgPicker}
+      <div class="mb-3">
+        <OrgTreePicker
+          departments={data.departments ?? []}
+          members={data.members.map(m => ({ id: m.id, displayName: m.displayName, email: m.email, departmentId: m.departmentId, jobTitle: m.jobTitle }))}
+          onSelect={(m) => {
+            if (!approvalLine.some(item => item.userId === m.id)) {
+              approvalLine = [...approvalLine, { userId: m.id, stepType: 'approval' }];
+            }
+          }}
+          onClose={() => showOrgPicker = false}
+        />
       </div>
     {/if}
 
     <!-- 결재선 편집 -->
+    <div class="mb-2 flex items-center gap-2">
+      <button type="button" onclick={() => showOrgPicker = !showOrgPicker} class="text-xs text-blue-600 hover:underline">
+        {showOrgPicker ? '조직도 닫기' : '조직도에서 선택'}
+      </button>
+    </div>
     <ApprovalLine line={approvalLine} members={data.members} editable onChange={(next) => (approvalLine = next)} />
   </section>
 
@@ -285,6 +327,8 @@
       formData.set('approvalLine', JSON.stringify(approvalLine));
       formData.set('attachmentIds', JSON.stringify(collectAttachmentIds()));
       formData.set('urgency', urgency);
+      formData.set('retentionPeriod', retentionPeriod);
+      formData.set('securityLevel', securityLevel);
       if (isPostFacto) { formData.set('reason', postFactoReason); }
       else if (documentId) { formData.set('documentId', documentId); }
       submittingSubmit = true;

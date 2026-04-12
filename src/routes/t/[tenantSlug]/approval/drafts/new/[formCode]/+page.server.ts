@@ -92,6 +92,13 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
     };
   });
 
+  // v2.3 M2: 부서 (OrgTreePicker용)
+  const { data: deptRows } = await locals.supabase
+    .from('departments')
+    .select('id, name, parent_id')
+    .eq('tenant_id', currentTenant.id)
+    .order('sort_order').order('name');
+
   // v2.2 M1: 즐겨찾기
   const { data: favRows } = await locals.supabase
     .from('approval_line_favorites')
@@ -118,6 +125,7 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
       defaultApprovalLine: (form.default_approval_line as unknown as ApprovalLineItem[]) ?? []
     },
     members,
+    departments: (deptRows ?? []).map((d) => ({ id: d.id as string, name: d.name as string, parentId: (d.parent_id as string | null) ?? null })),
     favorites: (favRows ?? []).map((f) => ({
       id: f.id as string,
       name: f.name as string,
@@ -287,13 +295,15 @@ export const actions: Actions = {
       return fail(400, { errors: formError(rpcErr.message || '상신 실패') });
     }
 
-    // v2.2 M7: urgency 저장
+    // v2.2 M7 + v2.3 M4: 메타데이터 저장
     const urgency = fd.get('urgency')?.toString() ?? '일반';
-    if (urgency !== '일반' && doc) {
+    const retentionPeriod = fd.get('retentionPeriod')?.toString() ?? '5년';
+    const securityLevel = fd.get('securityLevel')?.toString() ?? '일반';
+    if (doc && (urgency !== '일반' || retentionPeriod !== '5년' || securityLevel !== '일반')) {
       const docId = (doc as unknown as { id: string }).id;
       await locals.supabase
         .from('approval_documents')
-        .update({ urgency })
+        .update({ urgency, retention_period: retentionPeriod, security_level: securityLevel })
         .eq('id', docId);
     }
 
