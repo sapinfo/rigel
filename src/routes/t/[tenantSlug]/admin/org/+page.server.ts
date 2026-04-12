@@ -273,6 +273,18 @@ export const actions: Actions = {
 		const id = fd.get('id')?.toString();
 		if (!id) return fail(400);
 
+		// G6: 할당된 멤버 존재 확인
+		const { data: assigned } = await locals.supabase
+			.from('tenant_members')
+			.select('user_id')
+			.eq('tenant_id', tenant.id)
+			.eq('job_title_id', id)
+			.limit(1);
+
+		if (assigned && assigned.length > 0) {
+			return fail(400, { errors: formError('이 직급에 할당된 멤버가 있어 삭제할 수 없습니다. 먼저 멤버의 직급을 변경하세요.') });
+		}
+
 		const { error: err } = await locals.supabase
 			.from('job_titles')
 			.delete()
