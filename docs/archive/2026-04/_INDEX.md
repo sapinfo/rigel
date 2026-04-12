@@ -2,8 +2,25 @@
 
 | Feature | Status | Match | Archived | Path |
 |---|---|---|---|---|
+| 전자결재-v1.3-realtime-notification | completed | 91% | 2026-04-12 | [전자결재-v1.3-realtime-notification/](./전자결재-v1.3-realtime-notification/) |
 | 전자결재-v1.2-parallel-pdf-hash-signature | completed | 90% | 2026-04-11 | [전자결재-v1.2-parallel-pdf-hash-signature/](./전자결재-v1.2-parallel-pdf-hash-signature/) |
 | 전자결재-v1.1-korean-exceptions | completed | 94% | 2026-04-11 | [전자결재-v1.1-korean-exceptions/](./전자결재-v1.1-korean-exceptions/) |
+
+## 전자결재-v1.3-realtime-notification
+
+v1.2.0 (`8b60fb6`) → **v1.3.0** (`3cefc57`)
+
+실시간 알림·이메일·반응형·PWA — "놓치지 않는 결재"
+
+**산출물**:
+- [plan.md](./전자결재-v1.3-realtime-notification/전자결재-v1.3-realtime-notification.plan.md) — Plan Plus
+- [design.md](./전자결재-v1.3-realtime-notification/전자결재-v1.3-realtime-notification.design.md) — Realtime/Edge Function/PWA 명세
+- [analysis.md](./전자결재-v1.3-realtime-notification/전자결재-v1.3-realtime-notification.analysis.md) — Match Rate 91% (79%→91%, 1 iteration)
+- [report.md](./전자결재-v1.3-realtime-notification/전자결재-v1.3-realtime-notification.report.md) — 완료 보고서
+
+**핵심 메트릭**: 3 migrations (0038~0040) · NotificationBell/Dropdown · Edge Function · PWA · 반응형 햄버거
+
+---
 
 ## 전자결재-v1.2-parallel-pdf-hash-signature
 

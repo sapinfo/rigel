@@ -5,11 +5,12 @@
 ## 프로젝트 정체성
 
 - **Rigel**: 한국형 SMB용 multi-tenant 전자결재 SaaS
-- **현재 상태**: **v1.2.0** 병렬/PDF/해시/서명 완료 (commit `8b60fb6`)
+- **현재 상태**: **v1.3.0** Realtime/이메일/모바일 완료 (commit `3cefc57`)
   - v1.0.0 (`d957381`): Shippable Core (25 smoke, match 100%)
   - v1.1.0 (`cb703d7`): 전결/대결/후결/부재자동 (13/15 smoke, match 94%)
   - v1.2.0 (`8b60fb6`): 병렬결재/PDF/해시/서명 (33+ Vitest, match 90%)
-- **Phased 로드맵**: v1.0 ✅ → v1.1 ✅ → v1.2 ✅ → v1.3(Realtime/이메일/모바일) → v2(빌더)
+  - v1.3.0 (`3cefc57`): Realtime 알림/이메일/반응형/PWA (match 91%)
+- **Phased 로드맵**: v1.0 ✅ → v1.1 ✅ → v1.2 ✅ → v1.3 ✅ → v2(빌더)
 
 ## Stack (변경 금지)
 
@@ -142,6 +143,11 @@ supabase/migrations/                # 0001~0037
 | 단계 | 파일 |
 |---|---|
 | All | `docs/archive/2026-04/전자결재-v1.2-parallel-pdf-hash-signature/` — Match 90% |
+
+### v1.3 (archived)
+| 단계 | 파일 |
+|---|---|
+| All | `docs/archive/2026-04/전자결재-v1.3-realtime-notification/` — Match 91% |
 
 ### 공통
 | 자료 | 파일 |
