@@ -78,6 +78,14 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 	const profileMap = await fetchProfilesByIds(locals.supabase, [userId]);
 	const userName = profileMap.get(userId)?.display_name ?? '사용자';
 
+	// 6. 양식 목록 (빠른 기안용)
+	const { data: formRows } = await locals.supabase
+		.from('approval_forms')
+		.select('code, name')
+		.eq('tenant_id', tenantId)
+		.eq('is_published', true)
+		.order('name');
+
 	return {
 		userName,
 		counts: {
@@ -89,6 +97,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		},
 		urgentCount: urgentCount ?? 0,
 		favorites: (favRows ?? []).map((f) => ({ id: f.id as string, name: f.name as string })),
-		absentMembers
+		absentMembers,
+		forms: (formRows ?? []).map((f) => ({ code: f.code as string, name: f.name as string }))
 	};
 };

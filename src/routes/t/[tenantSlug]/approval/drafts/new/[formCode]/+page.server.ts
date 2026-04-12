@@ -287,6 +287,16 @@ export const actions: Actions = {
       return fail(400, { errors: formError(rpcErr.message || '상신 실패') });
     }
 
+    // v2.2 M7: urgency 저장
+    const urgency = fd.get('urgency')?.toString() ?? '일반';
+    if (urgency !== '일반' && doc) {
+      const docId = (doc as unknown as { id: string }).id;
+      await locals.supabase
+        .from('approval_documents')
+        .update({ urgency })
+        .eq('id', docId);
+    }
+
     redirect(303, `/t/${currentTenant.slug}/approval/inbox`);
   },
 
