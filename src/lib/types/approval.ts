@@ -94,6 +94,9 @@ export type StepType = 'approval' | 'reference';
 export interface ApprovalLineItem {
   userId: string;
   stepType: StepType;
+  // v1.2: 병렬 그룹 pointer. undefined/미지정 시 순차 (step_index 기반 자동 할당).
+  // 같은 groupOrder 를 가진 item 들은 병렬로 처리됨 (AND-only 완료 조건).
+  groupOrder?: number;
 }
 
 // ─── Documents ────────────────────────────────────
@@ -116,7 +119,12 @@ export interface ApprovalDocument {
   content: Record<string, unknown>;
   drafterId: string;
   status: DocumentStatus;
+  // v1.2 의미 재정의: "current group_order pointer". v1.0/v1.1 순차 문서는
+  // group_order = step_index 이므로 기존 시맨틱과 값 동일.
   currentStepIndex: number;
+  // v1.2: SHA-256(hex) of JCS-canonicalized payload. NULL for pre-v1.2 docs;
+  // v1.2+ submissions RPC 가 NOT NULL 강제.
+  contentHash: string | null;
   submittedAt: string | null;
   completedAt: string | null;
   createdAt: string;
@@ -128,6 +136,9 @@ export interface ApprovalStep {
   tenantId: string;
   documentId: string;
   stepIndex: number;
+  // v1.2 M15: 병렬 그룹 pointer. 동일 값 = 병렬, 증가 = 순차.
+  // 기존 v1.0/v1.1 rows 는 group_order = step_index 로 backfill 됨.
+  groupOrder: number;
   stepType: StepType;
   approverUserId: string;
   status: StepStatus;
@@ -145,6 +156,8 @@ export interface ApprovalAttachment {
   fileName: string;
   mime: string;
   size: number;
+  // v1.2: 클라이언트에서 crypto.subtle.digest('SHA-256') 로 계산. NULL for pre-v1.2 rows.
+  sha256: string | null;
   uploadedBy: string;
   uploadedAt: string;
 }
@@ -190,6 +203,9 @@ export interface ProfileLite {
   email: string;
   departmentId: string | null;
   jobTitle: string | null;
+  // v1.2: 서명이미지 (Storage 경로 + 해시). 미등록 사용자는 둘 다 NULL.
+  signatureStoragePath: string | null;
+  signatureSha256: string | null;
 }
 
 // ─── Inbox ────────────────────────────────────────

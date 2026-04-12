@@ -10,14 +10,17 @@
 
   let { data, form } = $props();
 
-  // ApprovalLine needs ProfileLite[] for display
+  // ApprovalLine needs ProfileLite[] for display.
+  // 이 뷰는 read-only 결재선 표시용이라 서명 메타는 DocumentSteps 에서 사용.
   const membersForLine = $derived<ProfileLite[]>(
     data.steps.map((s) => ({
       id: s.approver_user_id,
       displayName: s.approver_name,
       email: s.approver_email,
       departmentId: null,
-      jobTitle: null
+      jobTitle: null,
+      signatureStoragePath: null,
+      signatureSha256: null
     }))
   );
 </script>

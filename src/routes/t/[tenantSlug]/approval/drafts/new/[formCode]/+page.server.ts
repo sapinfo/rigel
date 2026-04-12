@@ -62,9 +62,17 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
   const { data: profileRows } = userIds.length
     ? await locals.supabase
         .from('profiles')
-        .select('id, display_name, email')
+        .select('id, display_name, email, signature_storage_path, signature_sha256')
         .in('id', userIds)
-    : { data: [] as { id: string; display_name: string; email: string }[] };
+    : {
+        data: [] as {
+          id: string;
+          display_name: string;
+          email: string;
+          signature_storage_path: string | null;
+          signature_sha256: string | null;
+        }[]
+      };
 
   const profileMap = new Map(
     (profileRows ?? []).map((p) => [p.id as string, p])
@@ -77,7 +85,9 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
       displayName: (p?.display_name as string | undefined) ?? '(알 수 없음)',
       email: (p?.email as string | undefined) ?? '',
       departmentId: (row.department_id as string | null) ?? null,
-      jobTitle: (row.job_title as string | null) ?? null
+      jobTitle: (row.job_title as string | null) ?? null,
+      signatureStoragePath: (p?.signature_storage_path as string | null | undefined) ?? null,
+      signatureSha256: (p?.signature_sha256 as string | null | undefined) ?? null
     };
   });
 
