@@ -153,6 +153,7 @@
 
         <a href={`/t/${data.currentTenant.slug}`} class="hover:underline">대시보드</a>
         <a href={`/t/${data.currentTenant.slug}/approval/inbox`} class="hover:underline">결재함</a>
+        <a href={`/t/${data.currentTenant.slug}/leave-calendar`} class="hover:underline">휴가</a>
         {#if data.currentTenant.role === 'owner' || data.currentTenant.role === 'admin'}
           <div class="group relative">
             <button type="button" class="hover:underline">관리 ▾</button>
@@ -197,13 +198,8 @@
       <div class="text-xs text-gray-500">
         {data.currentTenant.name} · {data.currentTenant.role}
       </div>
-      <a
-        href={`/t/${data.currentTenant.slug}/approval/inbox`}
-        class="block rounded px-3 py-2 text-sm hover:bg-gray-50"
-        onclick={closeMobileNav}
-      >
-        결재함
-      </a>
+      <a href={`/t/${data.currentTenant.slug}/approval/inbox`} class="block rounded px-3 py-2 text-sm hover:bg-gray-50" onclick={closeMobileNav}>결재함</a>
+      <a href={`/t/${data.currentTenant.slug}/leave-calendar`} class="block rounded px-3 py-2 text-sm hover:bg-gray-50" onclick={closeMobileNav}>휴가 캘린더</a>
       {#each data.forms as form (form.code)}
         <a
           href={`/t/${data.currentTenant.slug}/approval/drafts/new/${form.code}`}
