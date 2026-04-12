@@ -2,6 +2,7 @@
 
 | Feature | Status | Match | Archived | Path |
 |---|---|---|---|---|
+| 결재선-v2.2-실무완성 | completed | 93% | 2026-04-12 | [결재선-v2.2-실무완성/](./결재선-v2.2-실무완성/) |
 | 결재선-v2.1-보강 | completed | 93% | 2026-04-12 | [결재선-v2.1-보강/](./결재선-v2.1-보강/) |
 | 전자결재-v2.0-builder | completed | 78% | 2026-04-12 | [전자결재-v2.0-builder/](./전자결재-v2.0-builder/) |
 | 전자결재-v1.3-realtime-notification | completed | 91% | 2026-04-12 | [전자결재-v1.3-realtime-notification/](./전자결재-v1.3-realtime-notification/) |
