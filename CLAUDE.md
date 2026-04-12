@@ -5,13 +5,15 @@
 ## 프로젝트 정체성
 
 - **Rigel**: 한국형 SMB용 multi-tenant 전자결재 SaaS
-- **현재 상태**: **v1.3.0** Realtime/이메일/모바일 완료 (commit `3cefc57`)
+- **현재 상태**: **v2.2.0** 실무완성 완료 (commit `af0af3c`)
   - v1.0.0 (`d957381`): Shippable Core (25 smoke, match 100%)
   - v1.1.0 (`cb703d7`): 전결/대결/후결/부재자동 (13/15 smoke, match 94%)
   - v1.2.0 (`8b60fb6`): 병렬결재/PDF/해시/서명 (33+ Vitest, match 90%)
   - v1.3.0 (`3cefc57`): Realtime 알림/이메일/반응형/PWA (match 91%)
   - v2.0.0 (`f1e9a17`): 양식 빌더/결재선 규칙/버전 관리/조건부 필드 (match 78%)
-- **Phased 로드맵**: v1.0 ✅ → v1.1 ✅ → v1.2 ✅ → v1.3 ✅ → v2.0 ✅ → v2.1(빌더 보강)
+  - v2.1.0 (`e8f5f5e`): RuleBuilder GUI/OrgTree/프리뷰/시뮬레이터 (match 93%)
+  - v2.2.0 (`af0af3c`): 즐겨찾기/일괄결재/합의/대시보드/감사로그 등 12 마일스톤 (match 93%)
+- **Phased 로드맵**: v1.0 ✅ → v1.1 ✅ → v1.2 ✅ → v1.3 ✅ → v2.0 ✅ → v2.1 ✅ → v2.2 ✅ → v2.3(리치에디터/휴가캘린더)
 
 ## Stack (변경 금지)
 
@@ -119,11 +121,15 @@ src/
         │   ├── inbox/              # 5탭 (in_progress + pending_post_facto 포함)
         │   ├── drafts/new/[formCode]/  # 후결 토글 + reason
         │   └── documents/[id]/     # 승인/반려/회수/코멘트 + 대리/전결 배지
+        ├── +page.svelte              # v2.2 대시보드 (6카드+즐겨찾기+부재)
         └── admin/
-            ├── forms/ members/ org/      # v1.0 관리
+            ├── forms/ members/ org/      # v1.0 관리 (org: v2.1 3탭 개편)
             ├── delegations/              # v1.1 전결 규칙 CRUD
-            └── absences/                 # v1.1 멤버 부재 관리
-supabase/migrations/                # 0001~0037
+            ├── absences/                 # v1.1 멤버 부재 관리
+            ├── approval-rules/           # v2.1 규칙 빌더 GUI + 시뮬레이터
+            ├── approval-templates/       # v2.2 결재선 템플릿 CRUD
+            └── audit/                    # v2.2 감사 로그 뷰어
+supabase/migrations/                # 0001~0052c
 ```
 
 ## PDCA 문서 위치
@@ -149,6 +155,21 @@ supabase/migrations/                # 0001~0037
 | 단계 | 파일 |
 |---|---|
 | All | `docs/archive/2026-04/전자결재-v1.3-realtime-notification/` — Match 91% |
+
+### v2.0 (archived)
+| 단계 | 파일 |
+|---|---|
+| All | `docs/archive/2026-04/전자결재-v2.0-builder/` — Match 78% |
+
+### v2.1 (archived)
+| 단계 | 파일 |
+|---|---|
+| All | `docs/archive/2026-04/결재선-v2.1-보강/` — Match 93% |
+
+### v2.2 (archived)
+| 단계 | 파일 |
+|---|---|
+| All | `docs/archive/2026-04/결재선-v2.2-실무완성/` — Match 93% |
 
 ### 공통
 | 자료 | 파일 |
@@ -201,6 +222,22 @@ memory `project_rigel.md`의 "v1.1 완료" 섹션 참조. 잔여 작업:
 **v1.2 신규 scope**: 병렬결재(parallel_groups) + PDF 출력 + 본문 해시 + 서명이미지. 새 migration은 `0031~`.
 
 **모든 v1.0/v1.1 규칙 그대로 적용**.
+
+## v2.2 핵심 추가 사항
+
+| 항목 | 값 | 출처 |
+|---|---|---|
+| agreement step type | `StepType = 'approval' \| 'agreement' \| 'reference'` | 0052c |
+| fn_agree_step | agreed → advance, disagreed → rejected | 0052c |
+| audit_action 확장 | `agreed`, `disagreed` 추가 | 0052b |
+| urgency 컬럼 | `approval_documents.urgency DEFAULT '일반'` | 0051 |
+| 즐겨찾기 테이블 | `approval_line_favorites` (user RLS) | 0049 |
+| 템플릿 테이블 | `approval_line_templates` (admin RLS) | 0050 |
+| 대시보드 | `/t/[slug]/+page` (6카드 + 즐겨찾기 + 부재) | 신규 |
+| 기안 레이아웃 | 문서설정 → 결재선 → 내용 순서 | v2.2 M12 |
+| 일괄 결재 | inbox batchApprove/batchReject | v2.2 M3 |
+| 재기안 | documents/[id] resubmit action | v2.2 M5 |
+| 독촉 | documents/[id] remind action | v2.2 M6 |
 
 ## 주의
 
