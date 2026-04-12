@@ -9,6 +9,7 @@
     errors?: Record<string, string>;
     readonly?: boolean;
     onChange: (next: Record<string, unknown>) => void;
+    onHiddenChange?: (ids: Set<string>) => void;  // v2.1 M7
   };
 
   let {
@@ -17,7 +18,8 @@
     value,
     errors = {},
     readonly = false,
-    onChange
+    onChange,
+    onHiddenChange
   }: Props = $props();
 
   function updateField(id: string, next: unknown) {
@@ -46,6 +48,11 @@
       }
     }
     return hidden;
+  });
+
+  // v2.1 M7: 숨겨진 필드 변경 시 부모에 알림
+  $effect(() => {
+    onHiddenChange?.(hiddenFieldIds);
   });
 </script>
 

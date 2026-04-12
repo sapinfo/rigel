@@ -1,9 +1,11 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { dndzone } from 'svelte-dnd-action';
   import FieldPalette from './FieldPalette.svelte';
   import FieldEditor from './FieldEditor.svelte';
   import FormRenderer from './FormRenderer.svelte';
-  import type { FormField, FormFieldType, FormSchema } from '$lib/types/approval';
+  import ConditionalsEditor from './ConditionalsEditor.svelte';
+  import type { ConditionalRule, FormField, FormFieldType, FormSchema } from '$lib/types/approval';
 
   type Props = {
     initialSchema: FormSchema;
@@ -18,11 +20,12 @@
   );
   let selectedIndex = $state<number | null>(null);
   let previewMode = $state(false);
+  let conditionals = $state<ConditionalRule[]>(untrack(() => [...(initialSchema.conditionals ?? [])]));
 
   const schema = $derived<FormSchema>({
     version: 1,
     fields: fields.map(({ dndId, ...rest }) => rest as FormField),
-    conditionals: initialSchema.conditionals
+    conditionals: conditionals.length > 0 ? conditionals : undefined
   });
 
   const previewValue = $derived<Record<string, unknown>>(
@@ -132,8 +135,8 @@
     {/if}
   </div>
 
-  <!-- Right: Field Editor -->
-  <div class="w-64 flex-shrink-0">
+  <!-- Right: Field Editor + Conditionals -->
+  <div class="w-64 flex-shrink-0 space-y-4">
     {#if selectedIndex !== null && fields[selectedIndex]}
       <FieldEditor
         field={fields[selectedIndex]}
@@ -145,5 +148,14 @@
         필드를 선택하면 설정을 편집할 수 있습니다
       </div>
     {/if}
+
+    <!-- v2.1 M6: 조건부 표시 규칙 -->
+    <div class="rounded-lg border bg-white p-3">
+      <ConditionalsEditor
+        fields={schema.fields}
+        {conditionals}
+        onChange={(next) => conditionals = next}
+      />
+    </div>
   </div>
 </div>

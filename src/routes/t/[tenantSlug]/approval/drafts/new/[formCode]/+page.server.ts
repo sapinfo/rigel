@@ -262,6 +262,86 @@ export const actions: Actions = {
     redirect(303, `/t/${currentTenant.slug}/approval/inbox`);
   },
 
+  // v2.1 M2: 결��선 자동 구성 프리뷰
+  resolvePreview: async ({ request, locals, params }) => {
+    if (!locals.user) return fail(401);
+    const currentTenant = await resolveTenant(
+      locals.supabase,
+      locals.user.id,
+      params.tenantSlug
+    );
+    if (!currentTenant) return fail(404);
+
+    const fd = await request.formData();
+    const formId = fd.get('formId')?.toString();
+    const content = parseJson(fd.get('content'), {} as Record<string, unknown>);
+    if (!formId) return fail(400, { errors: formError('양식 ID 필수') });
+
+    // 1. fn_resolve_approval_line RPC
+    const { data: resolved, error: rpcErr } = await locals.supabase
+      .rpc('fn_resolve_approval_line', {
+        p_tenant_id: currentTenant.id,
+        p_form_id: formId,
+        p_content: content
+      });
+
+    if (rpcErr) {
+      return { preview: { approvers: [], ruleName: null, error: rpcErr.message } };
+    }
+
+    const lineItems = (resolved ?? []) as { userId: string; stepType: string }[];
+    if (lineItems.length === 0) {
+      return { preview: { approvers: [], ruleName: null, error: '매칭되는 결재선 규칙이 없습니다. 관리자에게 문의하세요.' } };
+    }
+
+    // 2. Profile + dept + jobTitle join
+    const userIds = lineItems.map((i) => i.userId);
+
+    const [profilesRes, tmRes, deptsRes, jtsRes] = await Promise.all([
+      locals.supabase.from('profiles').select('id, display_name, email').in('id', userIds),
+      locals.supabase.from('tenant_members').select('user_id, department_id, job_title_id').eq('tenant_id', currentTenant.id).in('user_id', userIds),
+      locals.supabase.from('departments').select('id, name').eq('tenant_id', currentTenant.id),
+      locals.supabase.from('job_titles').select('id, name').eq('tenant_id', currentTenant.id)
+    ]);
+
+    const profileMap = new Map((profilesRes.data ?? []).map((p) => [p.id as string, p]));
+    const tmMap = new Map((tmRes.data ?? []).map((r) => [r.user_id as string, r]));
+    const deptMap = new Map((deptsRes.data ?? []).map((d) => [d.id as string, d.name as string]));
+    const jtMap = new Map((jtsRes.data ?? []).map((j) => [j.id as string, j.name as string]));
+
+    const approvers = lineItems.map((item) => {
+      const p = profileMap.get(item.userId);
+      const tm = tmMap.get(item.userId);
+      return {
+        userId: item.userId,
+        displayName: (p?.display_name as string) ?? '(알 수 없음)',
+        email: (p?.email as string) ?? '',
+        departmentName: tm?.department_id ? (deptMap.get(tm.department_id as string) ?? null) : null,
+        jobTitleName: tm?.job_title_id ? (jtMap.get(tm.job_title_id as string) ?? null) : null,
+        stepType: item.stepType
+      };
+    });
+
+    // 3. 매칭 규칙 이름
+    const { data: matchedRule } = await locals.supabase
+      .from('approval_rules')
+      .select('name')
+      .eq('tenant_id', currentTenant.id)
+      .eq('is_active', true)
+      .or(`form_id.eq.${formId},form_id.is.null`)
+      .order('priority', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    return {
+      preview: {
+        approvers,
+        ruleName: matchedRule?.name ?? null,
+        error: null
+      }
+    };
+  },
+
   // v1.1 M13: 후결 상신 (v1.2 M16b: content_hash 추가)
   submitPostFacto: async ({ request, locals, params }) => {
     if (!locals.user) return fail(401);

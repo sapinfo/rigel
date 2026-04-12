@@ -23,6 +23,14 @@
   let isPostFacto = $state(false);
   let postFactoReason = $state('');
 
+  // v2.1 M2: 결재선 프리뷰
+  let previewInfo = $state<{ approvers: { userId: string; displayName: string; departmentName: string | null; jobTitleName: string | null; stepType: string }[]; ruleName: string | null; error: string | null } | null>(null);
+  let previewError = $state<string | null>(null);
+  let resolving = $state(false);
+
+  // v2.1 M7: 숨겨진 필드 추적
+  let hiddenIds = $state<Set<string>>(new Set());
+
   // 제출 상태
   let submittingSave = $state(false);
   let submittingSubmit = $state(false);
@@ -60,11 +68,70 @@
       value={content}
       errors={form?.errors?.fields ?? {}}
       onChange={(next) => (content = next)}
+      onHiddenChange={(ids) => (hiddenIds = ids)}
     />
   </section>
 
   <!-- 결재선 -->
   <section class="rounded-lg border bg-white p-6">
+    <!-- v2.1 M2: 자동 구성 버튼 -->
+    <div class="mb-3 flex items-center gap-2">
+      <form
+        method="POST"
+        action="?/resolvePreview"
+        use:enhance={({ formData }) => {
+          formData.set('formId', data.form.id);
+          formData.set('content', JSON.stringify(content));
+          resolving = true;
+          return async ({ result, update }) => {
+            if (result.type === 'success' && result.data?.preview) {
+              const preview = result.data.preview as typeof previewInfo;
+              if (preview?.error) {
+                previewError = preview.error;
+                previewInfo = null;
+              } else if (preview) {
+                approvalLine = preview.approvers.map((a) => ({
+                  userId: a.userId,
+                  stepType: a.stepType as 'approval' | 'reference'
+                }));
+                previewInfo = preview;
+                previewError = null;
+              }
+            }
+            resolving = false;
+            await update({ reset: false });
+          };
+        }}
+      >
+        <button
+          type="submit"
+          disabled={resolving}
+          class="rounded border bg-blue-50 px-3 py-1.5 text-sm text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+        >
+          {resolving ? '구성 중…' : '결재선 자동 구성'}
+        </button>
+      </form>
+
+      {#if approvalLine.length > 0}
+        <button
+          type="button"
+          onclick={() => { approvalLine = []; previewInfo = null; previewError = null; }}
+          class="text-xs text-gray-500 hover:underline"
+        >
+          초기화
+        </button>
+      {/if}
+    </div>
+
+    {#if previewInfo && !previewInfo.error}
+      <div class="mb-3 rounded border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+        규칙 "{previewInfo.ruleName ?? '기본'}" 기반 자동 구성 — 수동 편집 가능
+      </div>
+    {/if}
+    {#if previewError}
+      <p class="mb-3 text-sm text-amber-600">{previewError}</p>
+    {/if}
+
     <ApprovalLine
       line={approvalLine}
       members={data.members}
@@ -160,8 +227,11 @@
           cancel();
           return;
         }
+        // v2.1 M7: 숨겨진 필드 값 제거 후 제출
+        const filtered = { ...content };
+        for (const id of hiddenIds) delete filtered[id];
         formData.set('formId', data.form.id);
-        formData.set('content', JSON.stringify(content));
+        formData.set('content', JSON.stringify(filtered));
         formData.set('approvalLine', JSON.stringify(approvalLine));
         formData.set('attachmentIds', JSON.stringify(collectAttachmentIds()));
         if (isPostFacto) {

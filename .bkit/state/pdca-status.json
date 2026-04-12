@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-12T05:12:57.490Z",
+  "lastUpdated": "2026-04-12T06:31:22.783Z",
   "activeFeatures": [
     "approval-mvp",
     "Rigel",
@@ -29,10 +29,38 @@
     "unit",
     "pdf",
     "signature",
-    "send-notification-email"
+    "send-notification-email",
+    "approval-rules"
   ],
-  "primaryFeature": "전자결재-v1.1-korean-exceptions",
+  "primaryFeature": "결재선-v2.1-보강",
   "features": {
+    "결재선-v2.1-보강": {
+      "name": "결재선-v2.1-보강",
+      "displayName": "결재선 v2.1 보강",
+      "phase": "do",
+      "planPath": "docs/01-plan/features/결재선-v2.1-보강.plan.md",
+      "designPath": "docs/02-design/features/결재선-v2.1-보강.design.md",
+      "startedAt": "2026-04-12T12:00:00.000Z",
+      "planCompletedAt": "2026-04-12T12:00:00.000Z",
+      "designCompletedAt": "2026-04-12T12:30:00.000Z",
+      "matchRate": null,
+      "iterationCount": 0,
+      "currentMilestone": null,
+      "milestonesCompleted": [],
+      "scope": {
+        "strategy": "v2.1-ui-enhancement",
+        "stack": "SvelteKit2+Svelte5+SupabaseSSR",
+        "milestones": [
+          "M1-RuleBuilder",
+          "M2-Preview",
+          "M3-OrgTree",
+          "M4-JobTitles",
+          "M5-Simulator",
+          "M6-ConditionalsEditor",
+          "M7-HiddenFilter"
+        ]
+      }
+    },
     "전자결재-v1.1-korean-exceptions": {
       "phase": "archived",
       "matchRate": 94,
@@ -99,9 +127,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-11T15:43:13.234Z",
-        "lastUpdated": "2026-04-12T05:04:45.072Z"
+        "lastUpdated": "2026-04-12T06:16:54.495Z"
       },
-      "lastFile": "/Users/inseokko/Downloads/Rigel/src/lib/components/NotificationBell.svelte"
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/lib/components/FormRenderer.svelte"
     },
     "routes": {
       "phase": "do",
@@ -242,9 +270,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-11T17:08:16.871Z",
-        "lastUpdated": "2026-04-12T02:03:16.412Z"
+        "lastUpdated": "2026-04-12T06:17:20.407Z"
       },
-      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/approval/drafts/new/[formCode]/+page.server.ts"
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/approval/drafts/new/[formCode]/+page.svelte"
     },
     "queries": {
       "phase": "do",
@@ -307,7 +335,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-11T18:03:55.958Z",
-        "lastUpdated": "2026-04-11T18:04:11.850Z"
+        "lastUpdated": "2026-04-12T05:46:47.170Z"
       },
       "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/admin/forms/+page.svelte"
     },
@@ -346,7 +374,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-11T18:07:00.044Z",
-        "lastUpdated": "2026-04-11T18:07:22.082Z"
+        "lastUpdated": "2026-04-12T06:31:22.783Z"
       },
       "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/admin/org/+page.svelte"
     },
@@ -440,6 +468,19 @@
         "lastUpdated": "2026-04-12T05:12:57.490Z"
       },
       "lastFile": "/Users/inseokko/Downloads/Rigel/supabase/functions/send-notification-email/index.ts"
+    },
+    "approval-rules": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-12T05:53:34.710Z",
+        "lastUpdated": "2026-04-12T06:13:57.800Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/admin/approval-rules/+page.svelte"
     }
   },
   "pipeline": {
@@ -466,7 +507,7 @@
   "session": {
     "startedAt": "2026-04-11T13:28:26.710Z",
     "onboardingCompleted": true,
-    "lastActivity": "2026-04-12T05:12:57.490Z"
+    "lastActivity": "2026-04-12T06:31:22.783Z"
   },
   "history": [
     {
@@ -1735,6 +1776,234 @@
     {
       "timestamp": "2026-04-12T05:12:57.490Z",
       "feature": "send-notification-email",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:35:56.014Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:36:09.842Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:36:17.757Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:36:25.085Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:39:09.476Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:39:23.112Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:39:49.484Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:40:51.026Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:41:16.039Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:41:24.960Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:46:47.170Z",
+      "feature": "forms",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:53:34.710Z",
+      "feature": "approval-rules",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:53:59.178Z",
+      "feature": "approval-rules",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:10:10.328Z",
+      "feature": "org",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:11:08.831Z",
+      "feature": "org",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:11:37.483Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:12:19.583Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:13:03.932Z",
+      "feature": "approval-rules",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:13:57.800Z",
+      "feature": "approval-rules",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:14:39.475Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:14:47.006Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:15:01.956Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:15:38.248Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:15:54.492Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:16:01.976Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:16:14.347Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:16:19.797Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:16:26.042Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:16:34.121Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:16:46.917Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:16:54.495Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:17:04.623Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:17:12.397Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:17:20.407Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:17:57.064Z",
+      "feature": "org",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:18:05.170Z",
+      "feature": "org",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:18:17.344Z",
+      "feature": "org",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T06:31:22.783Z",
+      "feature": "org",
       "phase": "do",
       "action": "updated"
     }
