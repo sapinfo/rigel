@@ -1,7 +1,10 @@
 <script lang="ts">
+  import { page } from '$app/state';
+
   let { data, children } = $props();
 
   let newDraftOpen = $state(false);
+  const printMode = $derived(page.url.searchParams.get('print') === '1');
 
   function closeDropdown() {
     newDraftOpen = false;
@@ -10,6 +13,7 @@
 
 <svelte:window onclick={closeDropdown} />
 
+{#if !printMode}
 <header class="border-b bg-white">
   <div class="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
     <div class="flex items-center gap-4">
@@ -66,7 +70,8 @@
     </nav>
   </div>
 </header>
+{/if}
 
-<div class="mx-auto max-w-6xl px-6 py-8">
+<div class:mx-auto={!printMode} class:max-w-6xl={!printMode} class:px-6={!printMode} class:py-8={!printMode}>
   {@render children?.()}
 </div>

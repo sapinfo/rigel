@@ -7,8 +7,10 @@
   import AuditTimeline from '$lib/components/AuditTimeline.svelte';
   import ApprovalPanel from '$lib/components/ApprovalPanel.svelte';
   import type { ProfileLite } from '$lib/types/approval';
+  import { page } from '$app/state';
 
   let { data, form } = $props();
+  const printMode = $derived(page.url.searchParams.get('print') === '1');
 
   // ApprovalLine needs ProfileLite[] for display.
   // 이 뷰는 read-only 결재선 표시용이라 서명 메타는 DocumentSteps 에서 사용.
@@ -26,16 +28,18 @@
 </script>
 
 <div class="flex flex-col gap-6">
-  <DocumentHeader
-    docNumber={data.document.doc_number}
-    formName={data.document.form_name}
-    status={data.document.status}
-    drafterName={data.document.drafter_name}
-    submittedAt={data.document.submitted_at}
-    completedAt={data.document.completed_at}
-  />
+  {#if !printMode}
+    <DocumentHeader
+      docNumber={data.document.doc_number}
+      formName={data.document.form_name}
+      status={data.document.status}
+      drafterName={data.document.drafter_name}
+      submittedAt={data.document.submitted_at}
+      completedAt={data.document.completed_at}
+    />
+  {/if}
 
-  {#if form?.actionError}
+  {#if !printMode && form?.actionError}
     <p class="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
       {form.actionError}
     </p>
@@ -66,18 +70,30 @@
     <DocumentSteps steps={data.steps} />
   </section>
 
-  <!-- 결재 액션 패널 -->
-  {#if data.canApprove || data.canWithdraw || data.canComment}
-    <ApprovalPanel
-      canApprove={data.canApprove}
-      canWithdraw={data.canWithdraw}
-      canComment={data.canComment}
-      isProxyApproval={data.isProxyApproval}
-    />
-  {/if}
+  {#if !printMode}
+    <!-- PDF 다운로드 버튼 -->
+    <div class="flex justify-end">
+      <a
+        href="/t/{page.params.tenantSlug}/approval/documents/{data.document.id}/pdf"
+        class="inline-flex items-center gap-2 rounded-lg border bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+      >
+        PDF 다운로드
+      </a>
+    </div>
 
-  <!-- 이력 -->
-  <section class="rounded-lg border bg-white p-6">
-    <AuditTimeline audits={data.audits} />
-  </section>
+    <!-- 결재 액션 패널 -->
+    {#if data.canApprove || data.canWithdraw || data.canComment}
+      <ApprovalPanel
+        canApprove={data.canApprove}
+        canWithdraw={data.canWithdraw}
+        canComment={data.canComment}
+        isProxyApproval={data.isProxyApproval}
+      />
+    {/if}
+
+    <!-- 이력 -->
+    <section class="rounded-lg border bg-white p-6">
+      <AuditTimeline audits={data.audits} />
+    </section>
+  {/if}
 </div>
