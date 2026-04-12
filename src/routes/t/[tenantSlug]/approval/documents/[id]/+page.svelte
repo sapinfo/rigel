@@ -83,9 +83,10 @@
     </div>
 
     <!-- 결재 액션 패널 -->
-    {#if data.canApprove || data.canWithdraw || data.canComment}
+    {#if data.canApprove || data.canAgree || data.canWithdraw || data.canComment}
       <ApprovalPanel
         canApprove={data.canApprove}
+        canAgree={data.canAgree}
         canWithdraw={data.canWithdraw}
         canComment={data.canComment}
         isProxyApproval={data.isProxyApproval}

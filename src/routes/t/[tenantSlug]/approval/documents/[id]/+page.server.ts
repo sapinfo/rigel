@@ -132,18 +132,21 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
 
   // v1.1 M13: pending_post_facto 도 actionable
   const isActionableStatus = status === 'in_progress' || status === 'pending_post_facto';
-  const isCurrentStepActionable =
+  const isCurrentStepPending =
     isActionableStatus &&
-    (currentStep?.status as StepStatus) === 'pending' &&
-    (currentStep?.step_type as StepType) === 'approval';
+    (currentStep?.status as StepStatus) === 'pending';
 
-  const isOwnApproval = isCurrentStepActionable && currentStep?.approver_user_id === userId;
+  const isCurrentStepApproval = isCurrentStepPending && (currentStep?.step_type as StepType) === 'approval';
+  const isCurrentStepAgreement = isCurrentStepPending && (currentStep?.step_type as StepType) === 'agreement';
+
+  const isOwnApproval = isCurrentStepApproval && currentStep?.approver_user_id === userId;
   const isProxyApproval =
-    isCurrentStepActionable &&
+    isCurrentStepApproval &&
     currentStep?.approver_user_id !== userId &&
     activeProxyFor.has(currentStep?.approver_user_id as string);
 
   const canApprove = isOwnApproval || isProxyApproval;
+  const canAgree = isCurrentStepAgreement && currentStep?.approver_user_id === userId;
 
   const canWithdraw = isActionableStatus && doc.drafter_id === userId;
 
@@ -218,6 +221,7 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
     audits,
     approvalLineReadonly,
     canApprove,
+    canAgree,
     canWithdraw,
     canComment,
     isProxyApproval
@@ -310,6 +314,37 @@ export const actions: Actions = {
     });
 
     if (err) return fail(400, { actionError: err.message || '코멘트 실패' });
+    return { ok: true };
+  },
+
+  // v2.2 M4: 합의 동의
+  agree: async ({ request, locals, params }) => {
+    if (!locals.user) return fail(401);
+    const fd = await request.formData();
+    const comment = fd.get('comment')?.toString() || null;
+
+    const { error: err } = await locals.supabase.rpc('fn_agree_step', {
+      p_document_id: params.id,
+      p_comment: comment
+    });
+
+    if (err) return fail(400, { actionError: err.message || '동의 실패' });
+    return { ok: true };
+  },
+
+  // v2.2 M4: 합의 부동의
+  disagree: async ({ request, locals, params }) => {
+    if (!locals.user) return fail(401);
+    const fd = await request.formData();
+    const comment = fd.get('comment')?.toString();
+    if (!comment?.trim()) return fail(400, { actionError: '부동의 사유는 필수입니다' });
+
+    const { error: err } = await locals.supabase.rpc('fn_disagree_step', {
+      p_document_id: params.id,
+      p_comment: comment
+    });
+
+    if (err) return fail(400, { actionError: err.message || '부동의 실패' });
     return { ok: true };
   },
 

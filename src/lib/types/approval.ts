@@ -101,7 +101,7 @@ export interface FormSchema {
 }
 
 // ─── Approval Line ────────────────────────────────
-export type StepType = 'approval' | 'reference';
+export type StepType = 'approval' | 'agreement' | 'reference';
 
 export interface ApprovalLineItem {
   userId: string;
@@ -185,7 +185,9 @@ export type AuditAction =
   | 'delegated' // M11: 전결 규칙 매칭으로 step 자동 skip
   | 'approved_by_proxy' // M12: 부재 대리인이 승인
   | 'submitted_post_facto' // M13: 후결 상신
-  | 'auto_delegated'; // M14: 부재 등록 시 trigger/cron이 pending step 재배정
+  | 'auto_delegated' // M14: 부재 등록 시 trigger/cron이 pending step 재배정
+  | 'agreed'          // v2.2 M4: 합의 동의
+  | 'disagreed';      // v2.2 M4: 합의 부동의
 
 export interface ApprovalAuditLog {
   id: string;

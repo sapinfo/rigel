@@ -3,6 +3,7 @@
 
   type Props = {
     canApprove: boolean;
+    canAgree?: boolean;
     canWithdraw: boolean;
     canComment: boolean;
     isProxyApproval?: boolean;
@@ -10,12 +11,16 @@
 
   let {
     canApprove,
+    canAgree = false,
     canWithdraw,
     canComment,
     isProxyApproval = false
   }: Props = $props();
 
   let approveComment = $state('');
+  let agreeComment = $state('');
+  let disagreeReason = $state('');
+  let showDisagreeModal = $state(false);
   let rejectReason = $state('');
   let withdrawReason = $state('');
   let commentText = $state('');
@@ -77,6 +82,45 @@
         </button>
       </div>
     </section>
+  {/if}
+
+  {#if canAgree}
+    <section class="rounded-lg border bg-white p-4">
+      <h3 class="mb-3 text-sm font-semibold">합의 처리</h3>
+      <textarea bind:value={agreeComment} placeholder="코멘트 (선택)" rows="2" class="w-full rounded border px-3 py-2 text-sm"></textarea>
+      <div class="mt-2 flex gap-2">
+        <form method="POST" action="?/agree" class="flex-1" use:enhance={({ formData }) => {
+          formData.set('comment', agreeComment);
+          submitting = true;
+          return async ({ update }) => { await update(); agreeComment = ''; submitting = false; };
+        }}>
+          <button type="submit" disabled={submitting} class="w-full rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50">
+            {submitting ? '처리 중…' : '동의'}
+          </button>
+        </form>
+        <button type="button" onclick={() => showDisagreeModal = true} disabled={submitting} class="flex-1 rounded border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50">
+          부동의
+        </button>
+      </div>
+    </section>
+
+    {#if showDisagreeModal}
+      <section class="rounded-lg border border-red-200 bg-red-50 p-4">
+        <h3 class="mb-2 text-sm font-semibold text-red-800">부동의 사유</h3>
+        <form method="POST" action="?/disagree" use:enhance={({ formData, cancel }) => {
+          if (!disagreeReason.trim()) { cancel(); return; }
+          formData.set('comment', disagreeReason);
+          submitting = true;
+          return async ({ update }) => { await update(); disagreeReason = ''; showDisagreeModal = false; submitting = false; };
+        }}>
+          <textarea bind:value={disagreeReason} placeholder="부동의 사유를 입력하세요 (필수)" rows="3" required class="w-full rounded border px-3 py-2 text-sm"></textarea>
+          <div class="mt-2 flex gap-2">
+            <button type="submit" disabled={submitting || !disagreeReason.trim()} class="rounded bg-red-600 px-4 py-2 text-sm text-white disabled:opacity-50">부동의 확인</button>
+            <button type="button" onclick={() => showDisagreeModal = false} class="rounded border px-4 py-2 text-sm">취소</button>
+          </div>
+        </form>
+      </section>
+    {/if}
   {/if}
 
   {#if canWithdraw}

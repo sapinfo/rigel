@@ -27,7 +27,9 @@
     delegated: '전결',
     approved_by_proxy: '대리 승인',
     submitted_post_facto: '후결 상신',
-    auto_delegated: '자동 위임'
+    auto_delegated: '자동 위임',
+    agreed: '합의 동의',
+    disagreed: '합의 부동의'
   };
 
   const actionColor: Record<AuditAction, string> = {
@@ -41,7 +43,9 @@
     delegated: 'text-purple-600',
     approved_by_proxy: 'text-orange-600',
     submitted_post_facto: 'text-orange-600',
-    auto_delegated: 'text-purple-600'
+    auto_delegated: 'text-purple-600',
+    agreed: 'text-green-600',
+    disagreed: 'text-red-600'
   };
 
   function fmt(iso: string): string {
