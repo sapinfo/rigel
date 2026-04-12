@@ -78,13 +78,45 @@ export const actions: Actions = {
 		const currentTenant = await resolveTenant(locals.supabase, locals.user.id, params.tenantSlug);
 		if (!currentTenant) return fail(404);
 
-		const { error: err } = await locals.supabase
+		// 현재 양식 조회
+		const { data: form } = await locals.supabase
 			.from('approval_forms')
-			.update({ is_published: true, updated_at: new Date().toISOString() })
+			.select('id, is_published, version, schema, code, name, description')
 			.eq('id', params.formId)
-			.eq('tenant_id', currentTenant.id);
+			.eq('tenant_id', currentTenant.id)
+			.maybeSingle();
 
-		if (err) return fail(500, { actionError: err.message });
-		return { ok: true, published: true };
+		if (!form) return fail(404, { actionError: '양식을 찾을 수 없습니다' });
+
+		if (form.is_published) {
+			// 이미 발행된 양식 → 새 버전 INSERT (기존 문서 보호)
+			const { data: newForm, error: err } = await locals.supabase
+				.from('approval_forms')
+				.insert({
+					tenant_id: currentTenant.id,
+					code: form.code,
+					name: form.name,
+					description: form.description,
+					schema: form.schema,
+					version: (form.version as number) + 1,
+					parent_form_id: form.id,
+					is_published: true
+				})
+				.select('id')
+				.single();
+
+			if (err) return fail(500, { actionError: err.message });
+			return { ok: true, published: true, newFormId: newForm?.id };
+		} else {
+			// 미발행 → 단순 발행
+			const { error: err } = await locals.supabase
+				.from('approval_forms')
+				.update({ is_published: true, updated_at: new Date().toISOString() })
+				.eq('id', params.formId)
+				.eq('tenant_id', currentTenant.id);
+
+			if (err) return fail(500, { actionError: err.message });
+			return { ok: true, published: true };
+		}
 	}
 };
