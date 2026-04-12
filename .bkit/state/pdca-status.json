@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-11T23:55:46.971Z",
+  "lastUpdated": "2026-04-12T05:12:57.490Z",
   "activeFeatures": [
     "approval-mvp",
     "Rigel",
@@ -24,108 +24,34 @@
     "members",
     "org",
     "delegations",
-    "absences"
+    "absences",
+    "hash",
+    "unit",
+    "pdf",
+    "signature",
+    "send-notification-email"
   ],
   "primaryFeature": "전자결재-v1.1-korean-exceptions",
   "features": {
     "전자결재-v1.1-korean-exceptions": {
-      "name": "전자결재-v1.1-korean-exceptions",
-      "displayName": "전자결재 v1.1 Korean Exceptions",
-      "phase": "completed",
-      "method": "plan-plus",
-      "planPath": "docs/01-plan/features/전자결재-v1.1-korean-exceptions.plan.md",
-      "designPath": "docs/02-design/features/전자결재-v1.1-korean-exceptions.design.md",
-      "analysisPath": "docs/03-analysis/전자결재-v1.1-korean-exceptions.analysis.md",
-      "reportPath": "docs/04-report/features/전자결재-v1.1-korean-exceptions.report.md",
-      "startedAt": "2026-04-11T18:30:00.000Z",
-      "planCompletedAt": "2026-04-11T18:30:00.000Z",
-      "designCompletedAt": "2026-04-11T18:45:00.000Z",
-      "doStartedAt": "2026-04-11T18:50:00.000Z",
-      "doCompletedAt": "2026-04-11T23:00:00.000Z",
-      "checkCompletedAt": "2026-04-11T23:15:00.000Z",
-      "reportCompletedAt": "2026-04-11T23:30:00.000Z",
+      "phase": "archived",
       "matchRate": 94,
       "iterationCount": 0,
-      "currentMilestone": "M14",
       "milestonesCompleted": [
         "M11",
         "M12",
         "M13",
         "M14"
       ],
-      "scope": {
-        "strategy": "sequential-4-slice",
-        "milestones": [
-          "M11",
-          "M12",
-          "M13",
-          "M14"
-        ],
-        "baseVersion": "v1.0.0",
-        "baseCommit": "d957381",
-        "migrations": "0019~0029",
-        "smokeTargetTotal": 40,
-        "m11": {
-          "migrations": [
-            "0019_delegation_rules",
-            "0020_audit_action_delegated",
-            "0021_fn_submit_draft_v2",
-            "0021b_fn_submit_draft_auto_complete_fix"
-          ],
-          "smokePassed": [
-            "S26",
-            "S27",
-            "S28",
-            "S29"
-          ],
-          "completedAt": "2026-04-11T19:45:00.000Z",
-          "notes": "All-delegated auto-complete fix applied after smoke feedback"
-        },
-        "m12": {
-          "migrations": [
-            "0022_user_absences",
-            "0023_proxy_columns",
-            "0023b_audit_action_proxy",
-            "0024_fn_approve_with_proxy",
-            "0024b_fn_approve_step_enum_cast_fix"
-          ],
-          "smokePassed": [
-            "S30",
-            "S31",
-            "S32",
-            "S34"
-          ],
-          "completedAt": "2026-04-11T21:20:00.000Z",
-          "notes": "Client-safe $lib/absenceTypes.ts split + enum cast fix applied after smoke feedback. S33 (chain depth) skipped from browser smoke (covered by code review of fn_approve_step depth check)."
-        },
-        "m13": {
-          "migrations": [
-            "0025_post_facto_enums",
-            "0026_fn_post_facto"
-          ],
-          "smokePassed": [
-            "S35",
-            "S37"
-          ],
-          "completedAt": "2026-04-11T22:30:00.000Z",
-          "notes": "fn_submit_post_facto + fn_approve/reject/withdraw extended to accept pending_post_facto. S36 (empty reason guard) covered by client-side disabled + Zod min(1) review. Inbox + DocumentHeader + canApprove regression fixes applied."
-        },
-        "m14": {
-          "migrations": [
-            "0027_audit_action_auto_delegated",
-            "0028_fn_auto_delegate_on_absence",
-            "0029_absence_trigger",
-            "0030_pg_cron_absence_backup"
-          ],
-          "smokePassed": [
-            "S38",
-            "S39",
-            "S40"
-          ],
-          "completedAt": "2026-04-11T23:00:00.000Z",
-          "notes": "First pg_cron usage in Rigel. Trigger + daily KST 00:00 (UTC 15:00) backup cron. fn_auto_delegate_on_absence is idempotent (WHERE approver=absence.user_id naturally excludes already-reassigned). UI: documents step list shows 대리/전결 badges based on acted_by_proxy_user_id and comment prefix."
-        }
-      }
+      "gitTag": "v1.1.0",
+      "gitCommit": "cb703d7",
+      "startedAt": "2026-04-11T18:30:00.000Z",
+      "completedAt": "2026-04-11T23:30:00.000Z",
+      "archivedAt": "2026-04-11T23:45:00.000Z",
+      "archivedTo": "docs/archive/2026-04/전자결재-v1.1-korean-exceptions/",
+      "migrations": "0019~0030 (14 files)",
+      "smokePassed": 13,
+      "smokeTotal": 15
     },
     "approval-mvp": {
       "name": "approval-mvp",
@@ -173,9 +99,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-11T15:43:13.234Z",
-        "lastUpdated": "2026-04-11T23:55:46.971Z"
+        "lastUpdated": "2026-04-12T05:04:45.072Z"
       },
-      "lastFile": "/Users/inseokko/Downloads/Rigel/src/lib/components/AuditTimeline.svelte"
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/lib/components/NotificationBell.svelte"
     },
     "routes": {
       "phase": "do",
@@ -251,7 +177,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-11T16:11:44.668Z",
-        "lastUpdated": "2026-04-11T17:09:20.611Z"
+        "lastUpdated": "2026-04-12T05:02:51.287Z"
       },
       "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/+layout.svelte"
     },
@@ -290,9 +216,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-11T16:51:45.241Z",
-        "lastUpdated": "2026-04-11T23:10:41.026Z"
+        "lastUpdated": "2026-04-12T02:02:25.606Z"
       },
-      "lastFile": "/Users/inseokko/Downloads/Rigel/src/lib/server/schemas/absence.ts"
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/lib/server/schemas/approvalActions.ts"
     },
     "client": {
       "phase": "do",
@@ -303,7 +229,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-11T16:52:02.471Z",
-        "lastUpdated": "2026-04-11T16:52:02.471Z"
+        "lastUpdated": "2026-04-12T02:03:37.376Z"
       },
       "lastFile": "/Users/inseokko/Downloads/Rigel/src/lib/client/uploadAttachment.ts"
     },
@@ -316,9 +242,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-11T17:08:16.871Z",
-        "lastUpdated": "2026-04-11T23:20:16.903Z"
+        "lastUpdated": "2026-04-12T02:03:16.412Z"
       },
-      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/approval/drafts/new/[formCode]/+page.svelte"
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/approval/drafts/new/[formCode]/+page.server.ts"
     },
     "queries": {
       "phase": "do",
@@ -355,7 +281,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-11T17:33:38.159Z",
-        "lastUpdated": "2026-04-11T23:41:59.664Z"
+        "lastUpdated": "2026-04-12T04:04:27.519Z"
       },
       "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/approval/documents/[id]/+page.svelte"
     },
@@ -449,6 +375,71 @@
         "lastUpdated": "2026-04-11T23:11:11.373Z"
       },
       "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/my/absences/+page.svelte"
+    },
+    "hash": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-12T01:49:22.592Z",
+        "lastUpdated": "2026-04-12T01:49:35.839Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/lib/hash/documentHash.ts"
+    },
+    "unit": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-12T01:50:09.147Z",
+        "lastUpdated": "2026-04-12T01:50:27.208Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/tests/unit/documentHash.test.ts"
+    },
+    "pdf": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-12T02:09:21.868Z",
+        "lastUpdated": "2026-04-12T04:22:03.588Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/approval/documents/[id]/pdf/+server.ts"
+    },
+    "signature": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-12T04:05:40.075Z",
+        "lastUpdated": "2026-04-12T04:06:36.805Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/my/profile/signature/+page.server.ts"
+    },
+    "send-notification-email": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-12T05:12:57.490Z",
+        "lastUpdated": "2026-04-12T05:12:57.490Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/supabase/functions/send-notification-email/index.ts"
     }
   },
   "pipeline": {
@@ -475,7 +466,7 @@
   "session": {
     "startedAt": "2026-04-11T13:28:26.710Z",
     "onboardingCompleted": true,
-    "lastActivity": "2026-04-11T23:55:46.971Z"
+    "lastActivity": "2026-04-12T05:12:57.490Z"
   },
   "history": [
     {
@@ -1402,6 +1393,348 @@
     {
       "timestamp": "2026-04-11T23:55:46.971Z",
       "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T00:24:07.934Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T00:24:14.956Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T00:24:26.610Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T01:43:42.753Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T01:43:53.292Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T01:44:02.195Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T01:44:10.338Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T01:44:15.952Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T01:44:42.341Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T01:44:49.973Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T01:49:01.916Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T01:49:22.592Z",
+      "feature": "hash",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T01:49:35.839Z",
+      "feature": "hash",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T01:50:09.147Z",
+      "feature": "unit",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T01:50:27.208Z",
+      "feature": "unit",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T02:02:25.606Z",
+      "feature": "schemas",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T02:02:39.795Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T02:02:59.986Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T02:03:16.412Z",
+      "feature": "[formCode]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T02:03:37.376Z",
+      "feature": "client",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T02:03:59.673Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T02:04:06.813Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T02:04:19.123Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T02:04:32.174Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T02:05:30.139Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T02:09:21.868Z",
+      "feature": "pdf",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T02:09:35.631Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T04:03:34.184Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T04:03:57.229Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T04:04:27.519Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T04:04:49.969Z",
+      "feature": "pdf",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T04:05:40.075Z",
+      "feature": "signature",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T04:05:54.383Z",
+      "feature": "signature",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T04:06:18.180Z",
+      "feature": "pdf",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T04:06:36.805Z",
+      "feature": "signature",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T04:06:53.743Z",
+      "feature": "pdf",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T04:18:22.515Z",
+      "feature": "[tenantSlug]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T04:18:32.900Z",
+      "feature": "[tenantSlug]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T04:18:52.026Z",
+      "feature": "pdf",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T04:18:59.359Z",
+      "feature": "pdf",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T04:21:52.121Z",
+      "feature": "pdf",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T04:22:03.588Z",
+      "feature": "pdf",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:00:26.593Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:00:31.742Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:00:58.821Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:01:10.197Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:01:21.789Z",
+      "feature": "[tenantSlug]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:01:57.168Z",
+      "feature": "[tenantSlug]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:02:34.627Z",
+      "feature": "[tenantSlug]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:02:40.153Z",
+      "feature": "[tenantSlug]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:02:45.146Z",
+      "feature": "[tenantSlug]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:02:51.287Z",
+      "feature": "[tenantSlug]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:03:58.472Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:04:25.120Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:04:39.346Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:04:45.072Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-12T05:12:57.490Z",
+      "feature": "send-notification-email",
       "phase": "do",
       "action": "updated"
     }

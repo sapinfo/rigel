@@ -1,14 +1,35 @@
 {
   "version": "1.0",
-  "enabled": false,
+  "enabled": true,
   "teamName": "",
-  "feature": "",
-  "pdcaPhase": "plan",
+  "feature": "전자결재-v1.1-korean-exceptions",
+  "pdcaPhase": "archived",
   "orchestrationPattern": "leader",
   "ctoAgent": "opus",
-  "startedAt": "2026-04-11T13:50:23.514Z",
-  "lastUpdated": "2026-04-11T13:56:49.058Z",
-  "teammates": [],
+  "startedAt": "2026-04-12T05:10:14.744Z",
+  "lastUpdated": "2026-04-12T05:16:45.284Z",
+  "teammates": [
+    {
+      "name": "a067786e7ae8ab67f",
+      "role": "bkit:gap-detector",
+      "model": "sonnet",
+      "status": "completed",
+      "currentTask": null,
+      "taskId": null,
+      "startedAt": "2026-04-12T05:10:14.745Z",
+      "lastActivityAt": "2026-04-12T05:12:25.122Z"
+    },
+    {
+      "name": "aa9fa0334e6cbac83",
+      "role": "bkit:report-generator",
+      "model": "sonnet",
+      "status": "completed",
+      "currentTask": null,
+      "taskId": null,
+      "startedAt": "2026-04-12T05:15:02.684Z",
+      "lastActivityAt": "2026-04-12T05:16:45.283Z"
+    }
+  ],
   "progress": {
     "totalTasks": 0,
     "completedTasks": 0,
@@ -17,5 +38,5 @@
     "pendingTasks": 0
   },
   "recentMessages": [],
-  "sessionId": "2450797a-5e44-4e6e-8c7f-e6e9c13170b3"
+  "sessionId": "ee387e39-9a62-41a2-9593-3cf50334073f"
 }
