@@ -47,6 +47,13 @@
             {/if}
           </a>
 
+          <a
+            href={`${baseHref}/builder/${f.id}`}
+            class="rounded bg-blue-50 px-2 py-1 text-xs text-blue-700 hover:bg-blue-100"
+          >
+            빌더
+          </a>
+
           <form
             method="POST"
             action="?/togglePublish"
