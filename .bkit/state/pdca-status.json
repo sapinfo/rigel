@@ -37,10 +37,12 @@
     "결재선-v2.2-실무완성": {
       "name": "결재선-v2.2-실무완성",
       "displayName": "결재선 v2.2 실무완성",
-      "phase": "plan",
+      "phase": "design",
       "planPath": "docs/01-plan/features/결재선-v2.2-실무완성.plan.md",
+      "designPath": "docs/02-design/features/결재선-v2.2-실무완성.design.md",
       "startedAt": "2026-04-12T16:00:00.000Z",
       "planCompletedAt": "2026-04-12T16:00:00.000Z",
+      "designCompletedAt": "2026-04-12T17:00:00.000Z",
       "matchRate": null,
       "iterationCount": 0,
       "scope": {
