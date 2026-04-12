@@ -5,7 +5,7 @@
 ## 프로젝트 정체성
 
 - **Rigel**: 한국형 SMB용 multi-tenant 전자결재 SaaS
-- **현재 상태**: **v2.2.0** 실무완성 완료 (commit `af0af3c`)
+- **현재 상태**: **v2.3.0** Polish 완료 (commit `fd0648b`)
   - v1.0.0 (`d957381`): Shippable Core (25 smoke, match 100%)
   - v1.1.0 (`cb703d7`): 전결/대결/후결/부재자동 (13/15 smoke, match 94%)
   - v1.2.0 (`8b60fb6`): 병렬결재/PDF/해시/서명 (33+ Vitest, match 90%)
@@ -13,7 +13,8 @@
   - v2.0.0 (`f1e9a17`): 양식 빌더/결재선 규칙/버전 관리/조건부 필드 (match 78%)
   - v2.1.0 (`e8f5f5e`): RuleBuilder GUI/OrgTree/프리뷰/시뮬레이터 (match 93%)
   - v2.2.0 (`af0af3c`): 즐겨찾기/일괄결재/합의/대시보드/감사로그 등 12 마일스톤 (match 93%)
-- **Phased 로드맵**: v1.0 ✅ → v1.1 ✅ → v1.2 ✅ → v1.3 ✅ → v2.0 ✅ → v2.1 ✅ → v2.2 ✅ → v2.3(리치에디터/휴가캘린더)
+  - v2.3.0 (`fd0648b`): StampLine/OrgTreePicker통합/이관/보관기한/보안등급/사이드바 (match 92%)
+- **Phased 로드맵**: v1.0 ✅ → v1.1 ✅ → v1.2 ✅ → v1.3 ✅ → v2.0 ✅ → v2.1 ✅ → v2.2 ✅ → v2.3 ✅
 
 ## Stack (변경 금지)
 
