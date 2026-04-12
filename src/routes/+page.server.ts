@@ -33,5 +33,5 @@ export const load: PageServerLoad = async ({ locals }) => {
   const target =
     tenants.find((t) => t.id === profile?.default_tenant_id) ?? tenants[0];
 
-  redirect(303, `/t/${target.slug}/approval/inbox`);
+  redirect(303, `/t/${target.slug}`);
 };
