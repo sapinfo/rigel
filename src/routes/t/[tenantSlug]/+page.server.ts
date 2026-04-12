@@ -78,7 +78,32 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 	const profileMap = await fetchProfilesByIds(locals.supabase, [userId]);
 	const userName = profileMap.get(userId)?.display_name ?? '사용자';
 
-	// 6. 양식 목록 (빠른 기안용)
+	// 6. 최근 기안문서 (10건)
+	const { data: recentDocs } = await locals.supabase
+		.from('approval_documents')
+		.select('id, doc_number, status, form_id, submitted_at, updated_at, urgency')
+		.eq('tenant_id', tenantId)
+		.eq('drafter_id', userId)
+		.order('updated_at', { ascending: false })
+		.limit(10);
+
+	const recentFormIds = (recentDocs ?? []).map((d) => d.form_id as string);
+	const { data: recentFormRows } = recentFormIds.length
+		? await locals.supabase.from('approval_forms').select('id, name').in('id', [...new Set(recentFormIds)])
+		: { data: [] };
+	const recentFormMap = new Map((recentFormRows ?? []).map((f) => [f.id as string, f.name as string]));
+
+	const recentDocuments = (recentDocs ?? []).map((d) => ({
+		id: d.id as string,
+		docNumber: d.doc_number as string,
+		status: d.status as string,
+		formName: recentFormMap.get(d.form_id as string) ?? '(양식 없음)',
+		submittedAt: (d.submitted_at as string | null) ?? null,
+		updatedAt: d.updated_at as string,
+		urgency: (d.urgency as string) ?? '일반'
+	}));
+
+	// 7. 양식 목록 (빠른 기안용)
 	const { data: formRows } = await locals.supabase
 		.from('approval_forms')
 		.select('code, name')
@@ -98,6 +123,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		urgentCount: urgentCount ?? 0,
 		favorites: (favRows ?? []).map((f) => ({ id: f.id as string, name: f.name as string })),
 		absentMembers,
+		recentDocuments,
 		forms: (formRows ?? []).map((f) => ({ code: f.code as string, name: f.name as string }))
 	};
 };

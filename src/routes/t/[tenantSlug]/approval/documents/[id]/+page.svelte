@@ -121,6 +121,20 @@
             <button type="submit" class="rounded border bg-blue-50 px-3 py-1.5 text-sm text-blue-700 hover:bg-blue-100">재기안</button>
           </form>
         {/if}
+        {#if data.document.status === 'completed'}
+          <form method="POST" action="?/requestCancel" use:enhance={({ }) => {
+            return async ({ result }) => {
+              if (result.type === 'success' && result.data?.cancelRedirect) {
+                window.location.href = result.data.cancelRedirect as string;
+              }
+            };
+          }}>
+            <button type="submit" onclick={(e) => { if (!confirm('이 문서의 취소를 요청하시겠습니까? 취소 사유를 포함한 새 기안이 생성됩니다.')) e.preventDefault(); }}
+              class="rounded border border-orange-300 bg-orange-50 px-3 py-1.5 text-sm text-orange-700 hover:bg-orange-100">
+              취소 요청
+            </button>
+          </form>
+        {/if}
         {#if data.document.status === 'in_progress' || data.document.status === 'pending_post_facto'}
           <form method="POST" action="?/remind" use:enhance={() => {
             return async ({ update }) => { await update({ reset: false }); };

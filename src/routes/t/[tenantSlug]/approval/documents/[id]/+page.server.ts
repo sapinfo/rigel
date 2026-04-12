@@ -317,6 +317,50 @@ export const actions: Actions = {
     return { ok: true };
   },
 
+  // v2.3: 완료 문서 취소 요청 (휴가 취소 등)
+  requestCancel: async ({ request, locals, params }) => {
+    if (!locals.user) return fail(401);
+    const currentTenant = await resolveTenant(locals.supabase, locals.user.id, params.tenantSlug);
+    if (!currentTenant) return fail(404);
+
+    // 원본 문서 조회
+    const { data: doc } = await locals.supabase
+      .from('approval_documents')
+      .select('id, form_id, content, status, drafter_id')
+      .eq('id', params.id)
+      .eq('tenant_id', currentTenant.id)
+      .single();
+
+    if (!doc || doc.status !== 'completed') return fail(400, { actionError: '완료된 문서만 취소 요청할 수 있습니다' });
+    if (doc.drafter_id !== locals.user.id) return fail(403, { actionError: '본인 문서만 취소 요청할 수 있습니다' });
+
+    // 취소 사유를 포함한 새 draft 생성
+    const cancelContent = {
+      ...(doc.content as Record<string, unknown>),
+      _cancel_reason: '취소 요청',
+      _original_document_id: doc.id
+    };
+
+    const { data: newDoc, error: err } = await locals.supabase
+      .rpc('fn_save_draft', {
+        p_tenant_id: currentTenant.id,
+        p_form_id: doc.form_id,
+        p_content: cancelContent
+      })
+      .single();
+
+    if (err) return fail(400, { actionError: err.message || '취소 요청 실패' });
+
+    const { data: formRow } = await locals.supabase
+      .from('approval_forms')
+      .select('code')
+      .eq('id', doc.form_id as string)
+      .single();
+
+    const code = (formRow?.code as string) ?? 'general';
+    return { cancelRedirect: `/t/${currentTenant.slug}/approval/drafts/new/${code}` };
+  },
+
   // v2.3 M3: 문서 이관 (관리자만)
   transfer: async ({ request, locals, params }) => {
     if (!locals.user) return fail(401);

@@ -45,6 +45,36 @@
     </section>
   {/if}
 
+  <!-- 최근 기안문서 -->
+  {#if data.recentDocuments.length > 0}
+    <section class="rounded-lg border bg-white p-4">
+      <div class="mb-2 flex items-center justify-between">
+        <h2 class="text-sm font-semibold">최근 기안 문서</h2>
+        <a href="/t/{slug}/approval/inbox?tab=in_progress" class="text-xs text-blue-600 hover:underline">전체보기</a>
+      </div>
+      <ul class="divide-y">
+        {#each data.recentDocuments as doc (doc.id)}
+          <li>
+            <a href="/t/{slug}/approval/documents/{doc.id}" class="flex items-center gap-3 py-2 text-sm hover:bg-gray-50">
+              <span class="w-28 shrink-0 font-mono text-xs text-gray-400">{doc.docNumber}</span>
+              {#if doc.urgency === '긴급'}
+                <span class="rounded bg-red-100 px-1 py-0.5 text-[10px] text-red-700">긴급</span>
+              {/if}
+              <span class="flex-1 truncate">{doc.formName}</span>
+              <span class="w-14 shrink-0 rounded px-1.5 py-0.5 text-center text-xs"
+                class:bg-yellow-100={doc.status === 'draft'}
+                class:bg-blue-100={doc.status === 'in_progress'}
+                class:bg-green-100={doc.status === 'completed'}
+                class:bg-red-100={doc.status === 'rejected'}>
+                {doc.status === 'draft' ? '임시' : doc.status === 'in_progress' ? '진행' : doc.status === 'completed' ? '완료' : doc.status === 'rejected' ? '반려' : doc.status}
+              </span>
+            </a>
+          </li>
+        {/each}
+      </ul>
+    </section>
+  {/if}
+
   <!-- 부재 현황 -->
   {#if data.absentMembers.length > 0}
     <section class="rounded-lg border bg-white p-4">
