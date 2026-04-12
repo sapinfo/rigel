@@ -5,6 +5,7 @@ import {
   approvalLineSchema,
   type ApprovalLineItem
 } from '$lib/server/schemas/approvalActions';
+import { computeDocumentHash } from '$lib/hash/documentHash';
 import type { Actions, PageServerLoad } from './$types';
 import type { FormSchema, ProfileLite } from '$lib/types/approval';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -201,12 +202,54 @@ export const actions: Actions = {
       return fail(400, { errors: zodErrors(parsed) });
     }
 
+    // v1.2 M16b: content_hash 계산.
+    // form snapshot, attachment sha256 을 서버에서 조회하여 해시 입력 구성.
+    const { data: formRow, error: formErr } = await locals.supabase
+      .from('approval_forms')
+      .select('schema')
+      .eq('id', parsed.data.formId)
+      .eq('is_published', true)
+      .maybeSingle();
+
+    if (formErr || !formRow) {
+      return fail(400, { errors: formError('양식 조회 실패') });
+    }
+
+    let attachmentSha256s: string[] = [];
+    if (parsed.data.attachmentIds.length > 0) {
+      const { data: attRows, error: attErr } = await locals.supabase
+        .from('approval_attachments')
+        .select('sha256')
+        .in('id', parsed.data.attachmentIds);
+
+      if (attErr || !attRows) {
+        return fail(400, { errors: formError('첨부 조회 실패') });
+      }
+      const hashes = attRows
+        .map((a) => a.sha256 as string | null)
+        .filter((h): h is string => h !== null);
+      if (hashes.length !== attRows.length) {
+        return fail(400, {
+          errors: formError('첨부 파일 해시 누락 — 재업로드 후 다시 시도해주세요')
+        });
+      }
+      attachmentSha256s = hashes;
+    }
+
+    const contentHash = await computeDocumentHash({
+      formSchema: formRow.schema as unknown as FormSchema,
+      content: parsed.data.content,
+      approvalLine: parsed.data.approvalLine,
+      attachmentSha256s
+    });
+
     const { data: doc, error: rpcErr } = await locals.supabase
       .rpc('fn_submit_draft', {
         p_tenant_id: currentTenant.id,
         p_form_id: parsed.data.formId,
         p_content: parsed.data.content,
         p_approval_line: parsed.data.approvalLine,
+        p_content_hash: contentHash,
         p_attachment_ids: parsed.data.attachmentIds,
         p_document_id: parsed.data.documentId ?? undefined
       })
@@ -216,11 +259,10 @@ export const actions: Actions = {
       return fail(400, { errors: formError(rpcErr.message || '상신 실패') });
     }
 
-    // M6: 문서 상세 페이지는 M7. 당분간 결재함 placeholder로 리디렉트.
     redirect(303, `/t/${currentTenant.slug}/approval/inbox`);
   },
 
-  // v1.1 M13: 후결 상신
+  // v1.1 M13: 후결 상신 (v1.2 M16b: content_hash 추가)
   submitPostFacto: async ({ request, locals, params }) => {
     if (!locals.user) return fail(401);
     const currentTenant = await resolveTenant(
@@ -243,12 +285,53 @@ export const actions: Actions = {
       return fail(400, { errors: zodErrors(parsed) });
     }
 
+    // v1.2 M16b: content_hash 계산 (submit 과 동일 path)
+    const { data: formRow, error: formErr } = await locals.supabase
+      .from('approval_forms')
+      .select('schema')
+      .eq('id', parsed.data.formId)
+      .eq('is_published', true)
+      .maybeSingle();
+
+    if (formErr || !formRow) {
+      return fail(400, { errors: formError('양식 조회 실패') });
+    }
+
+    let attachmentSha256s: string[] = [];
+    if (parsed.data.attachmentIds.length > 0) {
+      const { data: attRows, error: attErr } = await locals.supabase
+        .from('approval_attachments')
+        .select('sha256')
+        .in('id', parsed.data.attachmentIds);
+
+      if (attErr || !attRows) {
+        return fail(400, { errors: formError('첨부 조회 실패') });
+      }
+      const hashes = attRows
+        .map((a) => a.sha256 as string | null)
+        .filter((h): h is string => h !== null);
+      if (hashes.length !== attRows.length) {
+        return fail(400, {
+          errors: formError('첨부 파일 해시 누락 — 재업로드 후 다시 시도해주세요')
+        });
+      }
+      attachmentSha256s = hashes;
+    }
+
+    const contentHash = await computeDocumentHash({
+      formSchema: formRow.schema as unknown as FormSchema,
+      content: parsed.data.content,
+      approvalLine: parsed.data.approvalLine,
+      attachmentSha256s
+    });
+
     const { data: doc, error: rpcErr } = await locals.supabase
       .rpc('fn_submit_post_facto', {
         p_tenant_id: currentTenant.id,
         p_form_id: parsed.data.formId,
         p_content: parsed.data.content,
         p_approval_line: parsed.data.approvalLine,
+        p_content_hash: contentHash,
         p_reason: parsed.data.reason,
         p_attachment_ids: parsed.data.attachmentIds
       })

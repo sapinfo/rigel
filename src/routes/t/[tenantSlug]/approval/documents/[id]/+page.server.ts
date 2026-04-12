@@ -54,10 +54,10 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
     .eq('id', doc.form_id as string)
     .maybeSingle();
 
-  // 3. steps
+  // 3. steps (v1.2: group_order 포함)
   const { data: stepRows } = await locals.supabase
     .from('approval_steps')
-    .select('id, step_index, step_type, approver_user_id, status, acted_at, comment, acted_by_proxy_user_id')
+    .select('id, step_index, group_order, step_type, approver_user_id, status, acted_at, comment, acted_by_proxy_user_id')
     .eq('document_id', doc.id as string)
     .order('step_index', { ascending: true });
 
@@ -82,6 +82,29 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
     ...((auditRows ?? []).map((a) => a.actor_id as string))
   ];
   const profileMap = await fetchProfilesByIds(locals.supabase, allUserIds);
+
+  // v1.2: approver 의 signature_storage_path 조회 + signed URL 생성 (60s TTL)
+  const approverIds = Array.from(
+    new Set((stepRows ?? []).map((s) => s.approver_user_id as string))
+  );
+  const signedSigUrls = new Map<string, string>();
+  if (approverIds.length > 0) {
+    const { data: sigProfiles } = await locals.supabase
+      .from('profiles')
+      .select('id, signature_storage_path')
+      .in('id', approverIds);
+
+    for (const p of sigProfiles ?? []) {
+      const path = p.signature_storage_path as string | null;
+      if (!path) continue;
+      const { data: signed } = await locals.supabase.storage
+        .from('user-signatures')
+        .createSignedUrl(path, 60);
+      if (signed?.signedUrl) {
+        signedSigUrls.set(p.id as string, signed.signedUrl);
+      }
+    }
+  }
 
   // 7. download urls for attachments
   const downloadUrls = await createDownloadUrls(
@@ -135,6 +158,7 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
     return {
       id: s.id as string,
       step_index: s.step_index as number,
+      group_order: s.group_order as number,
       step_type: s.step_type as StepType,
       approver_user_id: s.approver_user_id as string,
       approver_name: p?.display_name ?? '(알 수 없음)',
@@ -142,7 +166,8 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
       status: s.status as StepStatus,
       acted_at: (s.acted_at as string | null) ?? null,
       comment: (s.comment as string | null) ?? null,
-      acted_by_proxy_user_id: (s.acted_by_proxy_user_id as string | null) ?? null
+      acted_by_proxy_user_id: (s.acted_by_proxy_user_id as string | null) ?? null,
+      signature_url: signedSigUrls.get(s.approver_user_id as string) ?? null
     };
   });
 

@@ -20,6 +20,10 @@
 -- 가정:
 --   * `supabase db reset` 이후에 실행 (seed 시스템 양식이 로드된 상태)
 --   * postgres 슈퍼유저 권한으로 접속 (BYPASSRLS 기본)
+--
+-- v1.2 M16b 업데이트: fn_submit_draft / fn_submit_post_facto 가 v3 signature 로 교체되어
+--   p_content_hash (64-char hex) 가 필수. S33/S36 모두 placeholder hash 'a' * 64 사용.
+--   S36 은 reason 검증이 content_hash 검증보다 앞서므로 hash 순서와 무관.
 
 \set ON_ERROR_STOP on
 SET client_min_messages TO NOTICE;
@@ -100,7 +104,7 @@ BEGIN
   -- A 로 로그인한 것처럼 가장 (auth.uid() = A)
   PERFORM set_config('request.jwt.claim.sub', v.user_a::text, true);
 
-  -- [S36a] 빈 문자열
+  -- [S36a] 빈 문자열 (reason 검증이 content_hash 검증보다 먼저 발동)
   BEGIN
     PERFORM public.fn_submit_post_facto(
       v.tenant,
@@ -109,7 +113,8 @@ BEGIN
       jsonb_build_array(
         jsonb_build_object('userId', v.user_b::text, 'stepType', 'approval')
       ),
-      ''  -- empty
+      repeat('a', 64),  -- v1.2 M16b: content_hash placeholder
+      ''                -- empty reason
     );
     RAISE EXCEPTION 'S36a FAIL: RPC unexpectedly succeeded with empty reason';
   EXCEPTION
@@ -130,6 +135,7 @@ BEGIN
       jsonb_build_array(
         jsonb_build_object('userId', v.user_b::text, 'stepType', 'approval')
       ),
+      repeat('a', 64),
       NULL
     );
     RAISE EXCEPTION 'S36b FAIL: RPC unexpectedly succeeded with NULL reason';
@@ -151,6 +157,7 @@ BEGIN
       jsonb_build_array(
         jsonb_build_object('userId', v.user_b::text, 'stepType', 'approval')
       ),
+      repeat('a', 64),
       '   '
     );
     RAISE EXCEPTION 'S36c FAIL: RPC unexpectedly succeeded with whitespace reason';
@@ -184,7 +191,8 @@ BEGIN
     jsonb_build_object('title', 'smoke S33'),
     jsonb_build_array(
       jsonb_build_object('userId', v.user_b::text, 'stepType', 'approval')
-    )
+    ),
+    repeat('a', 64)  -- v1.2 M16b: content_hash placeholder (64-char hex)
   );
 
   IF v_doc.status <> 'in_progress' THEN

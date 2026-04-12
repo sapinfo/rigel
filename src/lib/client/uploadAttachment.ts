@@ -28,6 +28,19 @@ export type UploadedAttachment = {
   mime: string;
 };
 
+// v1.2 M16b: 클라이언트 SHA-256 계산 (crypto.subtle.digest).
+// 업로드와 병렬로 수행하면 총 시간 줄어들지만, Storage 업로드 실패 시 해시 불필요하므로 순차.
+async function computeFileSha256(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const digest = await crypto.subtle.digest('SHA-256', buffer);
+  const arr = new Uint8Array(digest);
+  let out = '';
+  for (const b of arr) {
+    out += b.toString(16).padStart(2, '0');
+  }
+  return out;
+}
+
 export async function uploadAttachment(
   tenantId: string,
   file: File
@@ -43,6 +56,9 @@ export async function uploadAttachment(
   const ext = extractExt(file.name);
   const month = currentMonthKST();
   const storagePath = `${tenantId}/${month}/${uploadUuid}.${ext}`;
+
+  // v1.2: 업로드 전 sha256 계산 (업로드 실패 시 DB insert 없음 → 낭비 없음)
+  const sha256 = await computeFileSha256(file);
 
   const { error: upErr } = await supabase.storage
     .from('approval-attachments')
@@ -69,6 +85,7 @@ export async function uploadAttachment(
       file_name: file.name,
       mime: file.type || 'application/octet-stream',
       size: file.size,
+      sha256,
       uploaded_by: user.id,
       document_id: null
     })
