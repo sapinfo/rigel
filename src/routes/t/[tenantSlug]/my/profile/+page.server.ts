@@ -26,9 +26,9 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 };
 
 export const actions: Actions = {
-  save: async ({ request, locals, parent }) => {
+  save: async ({ request, locals }) => {
     if (!locals.user) error(401, 'Not authenticated');
-    const { currentTenant } = await parent();
+    const currentTenant = locals.currentTenant!;
 
     const fd = await request.formData();
     const payload = {

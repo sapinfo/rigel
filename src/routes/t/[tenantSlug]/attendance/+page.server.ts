@@ -32,24 +32,22 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 };
 
 export const actions: Actions = {
-  clockIn: async ({ locals, parent }) => {
+  clockIn: async ({ locals }) => {
     if (!locals.user) error(401, 'Not authenticated');
-    const { currentTenant } = await parent();
 
     const { data, error: err } = await locals.supabase.rpc('fn_clock_in', {
-      p_tenant_id: currentTenant.id
+      p_tenant_id: locals.currentTenant!.id
     });
 
     if (err) return fail(400, { message: err.message });
     return { success: true, record: data };
   },
 
-  clockOut: async ({ locals, parent }) => {
+  clockOut: async ({ locals }) => {
     if (!locals.user) error(401, 'Not authenticated');
-    const { currentTenant } = await parent();
 
     const { data, error: err } = await locals.supabase.rpc('fn_clock_out', {
-      p_tenant_id: currentTenant.id
+      p_tenant_id: locals.currentTenant!.id
     });
 
     if (err) return fail(400, { message: err.message });
