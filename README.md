@@ -87,7 +87,7 @@ IT 전문 인력 없이도 설치 가능합니다. Docker가 설치된 서버/PC
 
 - **Podman (권장)** 또는 Docker
 - **Git**
-- 서버 또는 PC (CPU 2코어, RAM 4GB 이상)
+- 서버 또는 PC (CPU 4코어, RAM 16GB 이상)
 
 **Podman 설치 (권장 — 무료, 가벼움):**
 - Linux: https://podman.io/getting-started/installation

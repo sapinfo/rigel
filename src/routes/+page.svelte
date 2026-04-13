@@ -204,7 +204,7 @@
           <div class="flex flex-wrap gap-3">
             <span class="rounded bg-white border px-3 py-1.5 text-sm font-medium">Podman (권장) 또는 Docker</span>
             <span class="rounded bg-white border px-3 py-1.5 text-sm">Git</span>
-            <span class="rounded bg-white border px-3 py-1.5 text-sm">서버 또는 PC (CPU 2코어, RAM 4GB 이상)</span>
+            <span class="rounded bg-white border px-3 py-1.5 text-sm">서버 또는 PC (CPU 4코어, RAM 16GB 이상)</span>
           </div>
           <div class="mt-4 text-xs text-gray-600 space-y-2">
             <div>
@@ -386,7 +386,7 @@
     <div class="space-y-4">
       {#each [
         { q: '정말 무료인가요?', a: '네. 오픈소스 라이선스로 사용자 수, 기능 제한 없이 완전 무료입니다. 직접 서버에 설치해서 운영하시면 됩니다.' },
-        { q: '서버 사양은 어느 정도 필요한가요?', a: 'CPU 2코어, RAM 4GB 이상이면 충분합니다. 50명 이하 조직 기준. 일반 사무용 워크스테이션도 가능합니다.' },
+        { q: '서버 사양은 어느 정도 필요한가요?', a: 'CPU 4코어, RAM 16GB 이상을 권장합니다. DB + 인증 + API + 앱 서버 등 컨테이너 6개가 동시에 실행됩니다.' },
         { q: '한국 본사의 기존 그룹웨어와 연동 가능한가요?', a: '현재는 독립 운영 방식입니다. API 연동은 향후 업데이트 예정이며, 커스터마이징으로 대응 가능합니다.' },
         { q: '미국 현지 직원도 사용할 수 있나요?', a: '웹 브라우저만 있으면 어디서든 접속 가능합니다. 한국어 UI 기반이지만, 한국어를 사용하는 조직에 최적화되어 있습니다.' },
         { q: '데이터 보안은 어떻게 되나요?', a: '모든 데이터가 우리 서버에만 저장됩니다. 외부 클라우드로 데이터가 나가지 않으며, Row Level Security로 테넌트 간 데이터가 완전 격리됩니다.' },
