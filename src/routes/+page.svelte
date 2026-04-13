@@ -140,30 +140,84 @@
   <!-- 설치 가이드 -->
   <section id="install" class="mx-auto max-w-6xl px-6 py-20">
     <div class="text-center mb-12">
-      <h2 class="text-3xl font-bold">10분이면 설치 끝</h2>
-      <p class="mt-3 text-gray-600">Docker만 있으면 됩니다</p>
+      <h2 class="text-3xl font-bold">설치 가이드</h2>
+      <p class="mt-3 text-gray-600">Docker + Node.js + Supabase CLI만 있으면 됩니다</p>
     </div>
-    <div class="max-w-2xl mx-auto space-y-6">
-      <div class="flex gap-4 items-start">
-        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">1</div>
-        <div>
-          <h3 class="font-bold">소스 받기</h3>
-          <code class="mt-1 block rounded bg-gray-900 text-green-400 px-4 py-2 text-sm">git clone https://github.com/sapinfo/rigel.git</code>
+    <div class="max-w-3xl mx-auto">
+      <!-- 사전 요구 -->
+      <div class="mb-8 rounded-lg border bg-gray-50 p-5">
+        <h3 class="font-bold text-sm text-gray-500 mb-3">사전 요구 사항</h3>
+        <div class="flex flex-wrap gap-3">
+          <span class="rounded bg-white border px-3 py-1.5 text-sm">Docker + Docker Compose</span>
+          <span class="rounded bg-white border px-3 py-1.5 text-sm">Node.js 22+</span>
+          <span class="rounded bg-white border px-3 py-1.5 text-sm">Supabase CLI</span>
         </div>
       </div>
-      <div class="flex gap-4 items-start">
-        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">2</div>
-        <div>
-          <h3 class="font-bold">실행</h3>
-          <code class="mt-1 block rounded bg-gray-900 text-green-400 px-4 py-2 text-sm">cd rigel && docker compose up -d</code>
+
+      <!-- 단계별 -->
+      <div class="space-y-6">
+        <div class="flex gap-4 items-start">
+          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">1</div>
+          <div class="flex-1">
+            <h3 class="font-bold">소스 받기</h3>
+            <code class="mt-2 block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">git clone https://github.com/sapinfo/rigel.git && cd rigel</code>
+          </div>
+        </div>
+
+        <div class="flex gap-4 items-start">
+          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">2</div>
+          <div class="flex-1">
+            <h3 class="font-bold">Supabase 기동 + DB 초기화</h3>
+            <div class="mt-2 rounded bg-gray-900 px-4 py-3 text-sm space-y-1">
+              <div class="text-green-400">supabase start</div>
+              <div class="text-green-400">supabase db reset</div>
+            </div>
+            <p class="mt-2 text-xs text-gray-500">71개 migration 적용 + 테스트 데이터 자동 생성</p>
+          </div>
+        </div>
+
+        <div class="flex gap-4 items-start">
+          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">3</div>
+          <div class="flex-1">
+            <h3 class="font-bold">환경변수 설정</h3>
+            <code class="mt-2 block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">cp .env.example .env.local</code>
+            <p class="mt-2 text-xs text-gray-500"><code class="text-gray-400">supabase status</code> 출력의 ANON_KEY, URL을 .env.local에 입력</p>
+          </div>
+        </div>
+
+        <div class="flex gap-4 items-start">
+          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">4</div>
+          <div class="flex-1">
+            <h3 class="font-bold">실행</h3>
+            <div class="mt-2 rounded bg-gray-900 px-4 py-3 text-sm space-y-1">
+              <div class="text-green-400">npm install</div>
+              <div class="text-green-400">npm run dev</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-4 items-start">
+          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">5</div>
+          <div class="flex-1">
+            <h3 class="font-bold">접속</h3>
+            <p class="mt-2 text-sm text-gray-600">
+              브라우저에서 <code class="rounded bg-gray-100 px-2 py-1">http://localhost:5173</code> 접속
+            </p>
+            <div class="mt-3 rounded border bg-blue-50 p-3 text-xs text-gray-600">
+              <p class="font-medium text-gray-700 mb-1">테스트 계정</p>
+              <p>관리자: <code>m3test1@example.com</code> / <code>testpass1234</code></p>
+              <p>결재자: <code>m5approver@example.com</code> / <code>testpass1234</code></p>
+              <p>일반: <code>newuser@example.com</code> / <code>testpass1234</code></p>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="flex gap-4 items-start">
-        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">3</div>
-        <div>
-          <h3 class="font-bold">접속</h3>
-          <p class="mt-1 text-sm text-gray-600">브라우저에서 <code class="rounded bg-gray-100 px-2 py-0.5">http://서버IP:3000</code> 접속 → 관리자 계정 생성 → 완료!</p>
-        </div>
+
+      <!-- GitHub 링크 -->
+      <div class="mt-10 text-center">
+        <a href="https://github.com/sapinfo/rigel" class="inline-flex items-center gap-2 rounded-lg border-2 border-gray-900 px-5 py-2.5 text-sm font-medium hover:bg-gray-900 hover:text-white transition">
+          자세한 설치 가이드는 GitHub README 참조
+        </a>
       </div>
     </div>
   </section>
