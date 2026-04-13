@@ -79,48 +79,108 @@ Rigel은:
 
 ---
 
-## 설치 (셀프 호스팅)
+## 프로덕션 설치 (권장)
+
+IT 전문 인력 없이도 설치 가능합니다. Docker가 설치된 서버/PC 한 대면 충분합니다.
 
 ### 사전 요구
 
-- Docker + Docker Compose
+- **Docker + Docker Compose** (또는 Podman)
+- **Git**
+- 서버 또는 PC (CPU 2코어, RAM 4GB 이상)
+
+Docker 설치: https://docs.docker.com/get-docker/
+Podman 설치: https://podman.io/getting-started/installation (Docker 대안, 무료)
+
+### 방법 1: 원클릭 설치
+
+터미널에서 한 줄만 실행하면 소스 다운로드 → 보안 키 자동 생성 → 서버 실행까지 전부 자동입니다.
+
+**Linux / macOS:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/sapinfo/rigel/main/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/sapinfo/rigel/main/install.ps1 | iex
+```
+
+완료되면 `http://서버IP:3000` 접속 → 회원가입 → 조직 생성 → 사용 시작!
+
+### 방법 2: 수동 설치
+
+```bash
+# 1. 소스 받기
+git clone https://github.com/sapinfo/rigel.git && cd rigel
+
+# 2. 환경변수 설정 (보안 키는 install.sh가 자동 생성해주지만, 수동 시 직접 편집)
+cp .env.production.example .env
+# .env 파일을 열어서 POSTGRES_PASSWORD, JWT_SECRET 등 설정
+
+# 3. 실행
+docker compose up -d
+
+# 4. 접속
+# http://서버IP:3000
+```
+
+### 자주 쓰는 명령어
+
+```bash
+docker compose down          # 중지
+docker compose restart       # 재시작
+docker compose logs -f app   # 로그 확인
+git pull && docker compose up -d --build  # 업데이트
+```
+
+> 데이터는 Docker volume에 영구 저장됩니다. 중지해도 데이터는 유지됩니다.
+
+---
+
+## 개발 환경 설치
+
+소스 수정·기여를 위한 로컬 개발 환경입니다.
+
+### 사전 요구
+
+- Docker
 - Node.js 22+
 - Supabase CLI (`brew install supabase/tap/supabase`)
 
-### 1. 소스 받기
+### 설치 단계
 
 ```bash
-git clone https://github.com/sapinfo/rigel.git
-cd rigel
-```
+# 1. 소스 받기
+git clone https://github.com/sapinfo/rigel.git && cd rigel
 
-### 2. Supabase 기동 + DB 초기화
-
-```bash
+# 2. Supabase 기동 + DB 초기화
 supabase start
 supabase db reset   # 71개 migration 적용 + seed 데이터 생성
-```
 
-### 3. 환경변수
-
-```bash
+# 3. 환경변수
 cp .env.example .env.local
-# .env.local에 supabase status 출력의 ANON_KEY, URL 입력
-```
+# supabase status 출력의 ANON_KEY, URL을 .env.local에 입력
 
-### 4. 실행
-
-```bash
+# 4. 실행
 npm install
 npm run dev
 # → http://localhost:5173
 ```
 
-### 5. 빌드 (프로덕션)
+### 테스트 계정 (seed 데이터)
+
+| 계정 | 비밀번호 | 역할 |
+|---|---|---|
+| m3test1@example.com | testpass1234 | 관리자 (owner) |
+| m5approver@example.com | testpass1234 | 결재자 (member) |
+| newuser@example.com | testpass1234 | 일반 사용자 (member) |
+
+### 빌드·검증
 
 ```bash
-npm run build
-node build/index.js
+npm run check     # svelte-check (0 error 기준)
+npm run build     # 프로덕션 빌드 (adapter-node)
 ```
 
 ---
