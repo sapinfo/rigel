@@ -220,15 +220,9 @@
           <h3 class="font-bold text-lg mb-3">원클릭 설치 (권장)</h3>
           <p class="text-sm text-gray-600 mb-4">사전 요구 사항이 설치된 상태에서, 터미널에 아래 한 줄만 실행하세요.</p>
 
-          <div class="space-y-3">
-            <div>
-              <p class="text-xs font-medium text-gray-500 mb-1">Linux / macOS:</p>
-              <code class="block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">curl -fsSL https://raw.githubusercontent.com/sapinfo/rigel/main/install.sh | bash</code>
-            </div>
-            <div>
-              <p class="text-xs font-medium text-gray-500 mb-1">Windows (PowerShell):</p>
-              <code class="block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">irm https://raw.githubusercontent.com/sapinfo/rigel/main/install.ps1 | iex</code>
-            </div>
+          <div>
+            <p class="text-xs font-medium text-gray-500 mb-1">Linux / macOS 터미널에서:</p>
+            <code class="block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">curl -fsSL https://raw.githubusercontent.com/sapinfo/rigel/main/install.sh | bash</code>
           </div>
 
           <p class="mt-3 text-xs text-gray-500">스크립트가 자동으로: 소스 다운로드 → Supabase 시작 → DB 초기화 → 앱 빌드 → 서버 실행</p>

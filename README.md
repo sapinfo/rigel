@@ -79,68 +79,49 @@ Rigel은:
 
 ---
 
-## 프로덕션 설치 (권장)
+## 프로덕션 설치 (Linux 권장)
 
-IT 전문 인력 없이도 설치 가능합니다. Docker가 설치된 서버/PC 한 대면 충분합니다.
+Linux 서버(Ubuntu 24.04 검증) 한 대에서 Supabase CLI + Docker로 운영합니다.
 
 ### 사전 요구
 
-- **Podman (권장)** 또는 Docker
+- **Linux** (Ubuntu 24.04+ 권장) 또는 macOS
+- **Docker** + Docker Compose — https://docs.docker.com/get-docker/
+- **Node.js 22+** — https://nodejs.org/
+- **Supabase CLI** — https://supabase.com/docs/guides/cli/getting-started
 - **Git**
-- 서버 또는 PC (CPU 4코어, RAM 16GB 이상)
+- 서버 또는 PC (CPU 4코어, RAM 16GB 이상, 디스크 40GB 이상)
 
-**Podman 설치 (권장 — 무료, 가벼움):**
-- Linux: https://podman.io/getting-started/installation
-- macOS: `brew install podman`
-- Windows: https://podman.io/getting-started/installation
-  - 추가 필요: [WSL](https://learn.microsoft.com/windows/wsl/install) + [Python](https://www.python.org/downloads/) 설치 후 `pip install podman-compose`
+### 원클릭 설치
 
-**Docker 설치 (대안):**
-- https://docs.docker.com/get-docker/
+사전 요구가 설치된 상태에서 터미널에 아래 한 줄만 실행하세요.
 
-### 방법 1: 원클릭 설치
-
-터미널에서 한 줄만 실행하면 소스 다운로드 → 보안 키 자동 생성 → 서버 실행까지 전부 자동입니다.
-
-**Linux / macOS:**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/sapinfo/rigel/main/install.sh | bash
 ```
 
-**Windows (PowerShell):**
-```powershell
-irm https://raw.githubusercontent.com/sapinfo/rigel/main/install.ps1 | iex
-```
+스크립트가 자동으로 수행:
+1. 소스 다운로드 (`git clone`)
+2. Supabase 시작 (`supabase start`)
+3. DB 초기화 (`supabase db reset` — 71 migrations + seed)
+4. 환경변수 자동 생성 (`.env`, `.env.local`)
+5. 앱 빌드 (`npm ci && npm run build`)
+6. 앱 실행 (`docker compose up -d`)
 
-완료되면 `http://서버IP:3000` 접속 → 회원가입 → 조직 생성 → 사용 시작!
-
-### 방법 2: 수동 설치
-
-```bash
-# 1. 소스 받기
-git clone https://github.com/sapinfo/rigel.git && cd rigel
-
-# 2. 환경변수 설정 (보안 키는 install.sh가 자동 생성해주지만, 수동 시 직접 편집)
-cp .env.production.example .env
-# .env 파일을 열어서 POSTGRES_PASSWORD, JWT_SECRET 등 설정
-
-# 3. 실행
-docker compose up -d
-
-# 4. 접속
-# http://서버IP:3000
-```
+완료 후 `http://서버IP:3000` 접속 → 회원가입 → 조직 생성 → 사용 시작.
 
 ### 자주 쓰는 명령어
 
 ```bash
-docker compose down          # 중지
-docker compose restart       # 재시작
-docker compose logs -f app   # 로그 확인
-git pull && docker compose up -d --build  # 업데이트
+docker compose down                         # 앱 중지
+supabase stop                               # Supabase 중지
+docker compose restart                      # 앱 재시작
+docker compose logs -f app                  # 로그 확인
+supabase db reset                           # DB 초기화 (seed 재적용)
+git pull && npm run build && docker compose up -d --build  # 업데이트
 ```
 
-> 데이터는 Docker volume에 영구 저장됩니다. 중지해도 데이터는 유지됩니다.
+> **데이터 영속성**: Supabase는 Docker volume에 데이터 저장. `supabase stop` 해도 유지됩니다.
 
 ---
 
