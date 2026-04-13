@@ -42,19 +42,11 @@
   {/if}
 
   <!-- 문서 메타데이터 -->
-  {#if data.document.urgency !== '일반' || data.document.retention_period !== '5년' || data.document.security_level !== '일반'}
-    <div class="flex flex-wrap gap-3 text-xs">
-      {#if data.document.urgency === '긴급'}
-        <span class="rounded bg-red-100 px-2 py-1 font-medium text-red-700">긴급</span>
-      {/if}
-      {#if data.document.retention_period !== '5년'}
-        <span class="rounded bg-gray-100 px-2 py-1 text-gray-600">보관 {data.document.retention_period}</span>
-      {/if}
-      {#if data.document.security_level !== '일반'}
-        <span class="rounded bg-orange-100 px-2 py-1 text-orange-700">{data.document.security_level}</span>
-      {/if}
-    </div>
-  {/if}
+  <div class="flex flex-wrap items-center gap-4 rounded-lg border bg-white px-4 py-2 text-sm text-gray-600">
+    <span>긴급도: <strong class:text-red-600={data.document.urgency === '긴급'}>{data.document.urgency}</strong></span>
+    <span>보관기한: <strong>{data.document.retention_period}</strong></span>
+    <span>보안등급: <strong class:text-orange-600={data.document.security_level !== '일반'}>{data.document.security_level}</strong></span>
+  </div>
 
   {#if !printMode && form?.actionError}
     <p class="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
