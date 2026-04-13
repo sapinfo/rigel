@@ -43,12 +43,21 @@ if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
 }
 Write-Host "[OK] Node.js: $(node --version)" -ForegroundColor Green
 
-if (-not (Get-Command supabase -ErrorAction SilentlyContinue)) {
+# Supabase CLI: prefer global 'supabase', fallback to 'npx supabase'
+$SUPABASE_CMD = $null
+if (Get-Command supabase -ErrorAction SilentlyContinue) {
+    $SUPABASE_CMD = "supabase"
+} elseif (Get-Command npx -ErrorAction SilentlyContinue) {
+    $SUPABASE_CMD = "npx -y supabase"
+    Write-Host "[OK] Supabase CLI will be used via npx" -ForegroundColor Green
+}
+
+if (-not $SUPABASE_CMD) {
     Write-Host "[!] Supabase CLI not found." -ForegroundColor Red
     Write-Host "    https://supabase.com/docs/guides/cli/getting-started"
     exit 1
 }
-Write-Host "[OK] Supabase CLI found" -ForegroundColor Green
+Write-Host "[OK] Supabase CLI: $SUPABASE_CMD" -ForegroundColor Green
 
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     Write-Host "[!] git not found. https://git-scm.com/downloads" -ForegroundColor Red
@@ -79,17 +88,17 @@ Write-Host ""
 # --- 3. Start Supabase ---
 
 Write-Host "[..] Starting Supabase (DB, Auth, Storage, API)..."
-supabase start
+Invoke-Expression "$SUPABASE_CMD start"
 
 Write-Host ""
 Write-Host "[..] Initializing database (migrations + seed)..."
-supabase db reset
+Invoke-Expression "$SUPABASE_CMD db reset"
 
 Write-Host ""
 
 # --- 4. Configure environment ---
 
-$statusJson = supabase status --output json 2>$null | ConvertFrom-Json
+$statusJson = Invoke-Expression "$SUPABASE_CMD status --output json" 2>$null | ConvertFrom-Json
 $SUPABASE_URL = if ($statusJson.'API URL') { $statusJson.'API URL' } else { "http://localhost:54321" }
 $ANON_KEY = if ($statusJson.'anon key') { $statusJson.'anon key' } else { "" }
 
