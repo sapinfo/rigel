@@ -19,28 +19,35 @@
   </nav>
 
   <!-- Hero -->
-  <section class="mx-auto max-w-6xl px-6 py-20 lg:py-28">
-    <div class="max-w-3xl">
-      <div class="inline-block rounded-full bg-blue-50 px-4 py-1.5 text-sm text-blue-700 mb-6">
-        오픈소스 · 무료 · 셀프 호스팅
+  <section class="mx-auto max-w-6xl px-6 py-16 lg:py-24">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:gap-12">
+      <!-- 좌: 텍스트 -->
+      <div class="lg:w-1/2">
+        <div class="inline-block rounded-full bg-blue-50 px-4 py-1.5 text-sm text-blue-700 mb-6">
+          오픈소스 · 무료 · 셀프 호스팅
+        </div>
+        <h1 class="text-4xl font-bold tracking-tight lg:text-5xl leading-tight">
+          한국식 전자결재,<br/>
+          <span class="text-blue-600">미국에서도 그대로.</span>
+        </h1>
+        <p class="mt-6 text-lg text-gray-600 leading-relaxed">
+          전결, 대결, 후결, 합의, 병렬결재 — 한국 본사와 동일한 결재 체계를
+          우리 서버에 직접 설치해서 무료로 운영하세요.
+        </p>
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a href="https://github.com/sapinfo/rigel" class="rounded-lg bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800">
+            GitHub에서 받기
+          </a>
+          <a href="/signup" class="rounded-lg border-2 border-blue-600 px-6 py-3 text-sm font-medium text-blue-600 hover:bg-blue-50">
+            데모 사이트 체험
+          </a>
+        </div>
+        <p class="mt-4 text-xs text-gray-400">서버 한 대 + Docker만 있으면 10분 안에 설치 완료</p>
       </div>
-      <h1 class="text-4xl font-bold tracking-tight lg:text-5xl leading-tight">
-        한국식 전자결재,<br/>
-        <span class="text-blue-600">미국에서도 그대로.</span>
-      </h1>
-      <p class="mt-6 text-lg text-gray-600 leading-relaxed">
-        전결, 대결, 후결, 합의, 병렬결재 — 한국 본사와 동일한 결재 체계를<br class="hidden lg:block"/>
-        우리 서버에 직접 설치해서 무료로 운영하세요.
-      </p>
-      <div class="mt-8 flex flex-wrap gap-3">
-        <a href="https://github.com/sapinfo/rigel" class="rounded-lg bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800">
-          GitHub에서 받기
-        </a>
-        <a href="/signup" class="rounded-lg border-2 border-blue-600 px-6 py-3 text-sm font-medium text-blue-600 hover:bg-blue-50">
-          데모 사이트 체험
-        </a>
+      <!-- 우: 스크린샷 -->
+      <div class="mt-10 lg:mt-0 lg:w-1/2">
+        <img src="/hero.png" alt="Rigel 대시보드" class="rounded-xl shadow-2xl border" />
       </div>
-      <p class="mt-4 text-xs text-gray-400">서버 한 대 + Docker만 있으면 10분 안에 설치 완료</p>
     </div>
   </section>
 
