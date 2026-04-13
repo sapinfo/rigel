@@ -5,7 +5,7 @@
 ## 프로젝트 정체성
 
 - **Rigel**: 한국형 SMB용 multi-tenant 전자결재 SaaS
-- **현재 상태**: **v2.3.0** Polish 완료 (commit `fd0648b`)
+- **현재 상태**: **v3.1** 완료 (그룹웨어 확장, match 98%)
   - v1.0.0 (`d957381`): Shippable Core (25 smoke, match 100%)
   - v1.1.0 (`cb703d7`): 전결/대결/후결/부재자동 (13/15 smoke, match 94%)
   - v1.2.0 (`8b60fb6`): 병렬결재/PDF/해시/서명 (33+ Vitest, match 90%)
@@ -14,7 +14,9 @@
   - v2.1.0 (`e8f5f5e`): RuleBuilder GUI/OrgTree/프리뷰/시뮬레이터 (match 93%)
   - v2.2.0 (`af0af3c`): 즐겨찾기/일괄결재/합의/대시보드/감사로그 등 12 마일스톤 (match 93%)
   - v2.3.0 (`fd0648b`): StampLine/OrgTreePicker통합/이관/보관기한/보안등급/사이드바 (match 92%)
-- **Phased 로드맵**: v1.0 ✅ → v1.1 ✅ → v1.2 ✅ → v1.3 ✅ → v2.0 ✅ → v2.1 ✅ → v2.2 ✅ → v2.3 ✅
+  - v3.0.0 (`6617a7b`): AdminNav/Tiptap/메타데이터/휴가캘린더/로그인브랜딩 (match 95%)
+  - v3.1.0 (`290c7de`): 게시판/공지/일정/근태/인사/사이드바 (match 98%)
+- **Phased 로드맵**: v1.0 ✅ → v1.1 ✅ → v1.2 ✅ → v1.3 ✅ → v2.0 ✅ → v2.1 ✅ → v2.2 ✅ → v2.3 ✅ → v3.0 ✅ → v3.1 ✅
 
 ## Stack (변경 금지)
 
@@ -171,6 +173,11 @@ supabase/migrations/                # 0001~0052c
 | 단계 | 파일 |
 |---|---|
 | All | `docs/archive/2026-04/결재선-v2.2-실무완성/` — Match 93% |
+
+### v3.1 (archived)
+| 단계 | 파일 |
+|---|---|
+| All | `docs/archive/2026-04/그룹웨어-v3.1-확장/` — Match 98% |
 
 ### 공통
 | 자료 | 파일 |

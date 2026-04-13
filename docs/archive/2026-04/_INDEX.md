@@ -2,6 +2,7 @@
 
 | Feature | Status | Match | Archived | Path |
 |---|---|---|---|---|
+| 그룹웨어-v3.1-확장 | completed | 98% | 2026-04-12 | [그룹웨어-v3.1-확장/](./그룹웨어-v3.1-확장/) |
 | 결재선-v3.0-polish-final | completed | 95% | 2026-04-13 | [결재선-v3.0-polish-final/](./결재선-v3.0-polish-final/) |
 | 결재선-v2.3-polish | completed | 92% | 2026-04-12 | [결재선-v2.3-polish/](./결재선-v2.3-polish/) |
 | 결재선-v2.2-실무완성 | completed | 93% | 2026-04-12 | [결재선-v2.2-실무완성/](./결재선-v2.2-실무완성/) |
