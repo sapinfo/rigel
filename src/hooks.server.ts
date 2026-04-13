@@ -1,7 +1,8 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { type Handle, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+import { env } from '$env/dynamic/public';
+import { env as privateEnv } from '$env/dynamic/private';
 import { warmUpPdfRenderer } from '$lib/server/pdf/renderDocument';
 
 // v1.2 M17: puppeteer Chromium warm-up at boot time.
@@ -19,9 +20,11 @@ if (!process.env.VITEST && process.env.NODE_ENV !== 'test') {
  * Uses @supabase/ssr with the `getAll`/`setAll` cookie pattern.
  */
 const supabase: Handle = async ({ event, resolve }) => {
+  // Server uses internal Docker URL (kong:8000), browser uses public URL (localhost:8000)
+  const serverUrl = privateEnv.SUPABASE_INTERNAL_URL || env.PUBLIC_SUPABASE_URL!;
   event.locals.supabase = createServerClient(
-    PUBLIC_SUPABASE_URL,
-    PUBLIC_SUPABASE_ANON_KEY,
+    serverUrl,
+    env.PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll: () => event.cookies.getAll(),

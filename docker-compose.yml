@@ -116,8 +116,10 @@ services:
     depends_on:
       - kong
     environment:
-      PUBLIC_SUPABASE_URL: http://kong:8000
+      # Browser uses localhost (external), server uses kong (internal Docker network)
+      PUBLIC_SUPABASE_URL: http://localhost:${API_PORT:-8000}
       PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_INTERNAL_URL: http://kong:8000
       ORIGIN: ${SITE_URL:-http://localhost:3000}
       PORT: 3000
     ports:

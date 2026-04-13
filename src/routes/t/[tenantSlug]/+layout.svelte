@@ -2,7 +2,7 @@
   import { page } from '$app/state';
   import { onMount } from 'svelte';
   import { createBrowserClient } from '@supabase/ssr';
-  import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+  import { env } from '$env/dynamic/public';
   import NotificationBell from '$lib/components/NotificationBell.svelte';
   import Sidebar from '$lib/components/Sidebar.svelte';
   import AnnouncementPopup from '$lib/components/AnnouncementPopup.svelte';
@@ -30,7 +30,7 @@
   }
 
   onMount(() => {
-    const supabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
+    const supabase = createBrowserClient(env.PUBLIC_SUPABASE_URL!, env.PUBLIC_SUPABASE_ANON_KEY!);
 
     supabase
       .rpc('get_notifications', { p_tenant_id: data.currentTenant.id })
