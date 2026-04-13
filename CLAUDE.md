@@ -86,6 +86,7 @@
 6. **`$lib/server/*` 는 server-only** (v1.1 M12 교훈) — `.svelte` 파일에서 import 금지 ("An impossible situation occurred" Vite 오류). 클라이언트에서도 필요한 const/enum/label은 `$lib/` 루트에 client-safe 모듈로 분리 (예: `$lib/absenceTypes.ts` ↔ `$lib/server/schemas/absence.ts` re-export)
 7. **Label 접근성**: `<label>`과 input은 nesting (`<label><span>title</span><input/></label>`) 또는 for/id 연결. 형제 배치는 svelte-check `a11y_label_has_associated_control` 경고
 8. **새 enum 값 추가 후** `Record<EnumType, T>` 매핑 누락 → svelte-check가 잡아줌 → **절대 ignore 하지 말 것**
+9. **page server load에서 tenant 접근**: `locals.currentTenant!` 금지 → **`const { currentTenant } = await parent()`** 사용 필수. layout load와 page load 실행 순서가 보장되지 않아 locals가 null일 수 있음 (v3.1 교훈)
 
 ### Storage 규칙
 - 경로: **`{tenant_id}/{YYYY-MM}/{upload_uuid}.{ext}`** (월 버킷, 파일당 폴더 없음)
