@@ -33,7 +33,7 @@ async function loadPendingDocs(
   const { data: docs } = await supabase
     .from('approval_documents')
     .select(
-      'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency'
+      'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency, content'
     )
     .in('id', docIds)
     .in('status', ['in_progress', 'pending_post_facto'])
@@ -100,6 +100,7 @@ type DocRow = {
   updated_at: string;
   form_id: string;
   urgency: string;
+  content: Record<string, unknown>;
 };
 
 type FormLookup = Map<string, { name: string; code: string }>;
@@ -137,7 +138,7 @@ async function loadDocumentsForTab(
       const { data } = await supabase
         .from('approval_documents')
         .select(
-          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency'
+          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency, content'
         )
         .eq('tenant_id', tenantId)
         .eq('drafter_id', userId)
@@ -150,7 +151,7 @@ async function loadDocumentsForTab(
       const { data } = await supabase
         .from('approval_documents')
         .select(
-          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency'
+          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency, content'
         )
         .eq('tenant_id', tenantId)
         .eq('drafter_id', userId)
@@ -163,7 +164,7 @@ async function loadDocumentsForTab(
       const { data } = await supabase
         .from('approval_documents')
         .select(
-          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency'
+          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency, content'
         )
         .eq('tenant_id', tenantId)
         .eq('drafter_id', userId)
@@ -176,7 +177,7 @@ async function loadDocumentsForTab(
       const { data } = await supabase
         .from('approval_documents')
         .select(
-          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency'
+          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency, content'
         )
         .eq('tenant_id', tenantId)
         .eq('drafter_id', userId)
@@ -231,6 +232,7 @@ export const load: PageServerLoad = async ({ locals, url, parent }) => {
       status: d.status,
       form_name: form?.name ?? '(양식 없음)',
       form_code: form?.code ?? 'general',
+      title: (d.content?.title as string) ?? (d.content?.subject as string) ?? '',
       drafter_name: drafter?.display_name ?? '(알 수 없음)',
       submitted_at: d.submitted_at,
       completed_at: d.completed_at,

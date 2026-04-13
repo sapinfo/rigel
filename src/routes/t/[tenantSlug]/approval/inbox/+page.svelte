@@ -158,7 +158,8 @@
               {#if row.urgency === '긴급'}
                 <span class="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-700">긴급</span>
               {/if}
-              <span class="min-w-0 flex-1 truncate font-medium">{row.form_name}</span>
+              <span class="shrink-0 text-xs text-gray-500">{row.form_name}</span>
+              <span class="min-w-0 flex-1 truncate font-medium">{row.title || '(제목 없음)'}</span>
               <span class="w-24 shrink-0 truncate text-xs text-gray-600">{row.drafter_name}</span>
               <span class="w-16 shrink-0 rounded px-2 py-0.5 text-center text-xs"
                 class:bg-yellow-100={row.status === 'draft'} class:text-yellow-800={row.status === 'draft'}
