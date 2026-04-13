@@ -179,9 +179,20 @@
         <!-- 원클릭 설치 -->
         <div class="mb-8">
           <h3 class="font-bold text-lg mb-3">방법 1: 원클릭 설치 (권장)</h3>
-          <p class="text-sm text-gray-600 mb-3">터미널(명령 프롬프트)에서 아래 한 줄만 실행하세요. 소스 다운로드부터 보안 키 생성, 서버 실행까지 전부 자동입니다.</p>
-          <code class="block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">curl -fsSL https://raw.githubusercontent.com/sapinfo/rigel/main/install.sh | bash</code>
-          <p class="mt-2 text-xs text-gray-500">완료되면 접속 주소가 화면에 표시됩니다. 브라우저에서 접속 → 회원가입 → 조직 생성 → 사용 시작!</p>
+          <p class="text-sm text-gray-600 mb-4">터미널에서 아래 한 줄만 실행하세요. 소스 다운로드부터 보안 키 생성, 서버 실행까지 전부 자동입니다.</p>
+
+          <div class="space-y-3">
+            <div>
+              <p class="text-xs font-medium text-gray-500 mb-1">Linux / macOS — 터미널에서:</p>
+              <code class="block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">curl -fsSL https://raw.githubusercontent.com/sapinfo/rigel/main/install.sh | bash</code>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-gray-500 mb-1">Windows — PowerShell에서:</p>
+              <code class="block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">irm https://raw.githubusercontent.com/sapinfo/rigel/main/install.ps1 | iex</code>
+            </div>
+          </div>
+
+          <p class="mt-3 text-xs text-gray-500">완료되면 접속 주소가 화면에 표시됩니다. 브라우저에서 접속 → 회원가입 → 조직 생성 → 사용 시작!</p>
         </div>
 
         <div class="mb-8 border-t pt-8">
