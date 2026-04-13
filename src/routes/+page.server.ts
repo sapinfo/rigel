@@ -2,13 +2,14 @@ import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 /**
- * Entry redirect:
- *   - unauthenticated → /login (authGuard handles this already, but kept for safety)
+ * Entry point:
+ *   - unauthenticated → show landing page (no redirect)
  *   - authenticated, no tenants → /onboarding/create-tenant
- *   - authenticated, has tenants → /t/{defaultOrFirstSlug}/approval/inbox
+ *   - authenticated, has tenants → /t/{slug}
  */
 export const load: PageServerLoad = async ({ locals }) => {
-  if (!locals.user) redirect(303, '/login');
+  // Not logged in → show landing page
+  if (!locals.user) return { landing: true };
 
   const { data: memberships } = await locals.supabase
     .from('tenant_members')
