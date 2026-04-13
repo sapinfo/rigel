@@ -29,7 +29,7 @@
         우리 서버에 직접 설치해서 무료로 운영하세요.
       </p>
       <div class="mt-8 flex flex-wrap gap-3">
-        <a href="https://github.com" class="rounded-lg bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800">
+        <a href="https://github.com/sapinfo/rigel" class="rounded-lg bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800">
           GitHub에서 받기
         </a>
         <a href="/signup" class="rounded-lg border-2 border-blue-600 px-6 py-3 text-sm font-medium text-blue-600 hover:bg-blue-50">
@@ -148,7 +148,7 @@
         <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">1</div>
         <div>
           <h3 class="font-bold">소스 받기</h3>
-          <code class="mt-1 block rounded bg-gray-900 text-green-400 px-4 py-2 text-sm">git clone https://github.com/your-org/rigel.git</code>
+          <code class="mt-1 block rounded bg-gray-900 text-green-400 px-4 py-2 text-sm">git clone https://github.com/sapinfo/rigel.git</code>
         </div>
       </div>
       <div class="flex gap-4 items-start">
@@ -227,7 +227,7 @@
       <h2 class="text-3xl font-bold">지금 바로 시작하세요</h2>
       <p class="mt-3 text-blue-200">서버 한 대면 우리 회사 전용 그룹웨어가 완성됩니다</p>
       <div class="mt-8 flex justify-center gap-4">
-        <a href="https://github.com" class="rounded-lg bg-white px-6 py-3 text-sm font-medium text-gray-900 hover:bg-gray-100">
+        <a href="https://github.com/sapinfo/rigel" class="rounded-lg bg-white px-6 py-3 text-sm font-medium text-gray-900 hover:bg-gray-100">
           GitHub에서 받기
         </a>
         <a href="/signup" class="rounded-lg border-2 border-white px-6 py-3 text-sm font-medium text-white hover:bg-white/10">
@@ -246,7 +246,7 @@
           <span class="ml-2 text-sm text-gray-500">재미 한국기업을 위한 오픈소스 그룹웨어</span>
         </div>
         <div class="flex gap-6 text-sm text-gray-500">
-          <a href="https://github.com" class="hover:text-gray-900">GitHub</a>
+          <a href="https://github.com/sapinfo/rigel" class="hover:text-gray-900">GitHub</a>
           <a href="/login" class="hover:text-gray-900">로그인</a>
           <a href="/signup" class="hover:text-gray-900">회원가입</a>
         </div>
