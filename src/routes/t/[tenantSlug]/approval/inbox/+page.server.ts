@@ -230,6 +230,7 @@ export const load: PageServerLoad = async ({ locals, url, parent }) => {
       doc_number: d.doc_number,
       status: d.status,
       form_name: form?.name ?? '(양식 없음)',
+      form_code: form?.code ?? 'general',
       drafter_name: drafter?.display_name ?? '(알 수 없음)',
       submitted_at: d.submitted_at,
       completed_at: d.completed_at,

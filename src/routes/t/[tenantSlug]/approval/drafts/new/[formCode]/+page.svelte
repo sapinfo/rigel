@@ -11,8 +11,10 @@
 
   let { data, form } = $props();
 
-  // Form 콘텐츠
-  let content = $state<Record<string, unknown>>({});
+  // Form 콘텐츠 (임시저장 불러오기 시 초기값)
+  let content = $state<Record<string, unknown>>(
+    untrack(() => data.draftContent ?? {})
+  );
 
   // 결재선
   let approvalLine = $state<ApprovalLineItem[]>(
@@ -26,8 +28,8 @@
   let retentionPeriod = $state('5년');
   let securityLevel = $state('일반');
 
-  // 임시저장된 문서 ID
-  let documentId = $state<string | null>(null);
+  // 임시저장된 문서 ID (불러오기 시 초기값)
+  let documentId = $state<string | null>(data.loadedDocumentId ?? null);
 
   // 결재선 프리뷰
   let previewInfo = $state<{ approvers: { userId: string; displayName: string; departmentName: string | null; jobTitleName: string | null; stepType: string }[]; ruleName: string | null; error: string | null } | null>(null);
@@ -36,6 +38,9 @@
 
   // hidden 필드 추적
   let hiddenIds = $state<Set<string>>(new Set());
+
+  // 저장 피드백
+  let saveMessage = $state<string | null>(null);
 
   // 제출 상태
   let submittingSave = $state(false);
@@ -307,16 +312,27 @@
       formData.set('content', JSON.stringify(content));
       if (documentId) formData.set('documentId', documentId);
       submittingSave = true;
-      return async ({ update, result }) => {
+      saveMessage = null;
+      return async ({ result, update }) => {
+        if (result.type === 'success') {
+          const d = result.data as Record<string, unknown> | undefined;
+          if (d?.documentId) documentId = d.documentId as string;
+          saveMessage = '임시저장되었습니다.';
+          setTimeout(() => saveMessage = null, 3000);
+        } else {
+          saveMessage = '임시저장에 실패했습니다.';
+        }
         await update({ reset: false });
-        if (result.type === 'success' && result.data?.documentId) documentId = result.data.documentId as string;
         submittingSave = false;
       };
     }}>
       <button type="submit" disabled={submittingSave || submittingSubmit} class="rounded border px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-50">
-        {submittingSave ? '저장 중…' : '임시저장'}
+        {submittingSave ? '저장 중…' : documentId ? '임시저장 (업데이트)' : '임시저장'}
       </button>
     </form>
+    {#if saveMessage}
+      <span class="text-xs text-green-600">{saveMessage}</span>
+    {/if}
 
     <form method="POST" action={isPostFacto ? '?/submitPostFacto' : '?/submit'} use:enhance={({ formData, cancel }) => {
       if (isPostFacto && postFactoReason.trim().length === 0) { cancel(); return; }

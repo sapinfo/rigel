@@ -38,7 +38,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
   // 멤버 목록 (2-query pattern)
   const { data: memberRows } = await locals.supabase
     .from('tenant_members')
-    .select('user_id, role, job_title, joined_at')
+    .select('user_id, role, job_title, joined_at, department_id')
     .eq('tenant_id', tenantId);
 
   const profileMap = await fetchProfilesByIds(
@@ -52,6 +52,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
       user_id: m.user_id as string,
       role: m.role as TenantRole,
       job_title: (m.job_title as string | null) ?? null,
+      department_id: (m.department_id as string | null) ?? null,
       joined_at: m.joined_at as string,
       display_name: p?.display_name ?? '(알 수 없음)',
       email: p?.email ?? ''
@@ -75,7 +76,14 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
     created_at: i.created_at as string
   }));
 
-  return { members, invitations };
+  // 부서 목록 (필터용)
+  const { data: depts } = await locals.supabase
+    .from('departments')
+    .select('id, name')
+    .eq('tenant_id', tenantId)
+    .order('name');
+
+  return { members, invitations, departments: (depts ?? []).map((d) => ({ id: d.id as string, name: d.name as string })) };
 };
 
 export const actions: Actions = {

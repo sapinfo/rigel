@@ -30,9 +30,28 @@ async function resolveTenant(
   return { id: t.id, slug: t.slug };
 }
 
-export const load: PageServerLoad = async ({ locals, params, parent }) => {
+export const load: PageServerLoad = async ({ locals, params, parent, url }) => {
   const { currentTenant } = await parent();
   if (!currentTenant) error(404);
+
+  // 임시저장 문서 불러오기
+  const draftId = url.searchParams.get('draft');
+  let draftContent: Record<string, unknown> | null = null;
+  let loadedDocumentId: string | null = null;
+  if (draftId) {
+    const { data: draftDoc } = await locals.supabase
+      .from('approval_documents')
+      .select('id, content, status')
+      .eq('id', draftId)
+      .eq('tenant_id', currentTenant.id)
+      .eq('drafter_id', locals.user!.id)
+      .eq('status', 'draft')
+      .maybeSingle();
+    if (draftDoc) {
+      draftContent = draftDoc.content as Record<string, unknown>;
+      loadedDocumentId = draftDoc.id as string;
+    }
+  }
 
   // 1. 양식 조회 — 테넌트 양식 우선, 없으면 시스템 양식 fallback
   //    (fn_copy_system_forms가 보통 복사해둠, 시스템 양식 직접 사용은 예외적)
@@ -125,6 +144,8 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
       defaultApprovalLine: (form.default_approval_line as unknown as ApprovalLineItem[]) ?? []
     },
     members,
+    draftContent,
+    loadedDocumentId,
     departments: (deptRows ?? []).map((d) => ({ id: d.id as string, name: d.name as string, parentId: (d.parent_id as string | null) ?? null })),
     favorites: (favRows ?? []).map((f) => ({
       id: f.id as string,

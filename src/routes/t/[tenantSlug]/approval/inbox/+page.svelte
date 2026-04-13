@@ -21,8 +21,11 @@
     return new Date(iso).toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
   }
 
-  function documentHref(id: string): string {
-    return `/t/${data.currentTenant.slug}/approval/documents/${id}`;
+  function documentHref(row: { id: string; status: string; form_code: string }): string {
+    if (row.status === 'draft') {
+      return `/t/${data.currentTenant.slug}/approval/drafts/new/${row.form_code}?draft=${row.id}`;
+    }
+    return `/t/${data.currentTenant.slug}/approval/documents/${row.id}`;
   }
 
   // 검색 + 페이징
@@ -149,7 +152,7 @@
               <input type="checkbox" checked={selectedIds.has(row.id)} onchange={() => toggleSelect(row.id)} class="h-4 w-4 rounded border-gray-300" />
             {/if}
 
-            <a href={documentHref(row.id)} class="flex flex-1 items-center gap-4">
+            <a href={documentHref(row)} class="flex flex-1 items-center gap-4">
               <span class="w-32 shrink-0 font-mono text-xs text-gray-500">{row.doc_number}</span>
               <!-- 긴급 배지 -->
               {#if row.urgency === '긴급'}

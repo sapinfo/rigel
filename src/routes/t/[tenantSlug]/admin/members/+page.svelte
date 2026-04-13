@@ -5,8 +5,20 @@
   let { data, form } = $props();
 
   let newInviteLink = $state<string | null>(null);
+  let deptFilter = $state('');
 
   const isOwner = $derived(data.currentTenant.role === 'owner');
+
+  const filteredMembers = $derived(
+    deptFilter ? data.members.filter((m) => m.department_id === deptFilter) : data.members
+  );
+
+  const slug = data.currentTenant.slug;
+  const adminLinks = [
+    ['members', '멤버'], ['org', '조직 관리'], ['forms', '양식'],
+    ['approval-rules', '결재선 규칙'], ['approval-templates', '결재선 템플릿'],
+    ['delegations', '전결 규칙'], ['absences', '부재 관리'], ['audit', '감사 로그']
+  ];
 
   function fmt(iso: string): string {
     return new Date(iso).toLocaleDateString('ko-KR');
@@ -18,6 +30,13 @@
 </script>
 
 <div class="flex flex-col gap-6">
+  <!-- 관리 서브네비 -->
+  <nav class="flex gap-1 overflow-x-auto border-b">
+    {#each adminLinks as [path, label] (path)}
+      <a href="/t/{slug}/admin/{path}" class="shrink-0 px-3 py-2 text-sm" class:border-b-2={page.url.pathname.includes(`/admin/${path}`)} class:border-blue-600={page.url.pathname.includes(`/admin/${path}`)} class:text-blue-600={page.url.pathname.includes(`/admin/${path}`)} class:text-gray-500={!page.url.pathname.includes(`/admin/${path}`)}>{label}</a>
+    {/each}
+  </nav>
+
   <!-- 초대 -->
   <section class="rounded-lg border bg-white p-4">
     <h2 class="mb-3 text-base font-semibold">멤버 초대</h2>
@@ -114,9 +133,17 @@
 
   <!-- 멤버 목록 -->
   <section>
-    <h2 class="mb-2 text-base font-semibold">멤버 ({data.members.length})</h2>
+    <div class="mb-2 flex items-center justify-between">
+      <h2 class="text-base font-semibold">멤버 ({filteredMembers.length})</h2>
+      <select bind:value={deptFilter} class="rounded border px-2 py-1 text-sm">
+        <option value="">전체 부서</option>
+        {#each data.departments as dept (dept.id)}
+          <option value={dept.id}>{dept.name}</option>
+        {/each}
+      </select>
+    </div>
     <ul class="flex flex-col gap-1">
-      {#each data.members as m (m.user_id)}
+      {#each filteredMembers as m (m.user_id)}
         <li class="flex items-center gap-3 rounded border bg-white px-3 py-2 text-sm">
           <div class="min-w-0 flex-1">
             <div class="font-medium">{m.display_name}</div>
