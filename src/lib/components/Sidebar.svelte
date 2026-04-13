@@ -21,7 +21,7 @@
   }
 
   const linkClass = (href: string) =>
-    `block rounded px-2.5 py-0.5 text-[13px] leading-6 ${active(href) ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50'}`;
+    `sidebar-link block rounded px-2.5 text-[13px] ${active(href) ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50'}`;
 
   // Section collapse state
   let approvalOpen = $state(true);
@@ -169,3 +169,11 @@
     </form>
   </div>
 </aside>
+
+<style>
+  :global(.sidebar-link) {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    line-height: 1.5;
+  }
+</style>
