@@ -161,47 +161,55 @@
 
       {#if installTab === 'prod'}
         <div class="mb-6 rounded-lg border-l-4 border-blue-500 bg-blue-50 p-4 text-sm text-gray-700">
-          IT 전문 인력 없이도 설치 가능합니다. Docker가 설치된 서버/PC 한 대면 충분합니다.
+          IT 전문 인력 없이도 설치 가능합니다. Docker(또는 Podman)가 설치된 서버/PC 한 대면 충분합니다.
         </div>
         <div class="mb-8 rounded-lg border bg-gray-50 p-5">
           <h3 class="font-bold text-sm text-gray-500 mb-3">사전 요구 사항</h3>
           <div class="flex flex-wrap gap-3">
-            <span class="rounded bg-white border px-3 py-1.5 text-sm">Docker + Docker Compose</span>
+            <span class="rounded bg-white border px-3 py-1.5 text-sm">Docker 또는 Podman</span>
+            <span class="rounded bg-white border px-3 py-1.5 text-sm">Git</span>
             <span class="rounded bg-white border px-3 py-1.5 text-sm">서버 또는 PC (CPU 2코어, RAM 4GB 이상)</span>
           </div>
-          <p class="mt-3 text-xs text-gray-500">Docker 설치: <a href="https://docs.docker.com/get-docker/" class="text-blue-600 hover:underline" target="_blank" rel="noopener">docs.docker.com/get-docker</a></p>
+          <div class="mt-3 text-xs text-gray-500 space-y-1">
+            <p>Docker 설치: <a href="https://docs.docker.com/get-docker/" class="text-blue-600 hover:underline" target="_blank" rel="noopener">docs.docker.com/get-docker</a></p>
+            <p>Podman 설치: <a href="https://podman.io/getting-started/installation" class="text-blue-600 hover:underline" target="_blank" rel="noopener">podman.io/getting-started</a> (Docker 대안, 무료)</p>
+          </div>
         </div>
-        <div class="space-y-6">
-          <div class="flex gap-4 items-start">
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">1</div>
-            <div class="flex-1">
-              <h3 class="font-bold">소스 받기</h3>
-              <code class="mt-2 block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">git clone https://github.com/sapinfo/rigel.git && cd rigel</code>
+
+        <!-- 원클릭 설치 -->
+        <div class="mb-8">
+          <h3 class="font-bold text-lg mb-3">방법 1: 원클릭 설치 (권장)</h3>
+          <p class="text-sm text-gray-600 mb-3">터미널(명령 프롬프트)에서 아래 한 줄만 실행하세요. 소스 다운로드부터 보안 키 생성, 서버 실행까지 전부 자동입니다.</p>
+          <code class="block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">curl -fsSL https://raw.githubusercontent.com/sapinfo/rigel/main/install.sh | bash</code>
+          <p class="mt-2 text-xs text-gray-500">완료되면 접속 주소가 화면에 표시됩니다. 브라우저에서 접속 → 회원가입 → 조직 생성 → 사용 시작!</p>
+        </div>
+
+        <div class="mb-8 border-t pt-8">
+          <h3 class="font-bold text-lg mb-3">방법 2: 수동 설치</h3>
+          <div class="space-y-6">
+            <div class="flex gap-4 items-start">
+              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">1</div>
+              <div class="flex-1">
+                <h3 class="font-bold">소스 받기</h3>
+                <code class="mt-2 block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">git clone https://github.com/sapinfo/rigel.git && cd rigel</code>
+              </div>
             </div>
-          </div>
-          <div class="flex gap-4 items-start">
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">2</div>
-            <div class="flex-1">
-              <h3 class="font-bold">환경변수 설정</h3>
-              <code class="mt-2 block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">cp .env.production.example .env</code>
-              <p class="mt-2 text-xs text-gray-500"><code class="text-gray-400">.env</code> 파일을 열어서 비밀번호와 키를 설정합니다. 파일 안에 설명이 있습니다.</p>
+            <div class="flex gap-4 items-start">
+              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">2</div>
+              <div class="flex-1">
+                <h3 class="font-bold">설치 스크립트 실행</h3>
+                <code class="mt-2 block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">bash install.sh</code>
+                <p class="mt-2 text-xs text-gray-500">보안 키 자동 생성 + Docker 서비스 자동 시작</p>
+              </div>
             </div>
-          </div>
-          <div class="flex gap-4 items-start">
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">3</div>
-            <div class="flex-1">
-              <h3 class="font-bold">실행 (한 줄이면 끝)</h3>
-              <code class="mt-2 block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">docker compose up -d</code>
-              <p class="mt-2 text-xs text-gray-500">데이터베이스 + 인증 + 스토리지 + 앱 서버가 모두 자동으로 실행됩니다.</p>
-            </div>
-          </div>
-          <div class="flex gap-4 items-start">
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">4</div>
-            <div class="flex-1">
-              <h3 class="font-bold">접속</h3>
-              <p class="mt-2 text-sm text-gray-600">
-                브라우저에서 <code class="rounded bg-gray-100 px-2 py-1">http://서버IP:3000</code> 접속 → 회원가입 → 조직 생성 → 사용 시작!
-              </p>
+            <div class="flex gap-4 items-start">
+              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">3</div>
+              <div class="flex-1">
+                <h3 class="font-bold">접속</h3>
+                <p class="mt-2 text-sm text-gray-600">
+                  브라우저에서 <code class="rounded bg-gray-100 px-2 py-1">http://서버IP:3000</code> 접속 → 회원가입 → 조직 생성 → 사용 시작!
+                </p>
+              </div>
             </div>
           </div>
         </div>
