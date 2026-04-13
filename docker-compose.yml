@@ -109,6 +109,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        PUBLIC_SUPABASE_URL: http://kong:8000
+        PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-placeholder}
     restart: unless-stopped
     depends_on:
       - kong
