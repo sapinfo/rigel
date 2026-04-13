@@ -1,0 +1,125 @@
+# ─── Rigel 프로덕션 Docker Compose ───
+# 이 파일 하나로 Supabase + Rigel 앱 전체가 실행됩니다.
+#
+# 사용법:
+#   1. .env 파일 생성 (cp .env.production.example .env)
+#   2. docker compose up -d
+#   3. http://서버IP:3000 접속
+#
+# 중지: docker compose down
+# 데이터 유지됨 (PostgreSQL volume)
+
+services:
+  # ─── PostgreSQL ───
+  db:
+    image: supabase/postgres:17-alpine
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_strong_password}
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d/migrations
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ─── Supabase Auth (GoTrue) ───
+  auth:
+    image: supabase/gotrue:v2.170.0
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-changeme_strong_password}@db:5432/postgres?sslmode=disable
+      GOTRUE_SITE_URL: ${SITE_URL:-http://localhost:3000}
+      GOTRUE_JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-token-with-at-least-32-characters-long}
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      GOTRUE_API_HOST: 0.0.0.0
+      API_EXTERNAL_URL: ${SITE_URL:-http://localhost:3000}
+    ports:
+      - "${AUTH_PORT:-9999}:9999"
+
+  # ─── Supabase REST (PostgREST) ───
+  rest:
+    image: postgrest/postgrest:v12.2.8
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD:-changeme_strong_password}@db:5432/postgres
+      PGRST_DB_SCHEMAS: public,storage
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-token-with-at-least-32-characters-long}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+    ports:
+      - "${REST_PORT:-3001}:3000"
+
+  # ─── Supabase Storage ───
+  storage:
+    image: supabase/storage-api:v1.14.7
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-changeme_strong_password}@db:5432/postgres
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      ANON_KEY: ${SUPABASE_ANON_KEY}
+      SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+      PGRST_JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-token-with-at-least-32-characters-long}
+      TENANT_ID: stub
+      REGION: local
+      GLOBAL_S3_BUCKET: stub
+    volumes:
+      - storagedata:/var/lib/storage
+    ports:
+      - "${STORAGE_PORT:-5000}:5000"
+
+  # ─── Supabase Kong (API Gateway) ───
+  kong:
+    image: kong:3.8
+    restart: unless-stopped
+    depends_on:
+      - auth
+      - rest
+      - storage
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl
+    volumes:
+      - ./docker/kong.yml:/var/lib/kong/kong.yml:ro
+    ports:
+      - "${API_PORT:-8000}:8000"
+
+  # ─── Rigel App (SvelteKit) ───
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - kong
+    environment:
+      PUBLIC_SUPABASE_URL: http://kong:8000
+      PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      ORIGIN: ${SITE_URL:-http://localhost:3000}
+      PORT: 3000
+    ports:
+      - "${APP_PORT:-3000}:3000"
+
+volumes:
+  pgdata:
+  storagedata:
