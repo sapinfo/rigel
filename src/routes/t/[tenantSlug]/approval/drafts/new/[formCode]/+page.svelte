@@ -61,9 +61,9 @@
     }).join(' → ');
   }
 
-  // 결재선 적용
+  // 결재선 적용 (groupOrder 보장)
   function applyLine(line: ApprovalLineItem[]) {
-    approvalLine = [...line];
+    approvalLine = line.map((item, idx) => ({ ...item, groupOrder: item.groupOrder ?? idx }));
     previewInfo = null;
     previewError = null;
   }
@@ -225,7 +225,7 @@
             if (preview?.error) {
               previewError = preview.error; previewInfo = null;
             } else if (preview) {
-              approvalLine = preview.approvers.map((a) => ({ userId: a.userId, stepType: a.stepType as 'approval' | 'reference' }));
+              approvalLine = preview.approvers.map((a, idx) => ({ userId: a.userId, stepType: a.stepType as 'approval' | 'reference', groupOrder: idx }));
               previewInfo = preview; previewError = null;
             }
           }
@@ -340,7 +340,12 @@
       for (const id of hiddenIds) delete filtered[id];
       formData.set('formId', data.form.id);
       formData.set('content', JSON.stringify(filtered));
-      formData.set('approvalLine', JSON.stringify(approvalLine));
+      // groupOrder 보장 (undefined → index 할당)
+      const normalizedLine = approvalLine.map((item, idx) => ({
+        ...item,
+        groupOrder: item.groupOrder ?? idx
+      }));
+      formData.set('approvalLine', JSON.stringify(normalizedLine));
       formData.set('attachmentIds', JSON.stringify(collectAttachmentIds()));
       formData.set('urgency', urgency);
       formData.set('retentionPeriod', retentionPeriod);
