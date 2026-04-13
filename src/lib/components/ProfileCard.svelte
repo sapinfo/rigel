@@ -5,7 +5,7 @@
    * employee_profiles 데이터가 있으면 직책/연락처 표시.
    */
   import { createBrowserClient } from '@supabase/ssr';
-  import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+  import { env } from '$env/dynamic/public';
 
   interface Props {
     userId: string;
@@ -27,7 +27,7 @@
   async function loadProfile() {
     if (loaded) return;
     loaded = true;
-    const supabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
+    const supabase = createBrowserClient(env.PUBLIC_SUPABASE_URL!, env.PUBLIC_SUPABASE_ANON_KEY!);
     const { data } = await supabase
       .from('employee_profiles')
       .select('job_title, job_position, phone_mobile, phone_office')
