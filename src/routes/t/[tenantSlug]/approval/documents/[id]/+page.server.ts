@@ -39,7 +39,7 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
   const { data: doc, error: docErr } = await locals.supabase
     .from('approval_documents')
     .select(
-      'id, tenant_id, doc_number, form_id, form_schema_snapshot, content, drafter_id, status, current_step_index, submitted_at, completed_at, created_at, updated_at'
+      'id, tenant_id, doc_number, form_id, form_schema_snapshot, content, drafter_id, status, current_step_index, submitted_at, completed_at, created_at, updated_at, urgency, retention_period, security_level'
     )
     .eq('id', params.id)
     .eq('tenant_id', currentTenant.id)
@@ -207,7 +207,10 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
       drafter_email: drafter?.email ?? '',
       current_step_index: currentStepIndex,
       submitted_at: (doc.submitted_at as string | null) ?? null,
-      completed_at: (doc.completed_at as string | null) ?? null
+      completed_at: (doc.completed_at as string | null) ?? null,
+      urgency: (doc.urgency as string) ?? '일반',
+      retention_period: (doc.retention_period as string) ?? '5년',
+      security_level: (doc.security_level as string) ?? '일반'
     },
     steps,
     attachments: (attachmentRows ?? []).map((a) => ({

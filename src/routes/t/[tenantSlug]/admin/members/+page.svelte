@@ -13,12 +13,7 @@
     deptFilter ? data.members.filter((m) => m.department_id === deptFilter) : data.members
   );
 
-  const slug = data.currentTenant.slug;
-  const adminLinks = [
-    ['members', '멤버'], ['org', '조직 관리'], ['forms', '양식'],
-    ['approval-rules', '결재선 규칙'], ['approval-templates', '결재선 템플릿'],
-    ['delegations', '전결 규칙'], ['absences', '부재 관리'], ['audit', '감사 로그']
-  ];
+
 
   function fmt(iso: string): string {
     return new Date(iso).toLocaleDateString('ko-KR');
@@ -30,13 +25,6 @@
 </script>
 
 <div class="flex flex-col gap-6">
-  <!-- 관리 서브네비 -->
-  <nav class="flex gap-1 overflow-x-auto border-b">
-    {#each adminLinks as [path, label] (path)}
-      <a href="/t/{slug}/admin/{path}" class="shrink-0 px-3 py-2 text-sm" class:border-b-2={page.url.pathname.includes(`/admin/${path}`)} class:border-blue-600={page.url.pathname.includes(`/admin/${path}`)} class:text-blue-600={page.url.pathname.includes(`/admin/${path}`)} class:text-gray-500={!page.url.pathname.includes(`/admin/${path}`)}>{label}</a>
-    {/each}
-  </nav>
-
   <!-- 초대 -->
   <section class="rounded-lg border bg-white p-4">
     <h2 class="mb-3 text-base font-semibold">멤버 초대</h2>
