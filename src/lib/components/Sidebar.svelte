@@ -21,7 +21,7 @@
   }
 
   const linkClass = (href: string) =>
-    `block rounded px-3 py-1.5 text-sm ${active(href) ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50'}`;
+    `block rounded px-2.5 py-0.5 text-[13px] leading-6 ${active(href) ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50'}`;
 
   // Section collapse state
   let approvalOpen = $state(true);
@@ -59,7 +59,7 @@
     </span>
   </div>
 
-  <nav class="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+  <nav class="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
     <!-- New Draft -->
     <div class="relative mb-2">
       <button
@@ -94,7 +94,7 @@
     <!-- 전자결재 Section -->
     <button
       type="button"
-      class="flex w-full items-center justify-between px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-3"
+      class="flex w-full items-center justify-between px-3 py-0.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mt-2"
       onclick={() => (approvalOpen = !approvalOpen)}
     >
       전자결재
@@ -108,7 +108,7 @@
     <!-- 소통 Section -->
     <button
       type="button"
-      class="flex w-full items-center justify-between px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-3"
+      class="flex w-full items-center justify-between px-3 py-0.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mt-2"
       onclick={() => (commOpen = !commOpen)}
     >
       소통
@@ -122,7 +122,7 @@
     <!-- 업무 Section -->
     <button
       type="button"
-      class="flex w-full items-center justify-between px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-3"
+      class="flex w-full items-center justify-between px-3 py-0.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mt-2"
       onclick={() => (workOpen = !workOpen)}
     >
       업무
@@ -138,7 +138,7 @@
     {#if isAdmin}
       <button
         type="button"
-        class="flex w-full items-center justify-between px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-3"
+        class="flex w-full items-center justify-between px-3 py-0.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mt-2"
         onclick={() => (adminOpen = !adminOpen)}
       >
         관리
