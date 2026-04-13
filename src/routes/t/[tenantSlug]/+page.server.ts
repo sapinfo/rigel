@@ -81,7 +81,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 	// 6. 최근 기안문서 (10건)
 	const { data: recentDocs } = await locals.supabase
 		.from('approval_documents')
-		.select('id, doc_number, status, form_id, submitted_at, updated_at, urgency')
+		.select('id, doc_number, status, form_id, submitted_at, updated_at, urgency, content')
 		.eq('tenant_id', tenantId)
 		.eq('drafter_id', userId)
 		.order('updated_at', { ascending: false })
@@ -98,6 +98,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		docNumber: d.doc_number as string,
 		status: d.status as string,
 		formName: recentFormMap.get(d.form_id as string) ?? '(양식 없음)',
+		title: ((d.content as Record<string, unknown>)?.title as string) ?? '',
 		submittedAt: (d.submitted_at as string | null) ?? null,
 		updatedAt: d.updated_at as string,
 		urgency: (d.urgency as string) ?? '일반'

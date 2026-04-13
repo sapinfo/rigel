@@ -52,17 +52,28 @@
         <a href="/t/{slug}/approval/inbox" class="text-xs text-blue-600 hover:underline">전체보기</a>
       </div>
       <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b text-left text-xs text-gray-400">
+            <th class="py-1.5 font-normal">문서번호</th>
+            <th class="py-1.5 font-normal">양식</th>
+            <th class="py-1.5 font-normal">제목</th>
+            <th class="py-1.5 font-normal text-center">상태</th>
+          </tr>
+        </thead>
         <tbody>
           {#each data.recentDocuments as doc (doc.id)}
-            <tr class="border-b last:border-b-0">
+            <tr class="border-b last:border-b-0 hover:bg-gray-50">
               <td class="py-1.5 pr-2">
-                <a href="/t/{slug}/approval/documents/{doc.id}" class="flex items-center gap-2 hover:text-blue-600">
-                  <span class="shrink-0 font-mono text-xs text-gray-400">{doc.docNumber}</span>
-                  {#if doc.urgency === '긴급'}
-                    <span class="shrink-0 rounded bg-red-100 px-1 py-0.5 text-[10px] text-red-700">긴급</span>
-                  {/if}
-                  <span class="truncate">{doc.formName}</span>
-                </a>
+                <a href="/t/{slug}/approval/documents/{doc.id}" class="font-mono text-xs text-gray-500 hover:text-blue-600">{doc.docNumber}</a>
+              </td>
+              <td class="py-1.5 pr-2 text-xs text-gray-500">
+                {doc.formName}
+                {#if doc.urgency === '긴급'}
+                  <span class="ml-1 rounded bg-red-100 px-1 py-0.5 text-[10px] text-red-700">긴급</span>
+                {/if}
+              </td>
+              <td class="py-1.5 pr-2">
+                <a href="/t/{slug}/approval/documents/{doc.id}" class="truncate hover:text-blue-600">{doc.title || '(제목 없음)'}</a>
               </td>
               <td class="w-14 py-1.5 text-center">
                 <span class="rounded px-1.5 py-0.5 text-xs"

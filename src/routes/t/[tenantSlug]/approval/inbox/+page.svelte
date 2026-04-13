@@ -143,6 +143,18 @@
       {searchQuery ? '검색 결과가 없습니다.' : '해당 탭에 문서가 없습니다.'}
     </div>
   {:else}
+    <!-- 칼럼 헤더 -->
+    <div class="flex items-center gap-2 px-4 py-1.5 text-xs text-gray-400">
+      {#if data.tab === 'pending'}<span class="w-4"></span>{/if}
+      <div class="flex flex-1 items-center gap-4">
+        <span class="w-32 shrink-0">문서번호</span>
+        <span class="w-16 shrink-0">양식</span>
+        <span class="min-w-0 flex-1">제목</span>
+        <span class="w-24 shrink-0">기안자</span>
+        <span class="w-16 shrink-0 text-center">상태</span>
+        <span class="w-28 shrink-0 text-right">일시</span>
+      </div>
+    </div>
     <ul class="flex flex-col gap-1">
       {#each pagedRows as row (row.id)}
         <li>
