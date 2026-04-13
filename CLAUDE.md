@@ -197,15 +197,18 @@ npm run build        # adapter-node 빌드
 
 - **새 migration 추가 시**: `supabase/migrations/00NN_설명.sql` 파일 생성 + Supabase MCP `apply_migration` 적용 + `get_advisors` 로 Security/Performance WARN 확인
 - **RLS 적용 후 반드시 advisor 확인** — `auth_rls_initplan`, `multiple_permissive_policies` 0건 필수
+- **DB 초기화**: `npx supabase db reset` — migration 전체 재적용 + `seed.sql` 자동 실행
+- **seed 데이터 추가 시**: `supabase/seed.sql`에 추가 (MCP 직접 INSERT 금지 — volume 리셋 시 유실)
+- **결재 문서 seed**: `SELECT seed_create_document(...)` 헬퍼 사용 (0070 migration)
+- **Storage 버킷 추가 시**: migration SQL 파일로 생성 (execute_sql 직접 생성 금지)
 
-## 테스트 계정 (DB에 존재)
+## 테스트 계정 (seed.sql 관리)
 
-| 이메일 | 비밀번호 | 역할 | 테넌트 |
-|---|---|---|---|
-| m3test1@example.com | testpass1234 | owner | m3test-org |
-| m5approver@example.com | testpass1234 | member | m3test-org |
-| newuser@example.com | testpass1234 | member | m3test-org |
-| admin@example.com | (sign up 본인 비번) | owner | acme |
+| 이메일 | 비밀번호 | 역할 | 테넌트 | 부서 | 직급 |
+|---|---|---|---|---|---|
+| m3test1@example.com | testpass1234 | owner | m3test-org | 경영지원팀 | 부장 |
+| m5approver@example.com | testpass1234 | member | m3test-org | 개발팀 | 과장 |
+| newuser@example.com | testpass1234 | member | m3test-org | 영업팀 | 사원 |
 
 ## v1.1 핵심 정책 (고정, 수정 금지)
 
