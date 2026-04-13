@@ -197,85 +197,52 @@
 
       {#if installTab === 'prod'}
         <div class="mb-6 rounded-lg border-l-4 border-blue-500 bg-blue-50 p-4 text-sm text-gray-700">
-          IT 전문 인력 없이도 설치 가능합니다. Docker(또는 Podman)가 설치된 서버/PC 한 대면 충분합니다.
+          개발 환경과 동일한 구조입니다. Supabase CLI + Docker로 실행합니다.
         </div>
         <div class="mb-8 rounded-lg border bg-gray-50 p-5">
           <h3 class="font-bold text-sm text-gray-500 mb-3">사전 요구 사항</h3>
           <div class="flex flex-wrap gap-3">
-            <span class="rounded bg-white border px-3 py-1.5 text-sm font-medium">Podman (권장) 또는 Docker</span>
+            <span class="rounded bg-white border px-3 py-1.5 text-sm">Docker (또는 Podman)</span>
+            <span class="rounded bg-white border px-3 py-1.5 text-sm">Node.js 22+</span>
+            <span class="rounded bg-white border px-3 py-1.5 text-sm">Supabase CLI</span>
             <span class="rounded bg-white border px-3 py-1.5 text-sm">Git</span>
             <span class="rounded bg-white border px-3 py-1.5 text-sm">서버 또는 PC (CPU 4코어, RAM 16GB 이상)</span>
           </div>
-          <div class="mt-4 text-xs text-gray-600 space-y-2">
-            <div>
-              <p class="font-medium text-gray-700">Podman 설치 (권장 — 무료, 가벼움):</p>
-              <p class="mt-1"><a href="https://podman.io/getting-started/installation" class="text-blue-600 hover:underline" target="_blank" rel="noopener">podman.io/getting-started</a></p>
-              <p class="mt-1 text-gray-500">Windows의 경우 추가 필요: <a href="https://learn.microsoft.com/windows/wsl/install" class="text-blue-600 hover:underline" target="_blank" rel="noopener">WSL</a> + <a href="https://www.python.org/downloads/" class="text-blue-600 hover:underline" target="_blank" rel="noopener">Python</a> 설치 후 <code class="bg-gray-200 px-1 rounded">pip install podman-compose</code></p>
-            </div>
-            <div>
-              <p class="font-medium text-gray-700">Docker 설치 (대안):</p>
-              <p class="mt-1"><a href="https://docs.docker.com/get-docker/" class="text-blue-600 hover:underline" target="_blank" rel="noopener">docs.docker.com/get-docker</a></p>
-            </div>
+          <div class="mt-3 text-xs text-gray-500 space-y-1">
+            <p>Docker: <a href="https://docs.docker.com/get-docker/" class="text-blue-600 hover:underline" target="_blank" rel="noopener">docs.docker.com/get-docker</a></p>
+            <p>Node.js: <a href="https://nodejs.org/" class="text-blue-600 hover:underline" target="_blank" rel="noopener">nodejs.org</a></p>
+            <p>Supabase CLI: <a href="https://supabase.com/docs/guides/cli/getting-started" class="text-blue-600 hover:underline" target="_blank" rel="noopener">supabase.com/docs/guides/cli</a></p>
           </div>
         </div>
 
         <!-- 원클릭 설치 -->
         <div class="mb-8">
-          <h3 class="font-bold text-lg mb-3">방법 1: 원클릭 설치 (권장)</h3>
-          <p class="text-sm text-gray-600 mb-4">터미널에서 아래 한 줄만 실행하세요. 소스 다운로드부터 보안 키 생성, 서버 실행까지 전부 자동입니다.</p>
+          <h3 class="font-bold text-lg mb-3">원클릭 설치 (권장)</h3>
+          <p class="text-sm text-gray-600 mb-4">사전 요구 사항이 설치된 상태에서, 터미널에 아래 한 줄만 실행하세요.</p>
 
           <div class="space-y-3">
             <div>
-              <p class="text-xs font-medium text-gray-500 mb-1">Linux / macOS — 터미널에서:</p>
+              <p class="text-xs font-medium text-gray-500 mb-1">Linux / macOS:</p>
               <code class="block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">curl -fsSL https://raw.githubusercontent.com/sapinfo/rigel/main/install.sh | bash</code>
             </div>
             <div>
-              <p class="text-xs font-medium text-gray-500 mb-1">Windows — PowerShell에서:</p>
+              <p class="text-xs font-medium text-gray-500 mb-1">Windows (PowerShell):</p>
               <code class="block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">irm https://raw.githubusercontent.com/sapinfo/rigel/main/install.ps1 | iex</code>
             </div>
           </div>
 
-          <p class="mt-3 text-xs text-gray-500">완료되면 접속 주소가 화면에 표시됩니다. 브라우저에서 접속 → 회원가입 → 조직 생성 → 사용 시작!</p>
+          <p class="mt-3 text-xs text-gray-500">스크립트가 자동으로: 소스 다운로드 → Supabase 시작 → DB 초기화 → 앱 빌드 → 서버 실행</p>
         </div>
 
-        <div class="mb-8 border-t pt-8">
-          <h3 class="font-bold text-lg mb-3">방법 2: 수동 설치</h3>
-          <div class="space-y-6">
-            <div class="flex gap-4 items-start">
-              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">1</div>
-              <div class="flex-1">
-                <h3 class="font-bold">소스 받기</h3>
-                <code class="mt-2 block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">git clone https://github.com/sapinfo/rigel.git && cd rigel</code>
-              </div>
-            </div>
-            <div class="flex gap-4 items-start">
-              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">2</div>
-              <div class="flex-1">
-                <h3 class="font-bold">설치 스크립트 실행</h3>
-                <code class="mt-2 block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">bash install.sh</code>
-                <p class="mt-2 text-xs text-gray-500">보안 키 자동 생성 + Docker 서비스 자동 시작</p>
-              </div>
-            </div>
-            <div class="flex gap-4 items-start">
-              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">3</div>
-              <div class="flex-1">
-                <h3 class="font-bold">접속</h3>
-                <p class="mt-2 text-sm text-gray-600">
-                  브라우저에서 <code class="rounded bg-gray-100 px-2 py-1">http://서버IP:3000</code> 접속 → 회원가입 → 조직 생성 → 사용 시작!
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
         <div class="mt-8 rounded-lg border bg-gray-50 p-5 text-sm">
           <h3 class="font-bold text-gray-700 mb-2">자주 쓰는 명령어</h3>
           <div class="space-y-1 text-xs font-mono text-gray-600">
-            <p><span class="text-gray-400">중지:</span> docker compose down</p>
+            <p><span class="text-gray-400">앱 중지:</span> docker compose down</p>
+            <p><span class="text-gray-400">Supabase 중지:</span> supabase stop</p>
             <p><span class="text-gray-400">재시작:</span> docker compose restart</p>
-            <p><span class="text-gray-400">업데이트:</span> git pull && docker compose up -d --build</p>
-            <p><span class="text-gray-400">로그:</span> docker compose logs -f app</p>
+            <p><span class="text-gray-400">업데이트:</span> git pull && npm run build && docker compose up -d --build</p>
+            <p><span class="text-gray-400">DB 초기화:</span> supabase db reset</p>
           </div>
-          <p class="mt-3 text-xs text-gray-500">데이터는 Docker volume에 영구 저장됩니다. 중지해도 데이터는 유지됩니다.</p>
         </div>
 
       {:else}

@@ -6,9 +6,6 @@ set -euo pipefail
 #
 # 사용법:
 #   curl -fsSL https://raw.githubusercontent.com/sapinfo/rigel/main/install.sh | bash
-#
-# 또는 소스를 이미 받은 경우:
-#   bash install.sh
 # ============================================================
 
 REPO="https://github.com/sapinfo/rigel.git"
@@ -16,151 +13,160 @@ INSTALL_DIR="rigel"
 
 echo ""
 echo "=========================================="
-echo "  Rigel 그룹웨어 설치를 시작합니다"
+echo "  Rigel - Installation Start"
 echo "=========================================="
 echo ""
 
-# ─── 1. Docker 또는 Podman 확인 ────────────────────────────
+# ─── 1. Check prerequisites ───────────────────────────────
 
+# Docker or Podman
 COMPOSE_CMD=""
-
 if command -v docker &>/dev/null; then
-  echo "[OK] Docker 발견: $(docker --version)"
+  echo "[OK] Docker found: $(docker --version)"
   if docker compose version &>/dev/null; then
     COMPOSE_CMD="docker compose"
   elif command -v docker-compose &>/dev/null; then
     COMPOSE_CMD="docker-compose"
-  else
-    echo "[!] docker compose 플러그인이 없습니다."
-    echo "    Docker Desktop을 설치하면 자동으로 포함됩니다."
-    echo "    https://docs.docker.com/get-docker/"
-    exit 1
   fi
 elif command -v podman &>/dev/null; then
-  echo "[OK] Podman 발견: $(podman --version)"
+  echo "[OK] Podman found: $(podman --version)"
   if command -v podman-compose &>/dev/null; then
     COMPOSE_CMD="podman-compose"
-  else
-    echo "[!] podman-compose가 필요합니다."
-    echo "    pip install podman-compose"
-    exit 1
   fi
-else
-  echo "[!] Docker 또는 Podman이 설치되어 있지 않습니다."
-  echo ""
-  echo "  아래 중 하나를 설치해주세요:"
-  echo "  - Docker Desktop: https://docs.docker.com/get-docker/"
-  echo "  - Podman:         https://podman.io/getting-started/installation"
-  echo ""
+fi
+
+if [ -z "$COMPOSE_CMD" ]; then
+  echo "[!] Docker/Podman + Compose not found."
+  echo "    https://docs.docker.com/get-docker/"
   exit 1
 fi
 
-echo "[OK] Compose 명령어: $COMPOSE_CMD"
+# Node.js
+if ! command -v node &>/dev/null; then
+  echo "[!] Node.js not found. Install Node.js 22+."
+  echo "    https://nodejs.org/"
+  exit 1
+fi
+echo "[OK] Node.js: $(node --version)"
+
+# Supabase CLI
+if ! command -v supabase &>/dev/null; then
+  echo "[!] Supabase CLI not found."
+  echo "    Mac:   brew install supabase/tap/supabase"
+  echo "    Linux: https://supabase.com/docs/guides/cli/getting-started"
+  exit 1
+fi
+echo "[OK] Supabase CLI: $(supabase --version 2>/dev/null || echo 'installed')"
+
+# Git
+if ! command -v git &>/dev/null; then
+  echo "[!] git not found. https://git-scm.com/downloads"
+  exit 1
+fi
+
 echo ""
 
-# ─── 2. 소스 다운로드 ──────────────────────────────────────
+# ─── 2. Download source ───────────────────────────────────
 
 if [ -f "docker-compose.yml" ] && [ -d "supabase" ]; then
-  echo "[OK] 이미 Rigel 프로젝트 디렉토리에 있습니다."
+  echo "[OK] Already in Rigel project directory."
 else
   if [ -d "$INSTALL_DIR" ]; then
-    echo "[OK] $INSTALL_DIR 디렉토리가 이미 존재합니다. 업데이트합니다."
+    echo "[OK] $INSTALL_DIR directory exists. Updating..."
     cd "$INSTALL_DIR"
     git pull --quiet
   else
-    echo "[..] 소스를 다운로드합니다..."
-    if command -v git &>/dev/null; then
-      git clone --quiet "$REPO" "$INSTALL_DIR"
-      cd "$INSTALL_DIR"
-    else
-      echo "[!] git이 설치되어 있지 않습니다."
-      echo "    https://git-scm.com/downloads 에서 설치해주세요."
-      exit 1
-    fi
+    echo "[..] Downloading source..."
+    git clone --quiet "$REPO" "$INSTALL_DIR"
+    cd "$INSTALL_DIR"
   fi
-  echo "[OK] 소스 다운로드 완료"
+  echo "[OK] Source download complete"
 fi
 
 echo ""
 
-# ─── 3. 환경변수 자동 생성 ─────────────────────────────────
+# ─── 3. Start Supabase ─────────────────────────────────────
 
-if [ -f ".env" ]; then
-  echo "[OK] .env 파일이 이미 존재합니다. 기존 설정을 유지합니다."
-else
-  echo "[..] 보안 키를 자동 생성합니다..."
+echo "[..] Starting Supabase (DB, Auth, Storage, API)..."
+supabase start 2>&1 | tail -5
 
-  # 랜덤 비밀번호 생성
-  POSTGRES_PASSWORD=$(openssl rand -base64 24 | tr -dc 'a-zA-Z0-9' | head -c 32)
-  JWT_SECRET=$(openssl rand -base64 48 | tr -dc 'a-zA-Z0-9' | head -c 64)
+echo ""
+echo "[..] Initializing database (migrations + seed)..."
+supabase db reset 2>&1 | tail -3
 
-  # Supabase ANON_KEY, SERVICE_KEY 생성 (JWT)
-  # Header: {"alg":"HS256","typ":"JWT"}
-  JWT_HEADER=$(echo -n '{"alg":"HS256","typ":"JWT"}' | openssl base64 -e | tr -d '=' | tr '/+' '_-' | tr -d '\n')
+echo ""
 
-  # ANON KEY payload: role=anon
-  ANON_PAYLOAD=$(echo -n "{\"role\":\"anon\",\"iss\":\"supabase\",\"iat\":$(date +%s),\"exp\":$(($(date +%s) + 157680000))}" | openssl base64 -e | tr -d '=' | tr '/+' '_-' | tr -d '\n')
-  ANON_SIG=$(echo -n "${JWT_HEADER}.${ANON_PAYLOAD}" | openssl dgst -sha256 -hmac "$JWT_SECRET" -binary | openssl base64 -e | tr -d '=' | tr '/+' '_-' | tr -d '\n')
-  SUPABASE_ANON_KEY="${JWT_HEADER}.${ANON_PAYLOAD}.${ANON_SIG}"
+# ─── 4. Configure environment ──────────────────────────────
 
-  # SERVICE KEY payload: role=service_role
-  SERVICE_PAYLOAD=$(echo -n "{\"role\":\"service_role\",\"iss\":\"supabase\",\"iat\":$(date +%s),\"exp\":$(($(date +%s) + 157680000))}" | openssl base64 -e | tr -d '=' | tr '/+' '_-' | tr -d '\n')
-  SERVICE_SIG=$(echo -n "${JWT_HEADER}.${SERVICE_PAYLOAD}" | openssl dgst -sha256 -hmac "$JWT_SECRET" -binary | openssl base64 -e | tr -d '=' | tr '/+' '_-' | tr -d '\n')
-  SUPABASE_SERVICE_KEY="${JWT_HEADER}.${SERVICE_PAYLOAD}.${SERVICE_SIG}"
+# Get Supabase keys from CLI
+SUPABASE_URL=$(supabase status --output json 2>/dev/null | grep -o '"API URL":"[^"]*"' | cut -d'"' -f4 || echo "http://localhost:54321")
+ANON_KEY=$(supabase status --output json 2>/dev/null | grep -o '"anon key":"[^"]*"' | cut -d'"' -f4 || echo "")
 
-  # 서버 IP 자동 감지
-  SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
-  if [ -z "$SERVER_IP" ]; then
-    SERVER_IP="localhost"
-  fi
+if [ -z "$ANON_KEY" ]; then
+  # Fallback: parse from supabase status text output
+  ANON_KEY=$(supabase status 2>/dev/null | grep "anon key" | awk '{print $NF}' || echo "")
+fi
 
-  # .env 파일 생성
-  cat > .env <<EOF
-# ─── Rigel 환경변수 (자동 생성됨) ───
-# 생성 시각: $(date)
-
-POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-JWT_SECRET=${JWT_SECRET}
-SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
-SITE_URL=http://${SERVER_IP}:3000
-APP_PORT=3000
-API_PORT=8000
-POSTGRES_PORT=5432
+if [ ! -f ".env.local" ] || [ -z "$(grep PUBLIC_SUPABASE_ANON_KEY .env.local 2>/dev/null)" ]; then
+  cat > .env.local <<EOF
+PUBLIC_SUPABASE_URL=${SUPABASE_URL:-http://localhost:54321}
+PUBLIC_SUPABASE_ANON_KEY=${ANON_KEY}
 EOF
+  echo "[OK] .env.local created"
+else
+  echo "[OK] .env.local already exists"
+fi
 
-  echo "[OK] .env 파일 생성 완료 (보안 키 자동 생성)"
-  echo "     서버 주소: http://${SERVER_IP}:3000"
+# Docker env
+if [ ! -f ".env" ]; then
+  cat > .env <<EOF
+PUBLIC_SUPABASE_URL=${SUPABASE_URL:-http://localhost:54321}
+PUBLIC_SUPABASE_ANON_KEY=${ANON_KEY}
+SITE_URL=http://localhost:3000
+APP_PORT=3000
+EOF
+  echo "[OK] .env created for Docker"
 fi
 
 echo ""
 
-# ─── 4. Docker Compose 실행 ────────────────────────────────
+# ─── 5. Install dependencies + Build ──────────────────────
 
-echo "[..] 서비스를 시작합니다... (첫 실행 시 이미지 다운로드로 몇 분 걸릴 수 있습니다)"
-$COMPOSE_CMD up -d
+echo "[..] Installing dependencies..."
+npm ci --quiet 2>&1 | tail -1
+
+echo "[..] Building production bundle..."
+npm run build 2>&1 | tail -1
 
 echo ""
 
-# ─── 5. 완료 ───────────────────────────────────────────────
+# ─── 6. Start Rigel App ───────────────────────────────────
 
-# .env에서 서버 URL 읽기
-SITE_URL=$(grep SITE_URL .env | cut -d= -f2-)
+echo "[..] Starting Rigel app..."
+$COMPOSE_CMD up -d --build 2>&1 | tail -3
+
+echo ""
+
+# ─── 7. Done ───────────────────────────────────────────────
+
+SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
 
 echo "=========================================="
-echo "  Rigel 설치가 완료되었습니다!"
+echo "  Rigel installation complete!"
 echo "=========================================="
 echo ""
-echo "  접속 주소: ${SITE_URL}"
+echo "  URL: http://${SERVER_IP:-localhost}:3000"
 echo ""
-echo "  처음 접속하면 회원가입 → 조직 생성 순서로 진행하세요."
+echo "  Sign up -> Create organization -> Start!"
 echo ""
-echo "  ─── 유용한 명령어 ───"
-echo "  중지:     $COMPOSE_CMD down"
-echo "  재시작:   $COMPOSE_CMD restart"
-echo "  로그:     $COMPOSE_CMD logs -f app"
-echo "  업데이트: git pull && $COMPOSE_CMD up -d --build"
+echo "  --- Commands ---"
+echo "  Stop app:        $COMPOSE_CMD down"
+echo "  Stop Supabase:   supabase stop"
+echo "  Restart app:     $COMPOSE_CMD restart"
+echo "  Logs:            $COMPOSE_CMD logs -f app"
+echo "  Update:          git pull && npm run build && $COMPOSE_CMD up -d --build"
+echo "  DB reset:        supabase db reset"
 echo ""
-echo "  문제가 있으면: https://github.com/sapinfo/rigel/issues"
+echo "  Issues: https://github.com/sapinfo/rigel/issues"
 echo "=========================================="
 echo ""

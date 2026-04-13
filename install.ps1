@@ -3,58 +3,58 @@
 #
 # Usage:
 #   irm https://raw.githubusercontent.com/sapinfo/rigel/main/install.ps1 | iex
-#
-# Or if you already cloned the source:
-#   powershell -ExecutionPolicy Bypass -File install.ps1
 # ============================================================
 
 $ErrorActionPreference = "Stop"
 
 Write-Host ""
 Write-Host "==========================================" -ForegroundColor Cyan
-Write-Host "  Rigel Groupware - Installation Start" -ForegroundColor Cyan
+Write-Host "  Rigel - Installation Start" -ForegroundColor Cyan
 Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host ""
 
 $REPO = "https://github.com/sapinfo/rigel.git"
 $INSTALL_DIR = "rigel"
 
-# --- 1. Check Docker or Podman ---
+# --- 1. Check prerequisites ---
 
 $COMPOSE_CMD = $null
 
 if (Get-Command docker -ErrorAction SilentlyContinue) {
     Write-Host "[OK] Docker found" -ForegroundColor Green
     $dockerCompose = docker compose version 2>&1
-    if ($LASTEXITCODE -eq 0) {
-        $COMPOSE_CMD = "docker compose"
-    } elseif (Get-Command docker-compose -ErrorAction SilentlyContinue) {
-        $COMPOSE_CMD = "docker-compose"
-    } else {
-        Write-Host "[!] docker compose plugin not found." -ForegroundColor Red
-        Write-Host "    Install Docker Desktop: https://docs.docker.com/get-docker/"
-        exit 1
-    }
+    if ($LASTEXITCODE -eq 0) { $COMPOSE_CMD = "docker compose" }
+    elseif (Get-Command docker-compose -ErrorAction SilentlyContinue) { $COMPOSE_CMD = "docker-compose" }
 } elseif (Get-Command podman -ErrorAction SilentlyContinue) {
     Write-Host "[OK] Podman found" -ForegroundColor Green
-    if (Get-Command podman-compose -ErrorAction SilentlyContinue) {
-        $COMPOSE_CMD = "podman-compose"
-    } else {
-        Write-Host "[!] podman-compose is required." -ForegroundColor Red
-        Write-Host "    Run: pip install podman-compose"
-        exit 1
-    }
-} else {
-    Write-Host "[!] Docker or Podman is not installed." -ForegroundColor Red
-    Write-Host ""
-    Write-Host "  Please install one of the following:"
-    Write-Host "  - Docker Desktop: https://docs.docker.com/get-docker/"
-    Write-Host "  - Podman Desktop: https://podman-desktop.io/"
-    Write-Host ""
+    if (Get-Command podman-compose -ErrorAction SilentlyContinue) { $COMPOSE_CMD = "podman-compose" }
+}
+
+if (-not $COMPOSE_CMD) {
+    Write-Host "[!] Docker/Podman + Compose not found." -ForegroundColor Red
+    Write-Host "    https://docs.docker.com/get-docker/"
     exit 1
 }
 
-Write-Host "[OK] Compose command: $COMPOSE_CMD" -ForegroundColor Green
+if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+    Write-Host "[!] Node.js not found. Install Node.js 22+." -ForegroundColor Red
+    Write-Host "    https://nodejs.org/"
+    exit 1
+}
+Write-Host "[OK] Node.js: $(node --version)" -ForegroundColor Green
+
+if (-not (Get-Command supabase -ErrorAction SilentlyContinue)) {
+    Write-Host "[!] Supabase CLI not found." -ForegroundColor Red
+    Write-Host "    https://supabase.com/docs/guides/cli/getting-started"
+    exit 1
+}
+Write-Host "[OK] Supabase CLI found" -ForegroundColor Green
+
+if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+    Write-Host "[!] git not found. https://git-scm.com/downloads" -ForegroundColor Red
+    exit 1
+}
+
 Write-Host ""
 
 # --- 2. Download source ---
@@ -67,11 +67,6 @@ if ((Test-Path "docker-compose.yml") -and (Test-Path "supabase")) {
         Set-Location $INSTALL_DIR
         git pull --quiet
     } else {
-        if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-            Write-Host "[!] git is not installed." -ForegroundColor Red
-            Write-Host "    Download from: https://git-scm.com/downloads"
-            exit 1
-        }
         Write-Host "[..] Downloading source..."
         git clone --quiet $REPO $INSTALL_DIR
         Set-Location $INSTALL_DIR
@@ -81,94 +76,76 @@ if ((Test-Path "docker-compose.yml") -and (Test-Path "supabase")) {
 
 Write-Host ""
 
-# --- 3. Generate environment variables ---
+# --- 3. Start Supabase ---
 
-if (Test-Path ".env") {
-    Write-Host "[OK] .env file already exists. Keeping existing settings." -ForegroundColor Green
-} else {
-    Write-Host "[..] Generating security keys..."
+Write-Host "[..] Starting Supabase (DB, Auth, Storage, API)..."
+supabase start
 
-    function New-RandomString($length) {
-        $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-        -join ((1..$length) | ForEach-Object { $chars[(Get-Random -Maximum $chars.Length)] })
-    }
+Write-Host ""
+Write-Host "[..] Initializing database (migrations + seed)..."
+supabase db reset
 
-    function ConvertTo-Base64Url($text) {
-        $bytes = [System.Text.Encoding]::UTF8.GetBytes($text)
-        $b64 = [Convert]::ToBase64String($bytes)
-        $b64 = $b64.TrimEnd('=').Replace('+', '-').Replace('/', '_')
-        return $b64
-    }
+Write-Host ""
 
-    function New-HmacSha256($message, $secret) {
-        $hmac = New-Object System.Security.Cryptography.HMACSHA256
-        $hmac.Key = [System.Text.Encoding]::UTF8.GetBytes($secret)
-        $sig = $hmac.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($message))
-        $b64 = [Convert]::ToBase64String($sig)
-        return $b64.TrimEnd('=').Replace('+', '-').Replace('/', '_')
-    }
+# --- 4. Configure environment ---
 
-    $POSTGRES_PASSWORD = New-RandomString 32
-    $JWT_SECRET = New-RandomString 64
+$statusJson = supabase status --output json 2>$null | ConvertFrom-Json
+$SUPABASE_URL = if ($statusJson.'API URL') { $statusJson.'API URL' } else { "http://localhost:54321" }
+$ANON_KEY = if ($statusJson.'anon key') { $statusJson.'anon key' } else { "" }
 
-    $header = ConvertTo-Base64Url '{"alg":"HS256","typ":"JWT"}'
-    $now = [int][double]::Parse((Get-Date -UFormat %s))
-    $exp = $now + 157680000
+if (-not (Test-Path ".env.local")) {
+    @"
+PUBLIC_SUPABASE_URL=$SUPABASE_URL
+PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY
+"@ | Out-File -FilePath ".env.local" -Encoding utf8
+    Write-Host "[OK] .env.local created" -ForegroundColor Green
+}
 
-    $anonPayload = ConvertTo-Base64Url "{`"role`":`"anon`",`"iss`":`"supabase`",`"iat`":$now,`"exp`":$exp}"
-    $anonSig = New-HmacSha256 "$header.$anonPayload" $JWT_SECRET
-    $SUPABASE_ANON_KEY = "$header.$anonPayload.$anonSig"
-
-    $servicePayload = ConvertTo-Base64Url "{`"role`":`"service_role`",`"iss`":`"supabase`",`"iat`":$now,`"exp`":$exp}"
-    $serviceSig = New-HmacSha256 "$header.$servicePayload" $JWT_SECRET
-    $SUPABASE_SERVICE_KEY = "$header.$servicePayload.$serviceSig"
-
-    $SERVER_IP = "localhost"
-
-    $envContent = @"
-# Rigel Environment Variables (auto-generated)
-# Generated: $(Get-Date)
-
-POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-JWT_SECRET=$JWT_SECRET
-SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
-SUPABASE_SERVICE_KEY=$SUPABASE_SERVICE_KEY
-SITE_URL=http://${SERVER_IP}:3000
+if (-not (Test-Path ".env")) {
+    @"
+PUBLIC_SUPABASE_URL=$SUPABASE_URL
+PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY
+SITE_URL=http://localhost:3000
 APP_PORT=3000
-API_PORT=8000
-POSTGRES_PORT=5432
-"@
-    [System.IO.File]::WriteAllText((Join-Path $PWD ".env"), $envContent, [System.Text.Encoding]::UTF8)
-    Write-Host "[OK] .env file created (security keys auto-generated)" -ForegroundColor Green
-    Write-Host "     Server URL: http://${SERVER_IP}:3000" -ForegroundColor Yellow
+"@ | Out-File -FilePath ".env" -Encoding utf8
+    Write-Host "[OK] .env created for Docker" -ForegroundColor Green
 }
 
 Write-Host ""
 
-# --- 4. Start Docker Compose ---
+# --- 5. Install + Build ---
 
-Write-Host "[..] Starting services... (first run may take several minutes to download images)"
-Invoke-Expression "$COMPOSE_CMD up -d"
+Write-Host "[..] Installing dependencies..."
+npm ci --quiet
+
+Write-Host "[..] Building production bundle..."
+npm run build
 
 Write-Host ""
 
-# --- 5. Done ---
+# --- 6. Start Rigel App ---
 
-$SITE_URL = (Get-Content .env | Select-String "SITE_URL" | ForEach-Object { $_.ToString().Split("=", 2)[1] })
+Write-Host "[..] Starting Rigel app..."
+Invoke-Expression "$COMPOSE_CMD up -d --build"
+
+Write-Host ""
+
+# --- 7. Done ---
 
 Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host "  Rigel installation complete!" -ForegroundColor Cyan
 Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "  URL: $SITE_URL" -ForegroundColor Yellow
+Write-Host "  URL: http://localhost:3000" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "  Open browser -> Sign up -> Create organization -> Start!"
+Write-Host "  Sign up -> Create organization -> Start!"
 Write-Host ""
-Write-Host "  --- Useful commands ---"
-Write-Host "  Stop:     $COMPOSE_CMD down"
-Write-Host "  Restart:  $COMPOSE_CMD restart"
-Write-Host "  Logs:     $COMPOSE_CMD logs -f app"
-Write-Host "  Update:   git pull; $COMPOSE_CMD up -d --build"
+Write-Host "  --- Commands ---"
+Write-Host "  Stop app:        $COMPOSE_CMD down"
+Write-Host "  Stop Supabase:   supabase stop"
+Write-Host "  Restart app:     $COMPOSE_CMD restart"
+Write-Host "  Update:          git pull; npm run build; $COMPOSE_CMD up -d --build"
+Write-Host "  DB reset:        supabase db reset"
 Write-Host ""
 Write-Host "  Issues: https://github.com/sapinfo/rigel/issues"
 Write-Host "==========================================" -ForegroundColor Cyan
