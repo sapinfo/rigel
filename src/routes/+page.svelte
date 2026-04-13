@@ -202,13 +202,20 @@
         <div class="mb-8 rounded-lg border bg-gray-50 p-5">
           <h3 class="font-bold text-sm text-gray-500 mb-3">사전 요구 사항</h3>
           <div class="flex flex-wrap gap-3">
-            <span class="rounded bg-white border px-3 py-1.5 text-sm">Docker 또는 Podman</span>
+            <span class="rounded bg-white border px-3 py-1.5 text-sm font-medium">Podman (권장) 또는 Docker</span>
             <span class="rounded bg-white border px-3 py-1.5 text-sm">Git</span>
             <span class="rounded bg-white border px-3 py-1.5 text-sm">서버 또는 PC (CPU 2코어, RAM 4GB 이상)</span>
           </div>
-          <div class="mt-3 text-xs text-gray-500 space-y-1">
-            <p>Docker 설치: <a href="https://docs.docker.com/get-docker/" class="text-blue-600 hover:underline" target="_blank" rel="noopener">docs.docker.com/get-docker</a></p>
-            <p>Podman 설치: <a href="https://podman.io/getting-started/installation" class="text-blue-600 hover:underline" target="_blank" rel="noopener">podman.io/getting-started</a> (Docker 대안, 무료)</p>
+          <div class="mt-4 text-xs text-gray-600 space-y-2">
+            <div>
+              <p class="font-medium text-gray-700">Podman 설치 (권장 — 무료, 가벼움):</p>
+              <p class="mt-1"><a href="https://podman.io/getting-started/installation" class="text-blue-600 hover:underline" target="_blank" rel="noopener">podman.io/getting-started</a></p>
+              <p class="mt-1 text-gray-500">Windows의 경우 추가 필요: <a href="https://learn.microsoft.com/windows/wsl/install" class="text-blue-600 hover:underline" target="_blank" rel="noopener">WSL</a> + <a href="https://www.python.org/downloads/" class="text-blue-600 hover:underline" target="_blank" rel="noopener">Python</a> 설치 후 <code class="bg-gray-200 px-1 rounded">pip install podman-compose</code></p>
+            </div>
+            <div>
+              <p class="font-medium text-gray-700">Docker 설치 (대안):</p>
+              <p class="mt-1"><a href="https://docs.docker.com/get-docker/" class="text-blue-600 hover:underline" target="_blank" rel="noopener">docs.docker.com/get-docker</a></p>
+            </div>
           </div>
         </div>
 

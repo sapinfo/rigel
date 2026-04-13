@@ -85,12 +85,18 @@ IT 전문 인력 없이도 설치 가능합니다. Docker가 설치된 서버/PC
 
 ### 사전 요구
 
-- **Docker + Docker Compose** (또는 Podman)
+- **Podman (권장)** 또는 Docker
 - **Git**
 - 서버 또는 PC (CPU 2코어, RAM 4GB 이상)
 
-Docker 설치: https://docs.docker.com/get-docker/
-Podman 설치: https://podman.io/getting-started/installation (Docker 대안, 무료)
+**Podman 설치 (권장 — 무료, 가벼움):**
+- Linux: https://podman.io/getting-started/installation
+- macOS: `brew install podman`
+- Windows: https://podman.io/getting-started/installation
+  - 추가 필요: [WSL](https://learn.microsoft.com/windows/wsl/install) + [Python](https://www.python.org/downloads/) 설치 후 `pip install podman-compose`
+
+**Docker 설치 (대안):**
+- https://docs.docker.com/get-docker/
 
 ### 방법 1: 원클릭 설치
 
