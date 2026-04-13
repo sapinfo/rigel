@@ -284,3 +284,137 @@ INSERT INTO public.attendance_records (id, tenant_id, user_id, work_date, clock_
 ('c8000000-0000-0000-0000-000000000005', 'b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000002',
  current_date - 1, (current_date - 1)::date + time '09:00', (current_date - 1)::date + time '18:00', 'normal')
 ON CONFLICT (tenant_id, user_id, work_date) DO NOTHING;
+
+-- ============================================================
+-- 18~22. 결재 문서 샘플 (다양한 상태)
+-- form_id는 fn_copy_system_forms가 동적 생성하므로 서브쿼리로 참조
+-- seed.sql은 postgres 슈퍼유저로 실행 → RLS(ad_no_direct_insert) 우회
+-- ============================================================
+
+-- 변수 대용: 양식 ID를 임시 테이블에 저장
+DO $$
+DECLARE
+  v_tenant uuid := 'b0000000-0000-0000-0000-000000000001';
+  v_user1 uuid := 'a0000000-0000-0000-0000-000000000001'; -- 테스트관리자 (owner)
+  v_user2 uuid := 'a0000000-0000-0000-0000-000000000002'; -- 결재자 (member)
+  v_user3 uuid := 'a0000000-0000-0000-0000-000000000003'; -- 신규사용자 (member)
+  v_form_general uuid;
+  v_form_leave uuid;
+  v_form_expense uuid;
+  v_form_proposal uuid;
+  v_form_cooperation uuid;
+  v_doc1 uuid := 'f1000000-0000-0000-0000-000000000001';
+  v_doc2 uuid := 'f1000000-0000-0000-0000-000000000002';
+  v_doc3 uuid := 'f1000000-0000-0000-0000-000000000003';
+  v_doc4 uuid := 'f1000000-0000-0000-0000-000000000004';
+  v_doc5 uuid := 'f1000000-0000-0000-0000-000000000005';
+  v_doc6 uuid := 'f1000000-0000-0000-0000-000000000006';
+  v_schema jsonb;
+BEGIN
+  -- 양식 ID 조회
+  SELECT id INTO v_form_general FROM approval_forms WHERE tenant_id = v_tenant AND code = 'general';
+  SELECT id INTO v_form_leave FROM approval_forms WHERE tenant_id = v_tenant AND code = 'leave-request';
+  SELECT id INTO v_form_expense FROM approval_forms WHERE tenant_id = v_tenant AND code = 'expense-report';
+  SELECT id INTO v_form_proposal FROM approval_forms WHERE tenant_id = v_tenant AND code = 'proposal';
+  SELECT id INTO v_form_cooperation FROM approval_forms WHERE tenant_id = v_tenant AND code = 'cooperation';
+
+  -- 양식 스키마 스냅샷 (general 기준)
+  SELECT schema INTO v_schema FROM approval_forms WHERE id = v_form_general;
+
+  -- 문서번호 시퀀스 초기화
+  INSERT INTO doc_number_sequences (tenant_id, day, last_seq)
+  VALUES (v_tenant, current_date, 6)
+  ON CONFLICT (tenant_id, day) DO UPDATE SET last_seq = GREATEST(doc_number_sequences.last_seq, 6);
+
+  -- ─── DOC1: 완료된 일반 기안서 (전체 승인) ──────────────
+  INSERT INTO approval_documents (id, tenant_id, doc_number, form_id, form_schema_snapshot, content, drafter_id, status, current_step_index, submitted_at, completed_at, urgency)
+  VALUES (v_doc1, v_tenant, 'APP-' || to_char(current_date - 5, 'YYYYMMDD') || '-0001', v_form_general, v_schema,
+    '{"title":"사무용품 구매 요청","summary":"모니터 거치대 5개 구매","body":"개발팀에서 사용할 모니터 거치대 5개를 구매 요청합니다."}'::jsonb,
+    v_user3, 'completed', 1, now() - interval '5 days', now() - interval '4 days', '일반')
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO approval_steps (tenant_id, document_id, step_index, step_type, approver_user_id, status, acted_at, group_order) VALUES
+  (v_tenant, v_doc1, 0, 'approval', v_user2, 'approved', now() - interval '4 days 6 hours', 0),
+  (v_tenant, v_doc1, 1, 'approval', v_user1, 'approved', now() - interval '4 days', 1)
+  ON CONFLICT (document_id, step_index) DO NOTHING;
+
+  INSERT INTO approval_audit_logs (tenant_id, document_id, actor_id, action, payload) VALUES
+  (v_tenant, v_doc1, v_user3, 'submit', jsonb_build_object('doc_number', 'APP-' || to_char(current_date - 5, 'YYYYMMDD') || '-0001')),
+  (v_tenant, v_doc1, v_user2, 'approve', '{"step_index":0}'::jsonb),
+  (v_tenant, v_doc1, v_user1, 'approve', '{"step_index":1}'::jsonb);
+
+  -- ─── DOC2: 진행 중 휴가신청서 (1단계 승인, 2단계 대기) ──
+  INSERT INTO approval_documents (id, tenant_id, doc_number, form_id, form_schema_snapshot, content, drafter_id, status, current_step_index, submitted_at, urgency)
+  VALUES (v_doc2, v_tenant, 'APP-' || to_char(current_date - 2, 'YYYYMMDD') || '-0002',
+    v_form_leave, (SELECT schema FROM approval_forms WHERE id = v_form_leave),
+    '{"leave_type":"annual","period":"2026-04-21 ~ 2026-04-22","reason":"개인 사유로 연차 사용","contact":"010-3456-7890"}'::jsonb,
+    v_user3, 'in_progress', 1, now() - interval '2 days', '일반')
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO approval_steps (tenant_id, document_id, step_index, step_type, approver_user_id, status, acted_at, group_order) VALUES
+  (v_tenant, v_doc2, 0, 'approval', v_user2, 'approved', now() - interval '1 day', 0),
+  (v_tenant, v_doc2, 1, 'approval', v_user1, 'pending', NULL, 1)
+  ON CONFLICT (document_id, step_index) DO NOTHING;
+
+  INSERT INTO approval_audit_logs (tenant_id, document_id, actor_id, action, payload) VALUES
+  (v_tenant, v_doc2, v_user3, 'submit', jsonb_build_object('doc_number', 'APP-' || to_char(current_date - 2, 'YYYYMMDD') || '-0002')),
+  (v_tenant, v_doc2, v_user2, 'approve', '{"step_index":0}'::jsonb);
+
+  -- ─── DOC3: 반려된 지출결의서 ───────────────────────────
+  INSERT INTO approval_documents (id, tenant_id, doc_number, form_id, form_schema_snapshot, content, drafter_id, status, current_step_index, submitted_at, urgency)
+  VALUES (v_doc3, v_tenant, 'APP-' || to_char(current_date - 3, 'YYYYMMDD') || '-0003',
+    v_form_expense, (SELECT schema FROM approval_forms WHERE id = v_form_expense),
+    '{"title":"접대비 청구","expense_date":"2026-04-08","amount":350000,"category":"entertainment","description":"거래처 저녁 식사"}'::jsonb,
+    v_user2, 'rejected', 0, now() - interval '3 days', '일반')
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO approval_steps (tenant_id, document_id, step_index, step_type, approver_user_id, status, acted_at, comment, group_order) VALUES
+  (v_tenant, v_doc3, 0, 'approval', v_user1, 'rejected', now() - interval '2 days 18 hours', '영수증이 첨부되지 않았습니다. 재기안 바랍니다.', 0)
+  ON CONFLICT (document_id, step_index) DO NOTHING;
+
+  INSERT INTO approval_audit_logs (tenant_id, document_id, actor_id, action, payload) VALUES
+  (v_tenant, v_doc3, v_user2, 'submit', jsonb_build_object('doc_number', 'APP-' || to_char(current_date - 3, 'YYYYMMDD') || '-0003')),
+  (v_tenant, v_doc3, v_user1, 'reject', '{"step_index":0,"comment":"영수증이 첨부되지 않았습니다."}'::jsonb);
+
+  -- ─── DOC4: 임시저장 품의서 (미상신) ────────────────────
+  INSERT INTO approval_documents (id, tenant_id, doc_number, form_id, form_schema_snapshot, content, drafter_id, status, current_step_index, urgency)
+  VALUES (v_doc4, v_tenant, 'APP-' || to_char(current_date, 'YYYYMMDD') || '-0004',
+    v_form_proposal, (SELECT schema FROM approval_forms WHERE id = v_form_proposal),
+    '{"title":"AWS 서버 증설 품의","purpose":"트래픽 증가 대비","budget":5000000,"justification":"월 사용자 300% 증가 예상"}'::jsonb,
+    v_user2, 'draft', 0, '일반')
+  ON CONFLICT (id) DO NOTHING;
+
+  -- ─── DOC5: 긴급 업무협조전 (진행 중, 합의 포함) ────────
+  INSERT INTO approval_documents (id, tenant_id, doc_number, form_id, form_schema_snapshot, content, drafter_id, status, current_step_index, submitted_at, urgency)
+  VALUES (v_doc5, v_tenant, 'APP-' || to_char(current_date - 1, 'YYYYMMDD') || '-0005',
+    v_form_cooperation, (SELECT schema FROM approval_forms WHERE id = v_form_cooperation),
+    '{"title":"보안 패치 긴급 적용 요청","target_department":"경영지원팀","deadline":"2026-04-15","content":"CVE-2026-1234 취약점 패치를 긴급 적용해야 합니다."}'::jsonb,
+    v_user2, 'in_progress', 0, now() - interval '1 day', '긴급')
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO approval_steps (tenant_id, document_id, step_index, step_type, approver_user_id, status, group_order) VALUES
+  (v_tenant, v_doc5, 0, 'approval', v_user1, 'pending', 0),
+  (v_tenant, v_doc5, 1, 'agreement', v_user3, 'pending', 1)
+  ON CONFLICT (document_id, step_index) DO NOTHING;
+
+  INSERT INTO approval_audit_logs (tenant_id, document_id, actor_id, action, payload) VALUES
+  (v_tenant, v_doc5, v_user2, 'submit', jsonb_build_object('doc_number', 'APP-' || to_char(current_date - 1, 'YYYYMMDD') || '-0005'));
+
+  -- ─── DOC6: 회수된 일반 기안서 ──────────────────────────
+  INSERT INTO approval_documents (id, tenant_id, doc_number, form_id, form_schema_snapshot, content, drafter_id, status, current_step_index, submitted_at, urgency)
+  VALUES (v_doc6, v_tenant, 'APP-' || to_char(current_date - 4, 'YYYYMMDD') || '-0006',
+    v_form_general, v_schema,
+    '{"title":"출장 보고서 (취소)","summary":"서울 출장 보고","body":"출장이 취소되어 회수합니다."}'::jsonb,
+    v_user3, 'withdrawn', 0, now() - interval '4 days', '일반')
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO approval_steps (tenant_id, document_id, step_index, step_type, approver_user_id, status, group_order) VALUES
+  (v_tenant, v_doc6, 0, 'approval', v_user2, 'skipped', 0)
+  ON CONFLICT (document_id, step_index) DO NOTHING;
+
+  INSERT INTO approval_audit_logs (tenant_id, document_id, actor_id, action, payload) VALUES
+  (v_tenant, v_doc6, v_user3, 'submit', '{}'::jsonb),
+  (v_tenant, v_doc6, v_user3, 'withdraw', '{}'::jsonb);
+
+END;
+$$;
