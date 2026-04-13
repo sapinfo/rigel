@@ -2,6 +2,35 @@
   let installTab = $state<'prod' | 'dev'>('prod');
 </script>
 
+<svelte:head>
+  <title>Rigel — 재미 한국기업을 위한 오픈소스 그룹웨어</title>
+  <meta name="description" content="한국식 전자결재(전결/대결/후결/합의/병렬) + 게시판 + 일정 + 근태 + 인사. 서버 한 대면 완전 무료. 오픈소스 셀프호스팅." />
+
+  <!-- JSON-LD 구조화 데이터 -->
+  {@html `<script type="application/ld+json">${JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Rigel",
+    "description": "재미 한국기업을 위한 오픈소스 그룹웨어. 한국식 전자결재 + 게시판 + 일정 + 근태 + 인사.",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Linux, Windows, macOS",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Organization",
+      "name": "SAP Info",
+      "url": "https://github.com/sapinfo"
+    },
+    "url": "https://github.com/sapinfo/rigel",
+    "downloadUrl": "https://github.com/sapinfo/rigel",
+    "softwareVersion": "3.1",
+    "inLanguage": "ko"
+  })}</script>`}
+</svelte:head>
+
 <div class="min-h-screen bg-white">
   <!-- Nav -->
   <nav class="sticky top-0 z-50 border-b bg-white/90 backdrop-blur">
