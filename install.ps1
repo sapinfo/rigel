@@ -123,12 +123,7 @@ if (Test-Path ".env") {
     $serviceSig = New-HmacSha256 "$header.$servicePayload" $JWT_SECRET
     $SUPABASE_SERVICE_KEY = "$header.$servicePayload.$serviceSig"
 
-    try {
-        $SERVER_IP = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notlike "*Loopback*" -and $_.IPAddress -ne "127.0.0.1" } | Select-Object -First 1).IPAddress
-    } catch {
-        $SERVER_IP = "localhost"
-    }
-    if (-not $SERVER_IP) { $SERVER_IP = "localhost" }
+    $SERVER_IP = "localhost"
 
     $envContent = @"
 # Rigel Environment Variables (auto-generated)
