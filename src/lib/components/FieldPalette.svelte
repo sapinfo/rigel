@@ -4,6 +4,7 @@
   const FIELD_TYPES: { type: FormFieldType; label: string; icon: string }[] = [
     { type: 'text', label: '텍스트', icon: 'Aa' },
     { type: 'textarea', label: '장문 텍스트', icon: '¶' },
+    { type: 'richtext', label: '리치 텍스트', icon: '✎' },
     { type: 'number', label: '숫자', icon: '#' },
     { type: 'date', label: '날짜', icon: '📅' },
     { type: 'date-range', label: '기간', icon: '📅📅' },

@@ -22,6 +22,7 @@ export interface TenantSummary {
 export type FormFieldType =
   | 'text'
   | 'textarea'
+  | 'richtext'
   | 'number'
   | 'date'
   | 'date-range'
@@ -68,6 +69,11 @@ export interface SelectField extends FormFieldBase {
   multiple?: boolean;
 }
 
+export interface RichTextField extends FormFieldBase {
+  type: 'richtext';
+  placeholder?: string;
+}
+
 export interface AttachmentField extends FormFieldBase {
   type: 'attachment';
   maxFiles?: number;
@@ -81,6 +87,7 @@ export type FormField =
   | DateField
   | DateRangeField
   | SelectField
+  | RichTextField
   | AttachmentField;
 
 // ─── Form Schema v2 (조건부 필드, v2.0) ──────────────────

@@ -2,6 +2,7 @@
   import type { FormField } from '$lib/types/approval';
   import type { UploadedAttachment } from '$lib/client/uploadAttachment';
   import AttachmentInput from './AttachmentInput.svelte';
+  import RichEditor from './RichEditor.svelte';
 
   type Props = {
     field: FormField;
@@ -41,6 +42,13 @@
       disabled={readonly}
       oninput={(e) => onChange(e.currentTarget.value)}
     ></textarea>
+  {:else if field.type === 'richtext'}
+    <RichEditor
+      value={(value as string | undefined) ?? ''}
+      placeholder={field.placeholder ?? '내용을 입력하세요'}
+      {readonly}
+      onChange={(html) => onChange(html)}
+    />
   {:else if field.type === 'number'}
     <div class="flex items-center gap-2">
       <input
