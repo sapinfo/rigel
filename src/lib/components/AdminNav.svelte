@@ -12,7 +12,12 @@
     ['approval-templates', '결재선 템플릿'],
     ['delegations', '전결 규칙'],
     ['absences', '부재 관리'],
-    ['audit', '감사 로그']
+    ['audit', '감사 로그'],
+    ['boards', '게시판 관리'],
+    ['announcements', '공지 관리'],
+    ['rooms', '회의실 관리'],
+    ['attendance', '근태 관리'],
+    ['attendance/settings', '근태 설정']
   ];
 </script>
 

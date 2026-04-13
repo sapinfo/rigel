@@ -1,0 +1,1 @@
+-- 0060_announcement_reads.sql (applied via MCP)

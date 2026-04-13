@@ -4,25 +4,18 @@
   import { createBrowserClient } from '@supabase/ssr';
   import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
   import NotificationBell from '$lib/components/NotificationBell.svelte';
+  import Sidebar from '$lib/components/Sidebar.svelte';
+  import AnnouncementPopup from '$lib/components/AnnouncementPopup.svelte';
   import type { Notification } from '$lib/types/approval';
 
   let { data, children } = $props();
 
-  let newDraftOpen = $state(false);
-  let mobileNavOpen = $state(false);
+  let sidebarOpen = $state(false);
   const printMode = $derived(page.url.searchParams.get('print') === '1');
 
   // ─── Notifications state ──────────────────────────
   let notifications = $state<Notification[]>([]);
   let unreadCount = $state(data.unreadCount as number);
-
-  function closeDropdown() {
-    newDraftOpen = false;
-  }
-
-  function closeMobileNav() {
-    mobileNavOpen = false;
-  }
 
   function mapRow(r: Record<string, unknown>): Notification {
     return {
@@ -39,14 +32,12 @@
   onMount(() => {
     const supabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
 
-    // Load initial notifications
     supabase
       .rpc('get_notifications', { p_tenant_id: data.currentTenant.id })
       .then(({ data: rows }) => {
         if (rows) notifications = (rows as Record<string, unknown>[]).map(mapRow);
       });
 
-    // Realtime subscription
     const userId = page.data.session?.user?.id ?? '';
     const channel = supabase
       .channel(`notif:${data.currentTenant.id}`)
@@ -67,7 +58,6 @@
       )
       .subscribe();
 
-    // Store supabase ref for mark-read actions
     markReadFn = async (id: string) => {
       const n = notifications.find((n) => n.id === id);
       if (n && !n.read) {
@@ -94,141 +84,63 @@
   let markAllReadFn = $state<() => Promise<void>>(async () => {});
 </script>
 
-<svelte:window onclick={closeDropdown} />
+{#if printMode}
+  {@render children?.()}
+{:else}
+  <div class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <Sidebar
+      tenant={data.currentTenant}
+      forms={data.forms}
+      open={sidebarOpen}
+      onclose={() => (sidebarOpen = false)}
+    />
 
-{#if !printMode}
-<header class="border-b bg-white">
-  <div class="mx-auto max-w-6xl px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between">
-    <div class="flex items-center gap-2 sm:gap-4">
-      <a href="/" class="text-lg sm:text-xl font-bold">Rigel</a>
-      <span class="hidden sm:inline text-gray-300">/</span>
-      <span class="hidden sm:inline text-gray-700">{data.currentTenant.name}</span>
-      <span class="hidden sm:inline text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600">
-        {data.currentTenant.role}
-      </span>
-    </div>
+    <!-- Main content -->
+    <div class="flex flex-1 flex-col overflow-hidden">
+      <!-- Top bar (compact) -->
+      <header class="flex items-center justify-between border-b bg-white px-4 py-2 lg:px-6">
+        <button
+          type="button"
+          class="lg:hidden rounded p-1 text-gray-600 hover:text-gray-900"
+          onclick={() => (sidebarOpen = true)}
+          aria-label="메뉴"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
 
-    <div class="flex items-center gap-2 sm:gap-4">
-      <!-- Notification bell -->
-      <NotificationBell
-        {notifications}
-        {unreadCount}
-        tenantSlug={data.currentTenant.slug}
-        onMarkRead={markReadFn}
-        onMarkAllRead={markAllReadFn}
-      />
-
-      <!-- Desktop nav -->
-      <nav class="hidden sm:flex items-center gap-4 text-sm">
-        <div class="relative">
-          <button
-            type="button"
-            class="rounded bg-blue-600 px-3 py-1.5 text-white hover:bg-blue-700"
-            onclick={(e) => { e.stopPropagation(); newDraftOpen = !newDraftOpen; }}
-          >
-            + 새 기안
-          </button>
-          {#if newDraftOpen}
-            <div
-              class="absolute right-0 top-full z-10 mt-1 min-w-48 rounded-lg border bg-white py-1 shadow-lg"
-              role="menu"
-              tabindex="-1"
-              onclick={(e) => e.stopPropagation()}
-              onkeydown={(e) => e.key === 'Escape' && (newDraftOpen = false)}
-            >
-              {#each data.forms as form (form.code)}
-                <a
-                  href={`/t/${data.currentTenant.slug}/approval/drafts/new/${form.code}`}
-                  class="block px-3 py-2 text-sm hover:bg-gray-50"
-                  onclick={closeDropdown}
-                >
-                  {form.name}
-                </a>
-              {:else}
-                <p class="px-3 py-2 text-xs text-gray-500">양식 없음</p>
-              {/each}
-            </div>
-          {/if}
+        <div class="hidden lg:block text-sm text-gray-500">
+          {data.currentTenant.name}
+          <span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 ml-1">{data.currentTenant.role}</span>
         </div>
 
-        <a href={`/t/${data.currentTenant.slug}`} class="hover:underline">대시보드</a>
-        <a href={`/t/${data.currentTenant.slug}/approval/inbox`} class="hover:underline">결재함</a>
-        <a href={`/t/${data.currentTenant.slug}/leave-calendar`} class="hover:underline">휴가</a>
-        {#if data.currentTenant.role === 'owner' || data.currentTenant.role === 'admin'}
-          <div class="group relative">
-            <button type="button" class="hover:underline">관리 ▾</button>
-            <div class="absolute right-0 top-full z-10 hidden min-w-40 rounded-lg border bg-white py-1 shadow-lg group-hover:block">
-              <a href={`/t/${data.currentTenant.slug}/admin/members`} class="block px-3 py-1.5 text-sm hover:bg-gray-50">멤버</a>
-              <a href={`/t/${data.currentTenant.slug}/admin/org`} class="block px-3 py-1.5 text-sm hover:bg-gray-50">조직 관리</a>
-              <a href={`/t/${data.currentTenant.slug}/admin/forms`} class="block px-3 py-1.5 text-sm hover:bg-gray-50">양식</a>
-              <a href={`/t/${data.currentTenant.slug}/admin/approval-rules`} class="block px-3 py-1.5 text-sm hover:bg-gray-50">결재선 규칙</a>
-              <a href={`/t/${data.currentTenant.slug}/admin/approval-templates`} class="block px-3 py-1.5 text-sm hover:bg-gray-50">결재선 템플릿</a>
-              <a href={`/t/${data.currentTenant.slug}/admin/delegations`} class="block px-3 py-1.5 text-sm hover:bg-gray-50">전결 규칙</a>
-              <a href={`/t/${data.currentTenant.slug}/admin/absences`} class="block px-3 py-1.5 text-sm hover:bg-gray-50">부재 관리</a>
-              <a href={`/t/${data.currentTenant.slug}/admin/audit`} class="block px-3 py-1.5 text-sm hover:bg-gray-50">감사 로그</a>
-            </div>
-          </div>
-        {/if}
-        <form method="POST" action="/logout" class="inline">
-          <button type="submit" class="text-gray-500 hover:text-gray-900">로그아웃</button>
-        </form>
-      </nav>
+        <div class="flex items-center gap-3">
+          <NotificationBell
+            {notifications}
+            {unreadCount}
+            tenantSlug={data.currentTenant.slug}
+            onMarkRead={markReadFn}
+            onMarkAllRead={markAllReadFn}
+          />
+        </div>
+      </header>
 
-      <!-- Mobile hamburger -->
-      <button
-        type="button"
-        class="sm:hidden rounded p-1 text-gray-600 hover:text-gray-900"
-        onclick={() => (mobileNavOpen = !mobileNavOpen)}
-        aria-label="메뉴"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          {#if mobileNavOpen}
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          {:else}
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-          {/if}
-        </svg>
-      </button>
+      <!-- Page content -->
+      <main class="flex-1 overflow-y-auto px-4 py-6 lg:px-8">
+        <div class="mx-auto max-w-5xl">
+          {@render children?.()}
+        </div>
+      </main>
     </div>
+
+    <!-- Popup announcements modal -->
+    {#if data.popupAnnouncements?.length > 0}
+      <AnnouncementPopup
+        announcements={data.popupAnnouncements}
+        tenantId={data.currentTenant.id}
+      />
+    {/if}
   </div>
-
-  <!-- Mobile nav panel -->
-  {#if mobileNavOpen}
-    <nav class="sm:hidden border-t bg-white px-4 py-3 space-y-2">
-      <div class="text-xs text-gray-500">
-        {data.currentTenant.name} · {data.currentTenant.role}
-      </div>
-      <a href={`/t/${data.currentTenant.slug}/approval/inbox`} class="block rounded px-3 py-2 text-sm hover:bg-gray-50" onclick={closeMobileNav}>결재함</a>
-      <a href={`/t/${data.currentTenant.slug}/leave-calendar`} class="block rounded px-3 py-2 text-sm hover:bg-gray-50" onclick={closeMobileNav}>휴가 캘린더</a>
-      {#each data.forms as form (form.code)}
-        <a
-          href={`/t/${data.currentTenant.slug}/approval/drafts/new/${form.code}`}
-          class="block rounded px-3 py-2 text-sm hover:bg-gray-50"
-          onclick={closeMobileNav}
-        >
-          + {form.name}
-        </a>
-      {/each}
-      {#if data.currentTenant.role === 'owner' || data.currentTenant.role === 'admin'}
-        <div class="text-xs font-medium text-gray-400 mt-2">관리</div>
-        {#each [
-          ['members', '멤버'], ['org', '조직 관리'], ['forms', '양식'],
-          ['approval-rules', '결재선 규칙'], ['approval-templates', '결재선 템플릿'],
-          ['delegations', '전결 규칙'], ['absences', '부재 관리'], ['audit', '감사 로그']
-        ] as [path, label] (path)}
-          <a href={`/t/${data.currentTenant.slug}/admin/${path}`} class="block rounded px-3 py-1.5 text-sm hover:bg-gray-50" onclick={closeMobileNav}>{label}</a>
-        {/each}
-      {/if}
-      <form method="POST" action="/logout">
-        <button type="submit" class="block w-full rounded px-3 py-2 text-left text-sm text-gray-500 hover:bg-gray-50">
-          로그아웃
-        </button>
-      </form>
-    </nav>
-  {/if}
-</header>
 {/if}
-
-<div class:mx-auto={!printMode} class:max-w-6xl={!printMode} class:px-6={!printMode} class:py-8={!printMode}>
-  {@render children?.()}
-</div>

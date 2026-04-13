@@ -1,0 +1,1 @@
+-- 0059_announcements.sql (applied via MCP)

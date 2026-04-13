@@ -112,6 +112,45 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		.eq('is_published', true)
 		.order('name');
 
+	// ─── v3.1 Dashboard widgets ───────────────────────
+	const today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
+	const monthStart = today.slice(0, 8) + '01';
+	const monthEnd = new Date(new Date(today).getFullYear(), new Date(today).getMonth() + 1, 0).toISOString().slice(0, 10);
+
+	const [
+		unreadAnnouncementRes,
+		todayAttendanceRes,
+		todayEventsRes,
+		recentPostsRes
+	] = await Promise.all([
+		// 미확인 공지 수
+		locals.supabase.rpc('get_unread_announcement_count', { p_tenant_id: tenantId }),
+		// 오늘 출근 기록
+		locals.supabase
+			.from('attendance_records')
+			.select('clock_in, clock_out, work_type')
+			.eq('tenant_id', tenantId)
+			.eq('user_id', userId)
+			.eq('work_date', today)
+			.maybeSingle(),
+		// 오늘 일정
+		locals.supabase
+			.from('calendar_events')
+			.select('id, title, start_at, end_at, all_day, event_type')
+			.eq('tenant_id', tenantId)
+			.lte('start_at', today + 'T23:59:59+09:00')
+			.gte('end_at', today + 'T00:00:00+09:00')
+			.order('start_at')
+			.limit(5),
+		// 최근 게시글
+		locals.supabase
+			.from('board_posts')
+			.select('id, title, board_id, created_at, boards!inner(name)')
+			.eq('tenant_id', tenantId)
+			.order('created_at', { ascending: false })
+			.limit(5)
+	]);
+
 	return {
 		userName,
 		counts: {
@@ -125,6 +164,23 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		favorites: (favRows ?? []).map((f) => ({ id: f.id as string, name: f.name as string })),
 		absentMembers,
 		recentDocuments,
-		forms: (formRows ?? []).map((f) => ({ code: f.code as string, name: f.name as string }))
+		forms: (formRows ?? []).map((f) => ({ code: f.code as string, name: f.name as string })),
+		// v3.1 widgets
+		unreadAnnouncementCount: (unreadAnnouncementRes.data as number) ?? 0,
+		todayAttendance: todayAttendanceRes.data ?? null,
+		todayEvents: (todayEventsRes.data ?? []).map((e) => ({
+			id: e.id as string,
+			title: e.title as string,
+			startAt: e.start_at as string,
+			allDay: e.all_day as boolean,
+			eventType: e.event_type as string
+		})),
+		recentPosts: (recentPostsRes.data ?? []).map((p) => ({
+			id: p.id as string,
+			title: p.title as string,
+			boardId: p.board_id as string,
+			boardName: (p.boards as unknown as { name: string } | null)?.name ?? '',
+			createdAt: p.created_at as string
+		}))
 	};
 };

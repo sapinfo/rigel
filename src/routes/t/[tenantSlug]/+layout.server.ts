@@ -51,5 +51,16 @@ export const load: LayoutServerLoad = async ({ locals, params }) => {
     .eq('tenant_id', currentTenant.id)
     .eq('read', false);
 
-  return { currentTenant, forms, unreadCount: unreadCount ?? 0 };
+  // v3.1: popup announcements for modal
+  const { data: popupRows } = await locals.supabase.rpc('get_popup_announcements', {
+    p_tenant_id: currentTenant.id
+  });
+  const popupAnnouncements = (popupRows ?? []).map((a: Record<string, unknown>) => ({
+    id: a.id as string,
+    title: a.title as string,
+    content: a.content as Record<string, unknown>,
+    publishedAt: a.published_at as string
+  }));
+
+  return { currentTenant, forms, unreadCount: unreadCount ?? 0, popupAnnouncements };
 };
