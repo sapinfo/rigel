@@ -102,7 +102,7 @@
     </button>
     {#if approvalOpen}
       <a href={`${base}/approval/inbox`} class={linkClass(`${base}/approval/inbox`)} onclick={handleNav}>결재함</a>
-      <a href={`${base}/approval/drafts`} class={linkClass(`${base}/approval/drafts`)} onclick={handleNav}>내 문서</a>
+      <a href={`${base}/approval/inbox?tab=drafts`} class={linkClass(`${base}/approval/inbox`)} onclick={handleNav}>내 문서</a>
     {/if}
 
     <!-- 소통 Section -->
