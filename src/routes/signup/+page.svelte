@@ -73,7 +73,9 @@
     </label>
 
     {#if form?.errors?.form}
-      <p class="text-sm text-red-600">{form.errors.form}</p>
+      <p class="text-sm text-red-600">{typeof form.errors.form === 'string' ? form.errors.form : JSON.stringify(form.errors.form)}</p>
+    {:else if form?.errors}
+      <p class="text-sm text-red-600">{JSON.stringify(form.errors)}</p>
     {/if}
 
     <button

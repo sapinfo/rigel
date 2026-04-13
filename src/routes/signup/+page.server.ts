@@ -59,7 +59,8 @@ export const actions: Actions = {
     });
 
     if (error) {
-      return fail(400, { errors: formError(error.message), values });
+      console.error('[signup] Auth error:', error.message, error.status, error);
+      return fail(400, { errors: formError(error.message || 'Authentication service error'), values });
     }
 
     // 가입 후 ?redirect=<path>로 복귀 (초대 플로우 등에서 사용).
