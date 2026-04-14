@@ -27,7 +27,23 @@
 
   <!-- Create form -->
   {#if showCreate}
-    <form method="POST" action="?/create" use:enhance class="rounded-lg border bg-white p-4 space-y-3">
+    <form
+      method="POST"
+      action="?/create"
+      use:enhance={() => {
+        return async ({ update, result }) => {
+          await update();
+          if (result.type === 'success') {
+            showCreate = false;
+            newName = '';
+            newDesc = '';
+            newType = 'general';
+            newDeptId = '';
+          }
+        };
+      }}
+      class="rounded-lg border bg-white p-4 space-y-3"
+    >
       <label class="block">
         <span class="text-sm font-medium">게시판 이름</span>
         <input name="name" bind:value={newName} class="mt-1 block w-full rounded border px-3 py-2 text-sm" required />
