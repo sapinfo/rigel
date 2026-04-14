@@ -194,6 +194,22 @@ if ! grep -q "^PUBLIC_SUPABASE_ANON_KEY=.\+" .env; then
   err "  Copy ANON_KEY value from your supabase/docker/.env to Rigel .env."
   exit 1
 fi
+
+# localhost 기본값 → 서버 IP 자동 치환 (LAN/원격 브라우저 접근 대응)
+# PUBLIC_* 변수는 SvelteKit 빌드 시점에 client JS 번들에 baked되므로
+# 브라우저에서 해석 가능한 주소여야 함. localhost는 클라이언트 머신의 자기 자신으로 해석됨.
+SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "")
+if [ -n "$SERVER_IP" ]; then
+  if grep -qE '^PUBLIC_SUPABASE_URL=http://(localhost|127\.0\.0\.1):' .env; then
+    run "Auto-replacing PUBLIC_SUPABASE_URL localhost → $SERVER_IP (backup: .env.bak)"
+    sed -i.bak -E "s|^PUBLIC_SUPABASE_URL=http://(localhost\|127\.0\.0\.1):|PUBLIC_SUPABASE_URL=http://${SERVER_IP}:|" .env
+  fi
+  if grep -qE '^SITE_URL=http://(localhost|127\.0\.0\.1):' .env; then
+    run "Auto-replacing SITE_URL localhost → $SERVER_IP"
+    sed -i.bak -E "s|^SITE_URL=http://(localhost\|127\.0\.0\.1):|SITE_URL=http://${SERVER_IP}:|" .env
+  fi
+fi
+
 ok ".env configured"
 
 echo ""
