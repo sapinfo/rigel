@@ -28,7 +28,9 @@ services:
       - "${APP_PORT:-3000}:3000"
 
 # supabase compose가 생성한 네트워크에 가입
+# docker compose → supabase_default, podman-compose → docker_default 등
+# install.sh가 실제 네트워크 이름을 SUPABASE_NETWORK env로 주입
 networks:
   default:
-    name: supabase_default
+    name: ${SUPABASE_NETWORK:-supabase_default}
     external: true

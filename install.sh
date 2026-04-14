@@ -42,15 +42,18 @@ echo ""
 # ─── 1. 사전 요구 확인 ─────────────────────────────────────
 
 COMPOSE_CMD=""
+CONTAINER_CMD=""
 if command -v docker &>/dev/null && docker compose version &>/dev/null; then
   COMPOSE_CMD="docker compose"
+  CONTAINER_CMD="docker"
 elif command -v podman-compose &>/dev/null; then
   COMPOSE_CMD="podman-compose"
+  CONTAINER_CMD="podman"
 else
-  err "Docker Compose not found. Install Docker: https://docs.docker.com/get-docker/"
+  err "Compose not found. Install Docker or Podman+podman-compose."
   exit 1
 fi
-ok "Compose: $COMPOSE_CMD"
+ok "Compose: $COMPOSE_CMD (container: $CONTAINER_CMD)"
 
 for cmd in git curl; do
   if ! command -v $cmd &>/dev/null; then
@@ -66,7 +69,7 @@ echo ""
 
 run "Checking Supabase (expected: supabase-db container running)..."
 
-if ! docker ps --format '{{.Names}}' | grep -q '^supabase-db$'; then
+if ! $CONTAINER_CMD ps --format '{{.Names}}' | grep -q '^supabase-db$'; then
   err "Supabase is not running."
   err ""
   err "  Install Supabase first (official self-hosting guide):"
@@ -85,20 +88,29 @@ if ! docker ps --format '{{.Names}}' | grep -q '^supabase-db$'; then
   exit 1
 fi
 
-if ! docker exec supabase-db pg_isready -U postgres &>/dev/null; then
+if ! $CONTAINER_CMD exec supabase-db pg_isready -U postgres &>/dev/null; then
   err "supabase-db container exists but not ready. Wait and retry, or check:"
-  err "  docker logs supabase-db --tail 50"
+  err "  $CONTAINER_CMD logs supabase-db --tail 50"
   exit 1
 fi
 ok "Supabase is running"
 
-# kong 네트워크 확인 (Rigel 앱이 supabase_default에 join)
-NETWORK=$(docker network ls --format '{{.Name}}' | grep -E '^supabase(_default)?$' | head -1 || echo "")
+# Rigel 앱이 join할 Supabase 네트워크 감지
+# docker-compose → supabase_default, podman-compose → docker_default (cwd=docker 기준) 등 상이
+NETWORK=$($CONTAINER_CMD network ls --format '{{.Name}}' \
+  | grep -E '^(supabase_default|docker_default|supabase)$' | head -1 || echo "")
 if [ -z "$NETWORK" ]; then
-  err "Supabase docker network not found (expected: supabase_default)."
-  err "Is Supabase really running via official docker-compose?"
+  # fallback: supabase-db가 실제로 연결된 네트워크 찾기
+  NETWORK=$($CONTAINER_CMD inspect supabase-db \
+    --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{"\n"}}{{end}}' \
+    2>/dev/null | grep -v '^$' | head -1 || echo "")
+fi
+if [ -z "$NETWORK" ]; then
+  err "Supabase container network not found."
+  err "Debug: $CONTAINER_CMD network ls"
   exit 1
 fi
+export SUPABASE_NETWORK="$NETWORK"
 ok "Supabase network: $NETWORK"
 
 echo ""
@@ -125,7 +137,7 @@ echo ""
 
 # ─── 4. Rigel migration + seed (idempotent) ───────────────
 
-MIGRATED=$(docker exec supabase-db psql -U postgres -tA -c "SELECT 1 FROM information_schema.tables WHERE table_name = '_rigel_installed' LIMIT 1" 2>/dev/null || echo "")
+MIGRATED=$($CONTAINER_CMD exec supabase-db psql -U postgres -tA -c "SELECT 1 FROM information_schema.tables WHERE table_name = '_rigel_installed' LIMIT 1" 2>/dev/null || echo "")
 
 if [ -z "$MIGRATED" ]; then
   run "Applying Rigel migrations..."
@@ -133,7 +145,7 @@ if [ -z "$MIGRATED" ]; then
   COUNT=0
   for f in supabase/migrations/*.sql; do
     if [ -f "$f" ]; then
-      if docker exec -i supabase-db psql -U postgres -v ON_ERROR_STOP=1 < "$f" > /dev/null 2>&1; then
+      if $CONTAINER_CMD exec -i supabase-db psql -U postgres -v ON_ERROR_STOP=1 < "$f" > /dev/null 2>&1; then
         COUNT=$((COUNT + 1))
       else
         err "Migration failed: $(basename $f)"
@@ -146,10 +158,10 @@ if [ -z "$MIGRATED" ]; then
   if [ $FAILED -eq 0 ]; then
     if [ -f supabase/seed.sql ]; then
       run "Applying seed data..."
-      docker exec -i supabase-db psql -U postgres -v ON_ERROR_STOP=1 < supabase/seed.sql > /dev/null 2>&1 \
+      $CONTAINER_CMD exec -i supabase-db psql -U postgres -v ON_ERROR_STOP=1 < supabase/seed.sql > /dev/null 2>&1 \
         || err "Seed warning (non-fatal)"
     fi
-    docker exec supabase-db psql -U postgres \
+    $CONTAINER_CMD exec supabase-db psql -U postgres \
       -c "CREATE TABLE IF NOT EXISTS _rigel_installed (at timestamptz DEFAULT now())" > /dev/null
     ok "Applied $COUNT migrations + seed"
   else
