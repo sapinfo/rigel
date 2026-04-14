@@ -56,15 +56,22 @@ export const actions: Actions = {
     if (!tm) return fail(403);
     const tenantId = (tm.tenant as unknown as { id: string }).id;
 
-    await locals.supabase
+    // upsert의 UPDATE 경로는 RLS UPDATE 정책이 필요한데 현재 없음.
+    // ignoreDuplicates=true로 conflict 시 아무것도 안 하게 하여
+    // INSERT 권한만으로 동작. 이미 읽음이면 no-op.
+    const { error: insErr } = await locals.supabase
       .from('announcement_reads')
-      .upsert({
-        announcement_id: params.id,
-        user_id: locals.user.id,
-        tenant_id: tenantId,
-        read_at: new Date().toISOString()
-      }, { onConflict: 'announcement_id,user_id' });
+      .upsert(
+        {
+          announcement_id: params.id,
+          user_id: locals.user.id,
+          tenant_id: tenantId,
+          read_at: new Date().toISOString()
+        },
+        { onConflict: 'announcement_id,user_id', ignoreDuplicates: true }
+      );
 
+    if (insErr) return fail(500, { message: insErr.message });
     return { ok: true };
   }
 };

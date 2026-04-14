@@ -66,13 +66,23 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		};
 	});
 
-	// 4. 긴급 미결 count
-	const { count: urgentCount } = await locals.supabase
-		.from('approval_documents')
-		.select('id', { count: 'exact', head: true })
-		.eq('tenant_id', tenantId)
-		.eq('urgency', '긴급')
-		.in('status', ['in_progress', 'pending_post_facto']);
+	// 4. 긴급 미결 count — "내가 결재할 긴급 문서" 로 정의.
+	//    대시보드 클릭 시 /approval/inbox?tab=pending&urgency=긴급 로 이동하므로
+	//    count도 같은 기준(내 결재 대기 + 긴급)으로 일치시킴.
+	//    approval_steps에서 approver=me AND status=pending인 step이 있는 문서 중
+	//    urgency='긴급' 인 것만 카운트.
+	const { data: urgentStepRows } = await locals.supabase
+		.from('approval_steps')
+		.select('document_id, document:approval_documents!inner(id, urgency, status, tenant_id)')
+		.eq('approver_user_id', userId)
+		.eq('status', 'pending')
+		.eq('document.tenant_id', tenantId)
+		.eq('document.urgency', '긴급')
+		.in('document.status', ['in_progress', 'pending_post_facto']);
+
+	const urgentCount = new Set(
+		(urgentStepRows ?? []).map((r) => r.document_id as string)
+	).size;
 
 	// 5. 현재 사용자 이름
 	const profileMap = await fetchProfilesByIds(locals.supabase, [userId]);
