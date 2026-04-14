@@ -313,6 +313,21 @@ podman exec supabase-db psql -U postgres -c "DROP TABLE _rigel_installed;"
 - 서버 측 원인. Supabase 서버 runbook의 Q9 참조: [supabase-selfhost-podman.md#Q9](./supabase-selfhost-podman.md)
 - Rigel 쪽은 정상. Supabase 서버 `docker-compose.yml`의 `PGRST_JWT_SECRET` 설정이 podman-compose 호환이어야 함
 
+### T11. 다중 도메인 POST 요청 403 Forbidden (CSRF origin mismatch)
+
+- **증상**: apex(`rigelworks.io`)에서 `/login`, `/signup` POST 시 403. app 서브도메인에선 정상
+- **원인**: SvelteKit 2 기본 CSRF check. `docker-compose.yml`의 `ORIGIN=https://app.rigelworks.io` 로 고정 → 다른 도메인 Origin 헤더와 mismatch
+- **해결**: `ORIGIN` 제거 + reverse proxy 헤더 env 사용
+  ```yaml
+  # docker-compose.yml
+  environment:
+    # ORIGIN 고정 금지 (다중 도메인 사용 시)
+    PROTOCOL_HEADER: x-forwarded-proto
+    HOST_HEADER: x-forwarded-host
+  ```
+- **효과**: 각 request의 X-Forwarded-Host/Proto 헤더에서 per-request origin 결정. Cloudflare Tunnel이 자동 세팅. apex + 서브도메인 + 로컬 IP 접근 모두 CSRF 통과
+- **보안**: CSRF 체크 자체는 유지 (Origin 헤더와 request URL host 비교). origin spoofing 공격 방어 동일
+
 ### T5. rigel-app DNS 에러 `getaddrinfo EAI_AGAIN kong`
 
 - **원인**: Podman aardvark DNS 초기 상태 꼬임. 첫 기동 직후에만 발생
