@@ -34,7 +34,16 @@ const supabase: Handle = async ({ event, resolve }) => {
         getAll: () => event.cookies.getAll(),
         setAll: (cookiesToSet: { name: string; value: string; options: CookieOptions }[]) => {
           cookiesToSet.forEach(({ name, value, options }) => {
-            event.cookies.set(name, value, { ...options, path: '/', secure: isSecure });
+            // httpOnly=false: 브라우저 createBrowserClient가 세션을 읽어 Authorization 헤더를
+            //   자동 첨부할 수 있게 허용. 없으면 realtime/RPC 호출이 anonymous로 나가고
+            //   auth.uid()=null이 되어 알림/구독 등 client-side 기능 전부 실패.
+            // secure/sameSite는 XSS·CSRF 1차 방어 유지.
+            event.cookies.set(name, value, {
+              ...options,
+              path: '/',
+              secure: isSecure,
+              httpOnly: false
+            });
           });
         }
       }
