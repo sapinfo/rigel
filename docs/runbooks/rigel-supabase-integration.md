@@ -187,6 +187,90 @@ Rigel 앱 기동 후:
 - [ ] ufw 포트 8000/5432/6543 열림 (또는 reverse proxy 443)
 - [ ] Auth email redirect URL이 Rigel 호스트 반영
 
+## 재설치 / 업데이트
+
+배포 이후 코드 변경 반영, 설정 재검증, 또는 install.sh 개선 사항 적용 시 두 가지 경로.
+
+### 경로 A: 기존 설치 업데이트 (권장, 빠름)
+
+- **언제**: 단순 코드 변경/버그픽스 반영. `.env`와 DB는 그대로.
+- **소요**: 1~2분 (이미지 재빌드만)
+
+```bash
+cd ~/rigel
+git pull
+podman-compose up -d --build
+sleep 15
+podman ps --format "table {{.Names}}\t{{.Status}}" | grep rigel
+```
+
+| 유지 | 재생성 |
+|---|---|
+| `.env`, DB 데이터, Supabase 설정 | rigel-app 컨테이너·이미지 |
+
+### 경로 B: 완전 초기화 후 재설치
+
+- **언제**: `install.sh` 자체를 end-to-end로 검증, `.env` 완전 재작성, 서버 교체
+- **주의**: Rigel DB 데이터는 Supabase 서버에 있어 안전. 사용자 계정·조직·결재 문서 모두 보존
+
+```bash
+# 1. 기존 Rigel 컨테이너 중지
+cd ~/rigel
+podman-compose down
+
+# 2. 소스 + .env 삭제
+cd ~
+rm -rf rigel
+
+# 3. 재설치
+git clone https://github.com/sapinfo/rigel.git
+cd rigel
+cp .env.production.example .env
+
+# 4. ANON_KEY 자동 주입 (Supabase 서버 .env에서 가져오기)
+ANON=$(grep ^ANON_KEY= ~/supabase/docker/.env | cut -d= -f2-)
+sed -i "s|^PUBLIC_SUPABASE_ANON_KEY=|PUBLIC_SUPABASE_ANON_KEY=${ANON}|" .env
+
+# 5. 설치 (PUBLIC_SUPABASE_URL/SITE_URL은 install.sh가 서버 IP로 자동 치환)
+bash install.sh
+```
+
+| 동작 | 설명 |
+|---|---|
+| `install.sh` migration 적용 | `_rigel_installed` 테이블 체크로 **skip** (이미 적용됨) |
+| `install.sh` seed 적용 | skip (migration과 함께) |
+| PUBLIC_SUPABASE_URL localhost 치환 | `hostname -I` 기반 자동 (예: `192.168.168.118`) |
+| 컨테이너 기동 | `podman-compose up -d --build` |
+
+### 검증 (두 경로 공통)
+
+```bash
+# 1. install.sh가 최신인지
+grep -c "CONTAINER_CMD\|Auto-replacing" ~/rigel/install.sh
+# 4 이상이면 최신 반영됨
+
+# 2. .env 치환 확인
+grep -E '^(PUBLIC_SUPABASE_URL|SITE_URL)=' ~/rigel/.env
+# 모두 서버 IP 포함해야 정상
+
+# 3. 컨테이너 healthy
+podman ps --format "table {{.Names}}\t{{.Status}}" | grep rigel
+```
+
+브라우저 `http://<SERVER_IP>:3000/login` → 기존 계정(`m3test1@example.com` / `testpass1234`) 로그인 → `/t/m3test-org/...` 이동 성공이면 완료.
+
+### DB도 완전 초기화하고 싶을 때 (드물게 필요)
+
+> ⚠️ **운영 중엔 금지**. 개발 단계에서만. `_rigel_installed` 삭제 시 `install.sh` 재실행으로 migration + seed가 다시 돌아감 (테이블이 이미 있으면 migration SQL에 따라 부분 실패 가능).
+
+```bash
+# _rigel_installed 제거 + 기존 앱 데이터 테이블 drop은 수동
+podman exec supabase-db psql -U postgres -c "DROP TABLE _rigel_installed;"
+# install.sh 재실행 시 migration 다시 적용 시도
+```
+
+**프로덕션에서는 DB 초기화 대신 Supabase 서버의 `supabase-db` 볼륨을 백업 → 복구로 롤백**.
+
 ## 트러블슈팅
 
 ### T1. 로그인/회원가입 눌러도 랜딩페이지로 튕김 (에러 메시지 없음)
