@@ -22,6 +22,10 @@ if (!process.env.VITEST && process.env.NODE_ENV !== 'test') {
 const supabase: Handle = async ({ event, resolve }) => {
   // Server uses internal Docker URL (kong:8000), browser uses public URL (localhost:8000)
   const serverUrl = privateEnv.SUPABASE_INTERNAL_URL || env.PUBLIC_SUPABASE_URL!;
+  // HTTP 배포(예: LAN)에서는 secure 쿠키가 브라우저에서 드롭됨.
+  // SvelteKit은 production에서 secure=true가 기본이므로 프로토콜로 명시 오버라이드.
+  const isSecure = event.url.protocol === 'https:';
+
   event.locals.supabase = createServerClient(
     serverUrl,
     env.PUBLIC_SUPABASE_ANON_KEY!,
@@ -30,7 +34,7 @@ const supabase: Handle = async ({ event, resolve }) => {
         getAll: () => event.cookies.getAll(),
         setAll: (cookiesToSet: { name: string; value: string; options: CookieOptions }[]) => {
           cookiesToSet.forEach(({ name, value, options }) => {
-            event.cookies.set(name, value, { ...options, path: '/' });
+            event.cookies.set(name, value, { ...options, path: '/', secure: isSecure });
           });
         }
       }
