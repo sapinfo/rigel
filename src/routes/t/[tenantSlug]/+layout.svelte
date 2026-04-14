@@ -14,7 +14,15 @@
 
   // ─── Notifications state ──────────────────────────
   let notifications = $state<Notification[]>([]);
-  let unreadCount = $state(data.unreadCount as number);
+  let notifLoaded = $state(false);
+
+  // 배지: notifications가 로드되면 그 안의 unread 개수, 아니면 SSR fallback.
+  // 이렇게 하면 markRead로 n.read=true 변경 시 자동 재계산되어 SSR/client 상태 미스매치 해소.
+  let unreadCount = $derived(
+    notifLoaded
+      ? notifications.filter((n) => !n.read).length
+      : (data.unreadCount as number)
+  );
 
   function mapRow(r: Record<string, unknown>): Notification {
     return {

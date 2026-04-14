@@ -160,14 +160,6 @@
       {/if}
     {/if}
   </nav>
-
-  <!-- Footer -->
-  <div class="border-t px-3 py-3 space-y-1">
-    <a href={`${base}/my/profile`} class={linkClass(`${base}/my/profile`)} onclick={handleNav}>내 프로필</a>
-    <form method="POST" action="/logout">
-      <button type="submit" class="block w-full rounded px-3 py-1.5 text-left text-sm text-gray-500 hover:bg-gray-50">로그아웃</button>
-    </form>
-  </div>
 </aside>
 
 <style>

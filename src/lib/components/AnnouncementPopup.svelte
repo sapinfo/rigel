@@ -46,21 +46,38 @@
     dismissed = true;
   }
 
-  function renderText(content: Record<string, unknown>): string {
-    // Simple Tiptap JSON → text extraction
+  // Tiptap editor 출력은 두 가지 형태 중 하나:
+  //   1. { html: '<p>...</p>' }  ← getHTML() 결과 저장
+  //   2. { type: 'doc', content: [...] }  ← getJSON() 결과 저장
+  // 신규 공지는 (1) 사용. 옛 데이터 호환 위해 (2)도 처리.
+  function renderHtml(content: Record<string, unknown>): string {
+    if (typeof content?.html === 'string') return content.html as string;
+
     if (content?.type === 'doc' && Array.isArray(content.content)) {
-      return (content.content as Array<Record<string, unknown>>)
+      const text = (content.content as Array<Record<string, unknown>>)
         .map((node) => {
           if (Array.isArray(node.content)) {
             return (node.content as Array<Record<string, unknown>>)
-              .map((c) => (c.text as string) ?? '')
+              .map((c) => escapeHtml((c.text as string) ?? ''))
               .join('');
           }
           return '';
         })
-        .join('\n');
+        .filter(Boolean)
+        .map((line) => `<p>${line}</p>`)
+        .join('');
+      return text || '<p class="text-gray-400">(빈 내용)</p>';
     }
-    return JSON.stringify(content);
+    return `<p class="text-gray-400">(렌더 불가 — ${escapeHtml(JSON.stringify(content).slice(0, 80))})</p>`;
+  }
+
+  function escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 </script>
 
@@ -82,8 +99,8 @@
       <!-- Body -->
       <div class="px-5 py-4">
         <h2 class="text-lg font-bold mb-2">{current.title}</h2>
-        <div class="text-sm text-gray-700 whitespace-pre-wrap max-h-60 overflow-y-auto">
-          {renderText(current.content)}
+        <div class="prose prose-sm max-w-none text-gray-700 max-h-60 overflow-y-auto">
+          {@html renderHtml(current.content)}
         </div>
         <p class="mt-3 text-xs text-gray-400">
           {new Date(current.publishedAt).toLocaleDateString('ko-KR')}

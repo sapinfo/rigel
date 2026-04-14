@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-14T19:05:04.432Z",
+  "lastUpdated": "2026-04-14T19:34:43.453Z",
   "primaryFeature": "Rigel",
   "activeFeatures": [
     "그룹웨어-v3.1-확장",
@@ -46,7 +46,7 @@
   "session": {
     "startedAt": "2026-04-12T00:00:00.000Z",
     "onboardingCompleted": true,
-    "lastActivity": "2026-04-14T19:05:04.432Z"
+    "lastActivity": "2026-04-14T19:34:43.453Z"
   },
   "features": {
     "그룹웨어-v3.1-확장": {
@@ -66,9 +66,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-13T02:25:14.875Z",
-        "lastUpdated": "2026-04-14T19:03:53.530Z"
+        "lastUpdated": "2026-04-14T19:33:23.504Z"
       },
-      "lastFile": "/Users/inseokko/Downloads/Rigel/src/lib/components/AnnouncementPopup.svelte"
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/lib/components/Sidebar.svelte"
     },
     "boards": {
       "phase": "do",
@@ -144,9 +144,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-13T02:30:36.257Z",
-        "lastUpdated": "2026-04-13T02:30:44.984Z"
+        "lastUpdated": "2026-04-14T19:20:22.435Z"
       },
-      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/announcements/[id]/+page.svelte"
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/announcements/[id]/+page.server.ts"
     },
     "calendar": {
       "phase": "do",
@@ -183,7 +183,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-13T03:09:20.928Z",
-        "lastUpdated": "2026-04-14T19:05:04.432Z"
+        "lastUpdated": "2026-04-14T19:33:33.941Z"
       },
       "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/+layout.svelte"
     },
@@ -196,7 +196,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-13T03:09:55.259Z",
-        "lastUpdated": "2026-04-13T17:31:44.807Z"
+        "lastUpdated": "2026-04-14T19:19:06.232Z"
       },
       "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/attendance/+page.server.ts"
     },
@@ -209,7 +209,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-13T03:11:35.652Z",
-        "lastUpdated": "2026-04-13T17:31:59.797Z"
+        "lastUpdated": "2026-04-14T19:34:12.002Z"
       },
       "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/admin/attendance/settings/+page.server.ts"
     },
@@ -222,9 +222,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-13T03:24:16.676Z",
-        "lastUpdated": "2026-04-14T19:04:42.848Z"
+        "lastUpdated": "2026-04-14T19:12:28.783Z"
       },
-      "lastFile": "/Users/inseokko/Downloads/Rigel/src/lib/client/uploadBoardFile.ts"
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/lib/client/supabase.ts"
     },
     "profile": {
       "phase": "do",
@@ -235,7 +235,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-13T03:24:42.386Z",
-        "lastUpdated": "2026-04-13T17:31:52.633Z"
+        "lastUpdated": "2026-04-14T19:34:43.453Z"
       },
       "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/my/profile/+page.server.ts"
     },
@@ -261,9 +261,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-13T17:44:13.229Z",
-        "lastUpdated": "2026-04-14T18:04:30.331Z"
+        "lastUpdated": "2026-04-14T19:12:55.821Z"
       },
-      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/+page.svelte"
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/+layout.svelte"
     },
     "signup": {
       "phase": "do",
@@ -1283,6 +1283,102 @@
     {
       "timestamp": "2026-04-14T19:05:04.432Z",
       "feature": "[tenantSlug]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:12:12.592Z",
+      "feature": "client",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:12:28.783Z",
+      "feature": "client",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:12:55.821Z",
+      "feature": "routes",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:18:56.327Z",
+      "feature": "attendance",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:19:06.232Z",
+      "feature": "attendance",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:20:22.435Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:20:39.817Z",
+      "feature": "[tenantSlug]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:26:44.349Z",
+      "feature": "[tenantSlug]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:29:59.471Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:30:11.865Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:33:23.504Z",
+      "feature": "Rigel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:33:33.941Z",
+      "feature": "[tenantSlug]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:34:01.113Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:34:12.002Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:34:34.014Z",
+      "feature": "profile",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:34:43.453Z",
+      "feature": "profile",
       "phase": "do",
       "action": "updated"
     }

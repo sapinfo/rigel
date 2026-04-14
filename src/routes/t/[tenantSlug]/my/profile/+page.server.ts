@@ -1,5 +1,22 @@
 import { error, fail } from '@sveltejs/kit';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { PageServerLoad, Actions } from './$types';
+
+// CLAUDE.md 규칙: Actions에서 locals.currentTenant 사용 금지.
+async function resolveTenantId(
+  supabase: SupabaseClient,
+  userId: string,
+  slug: string
+): Promise<string | null> {
+  const { data } = await supabase
+    .from('tenant_members')
+    .select('tenant:tenants!inner(id)')
+    .eq('user_id', userId)
+    .eq('tenant.slug', slug)
+    .maybeSingle();
+  if (!data) return null;
+  return (data.tenant as unknown as { id: string }).id;
+}
 
 export const load: PageServerLoad = async ({ locals, parent }) => {
   if (!locals.user) error(401, 'Not authenticated');
@@ -26,14 +43,16 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 };
 
 export const actions: Actions = {
-  save: async ({ request, locals }) => {
+  save: async ({ request, locals, params }) => {
     if (!locals.user) error(401, 'Not authenticated');
-    const currentTenant = locals.currentTenant!;
+
+    const tenantId = await resolveTenantId(locals.supabase, locals.user.id, params.tenantSlug);
+    if (!tenantId) return fail(404, { message: 'Tenant not found' });
 
     const fd = await request.formData();
     const payload = {
       user_id: locals.user.id,
-      tenant_id: currentTenant.id,
+      tenant_id: tenantId,
       employee_number: (fd.get('employee_number') as string) || null,
       hire_date: (fd.get('hire_date') as string) || null,
       phone_office: (fd.get('phone_office') as string) || null,
