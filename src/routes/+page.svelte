@@ -5,6 +5,22 @@
 <svelte:head>
   <title>Rigel — 재미 한국기업을 위한 오픈소스 그룹웨어</title>
   <meta name="description" content="한국식 전자결재(전결/대결/후결/합의/병렬) + 게시판 + 일정 + 근태 + 인사. 서버 한 대면 완전 무료. 오픈소스 셀프호스팅." />
+  <link rel="canonical" href="https://rigelworks.io" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://rigelworks.io" />
+  <meta property="og:title" content="Rigel — 재미 한국기업을 위한 오픈소스 그룹웨어" />
+  <meta property="og:description" content="한국식 전자결재(전결/대결/후결/합의/병렬) + 게시판 + 일정 + 근태 + 인사. 서버 한 대면 완전 무료." />
+  <meta property="og:image" content="https://rigelworks.io/hero.png" />
+  <meta property="og:locale" content="ko_KR" />
+  <meta property="og:site_name" content="Rigel" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Rigel — 재미 한국기업을 위한 오픈소스 그룹웨어" />
+  <meta name="twitter:description" content="한국식 전자결재 + 게시판 + 일정 + 근태 + 인사. 오픈소스 셀프호스팅, 완전 무료." />
+  <meta name="twitter:image" content="https://rigelworks.io/hero.png" />
 
   <!-- JSON-LD 구조화 데이터 -->
   {@html `<script type="application/ld+json">${JSON.stringify({
@@ -24,7 +40,10 @@
       "name": "SAP Info",
       "url": "https://github.com/sapinfo"
     },
-    "url": "https://github.com/sapinfo/rigel",
+    "url": "https://rigelworks.io",
+    "sameAs": [
+      "https://github.com/sapinfo/rigel"
+    ],
     "downloadUrl": "https://github.com/sapinfo/rigel",
     "softwareVersion": "3.1",
     "inLanguage": "ko"
@@ -68,10 +87,12 @@
             GitHub에서 받기
           </a>
           <a href="/signup" class="rounded-lg border-2 border-blue-600 px-6 py-3 text-sm font-medium text-blue-600 hover:bg-blue-50">
-            데모 사이트 체험
+            지금 바로 체험
           </a>
         </div>
-        <p class="mt-4 text-xs text-gray-400">서버 한 대 + Docker만 있으면 설치 완료</p>
+        <p class="mt-4 text-xs text-gray-400">
+          👉 <strong>이 사이트가 실사용 데모입니다.</strong> 회원가입 후 바로 결재 올려보세요. 서버 한 대 + Docker만 있으면 자체 설치도 가능합니다.
+        </p>
       </div>
       <!-- 우: 스크린샷 -->
       <div class="mt-10 lg:mt-0 lg:w-1/2">
@@ -288,10 +309,26 @@
           <div class="mt-4 rounded-md border-l-4 border-blue-500 bg-blue-50 p-3 text-xs text-blue-900">
             <p class="font-semibold mb-1">📋 .env에 입력할 값</p>
             <ul class="mt-1 space-y-0.5 list-disc list-inside">
-              <li><code class="bg-white px-1 rounded">PUBLIC_SUPABASE_URL</code>=http://localhost:8000 (같은 호스트) 또는 서버 IP/도메인</li>
-              <li><code class="bg-white px-1 rounded">PUBLIC_SUPABASE_ANON_KEY</code>=<code class="bg-white px-1 rounded">supabase/docker/.env</code>의 <code class="bg-white px-1 rounded">ANON_KEY</code> 값 복사</li>
-              <li><code class="bg-white px-1 rounded">SITE_URL</code>=브라우저 접속 주소 (기본 http://localhost:3000)</li>
+              <li><code class="bg-white px-1 rounded">PUBLIC_SUPABASE_URL</code> = <code class="bg-white px-1 rounded">http://&lt;서버IP&gt;:8000</code> 또는 HTTPS 도메인 (예: <code class="bg-white px-1 rounded">https://api.your-domain.com</code>)</li>
+              <li><code class="bg-white px-1 rounded">PUBLIC_SUPABASE_ANON_KEY</code> = <code class="bg-white px-1 rounded">supabase/docker/.env</code>의 <code class="bg-white px-1 rounded">ANON_KEY</code> 값 복사</li>
+              <li><code class="bg-white px-1 rounded">SITE_URL</code> = 브라우저 접속 주소 (예: <code class="bg-white px-1 rounded">https://app.your-domain.com</code>)</li>
             </ul>
+          </div>
+
+          <div class="mt-3 rounded-md border-l-4 border-orange-500 bg-orange-50 p-3 text-xs text-orange-900">
+            <p class="font-semibold mb-1">🌐 HTTPS · 도메인 붙이기</p>
+            <p>공인 IP 없어도 가능합니다. <strong>Cloudflare Tunnel</strong>이 가장 쉽고 무료:</p>
+            <ul class="mt-1 space-y-0.5 list-disc list-inside">
+              <li>포트 개방 불필요 (아웃바운드만)</li>
+              <li>SSL 인증서 자동 (Let's Encrypt 등 별도 관리 X)</li>
+              <li>DDoS · WAF 기본 포함</li>
+            </ul>
+            <p class="mt-1">
+              상세 절차:
+              <a href="https://github.com/sapinfo/rigel/blob/main/docs/runbooks/cloudflare-tunnel-https.md" class="underline hover:text-orange-700">
+                cloudflare-tunnel-https.md
+              </a>
+            </p>
           </div>
         </div>
 
@@ -525,14 +562,19 @@ docker compose up -d auth   # ⚠ restart 아님 — .env 재로드 필요</pre>
         <div>
           <span class="font-bold text-gray-900">Rigel</span>
           <span class="ml-2 text-sm text-gray-500">재미 한국기업을 위한 오픈소스 그룹웨어</span>
+          <a href="https://rigelworks.io" class="ml-3 text-sm text-blue-600 hover:text-blue-700">rigelworks.io</a>
         </div>
         <div class="flex gap-6 text-sm text-gray-500">
           <a href="https://github.com/sapinfo/rigel" class="hover:text-gray-900">GitHub</a>
+          <a href="https://github.com/sapinfo/rigel/issues" class="hover:text-gray-900">문의 · Issues</a>
           <a href="/login" class="hover:text-gray-900">로그인</a>
           <a href="/signup" class="hover:text-gray-900">회원가입</a>
         </div>
       </div>
-      <p class="mt-6 text-center text-xs text-gray-400">© 2026 Rigel. MIT License.</p>
+      <p class="mt-6 text-center text-xs text-gray-400">
+        © 2026 Rigel. MIT License. · 데모 사이트:
+        <a href="https://app.rigelworks.io" class="hover:text-gray-600 underline">app.rigelworks.io</a>
+      </p>
     </div>
   </footer>
 </div>

@@ -7,4 +7,4 @@ Disallow: /logout
 Disallow: /onboarding
 Disallow: /invite
 
-Sitemap: /sitemap.xml
+Sitemap: https://rigelworks.io/sitemap.xml
