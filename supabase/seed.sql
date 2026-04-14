@@ -120,6 +120,22 @@ INSERT INTO public.user_departments (tenant_id, user_id, department_id, is_prima
 ('b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000003', 'd0000000-0000-0000-0000-000000000003', true)
 ON CONFLICT (tenant_id, user_id, department_id) DO NOTHING;
 
+-- tenant_members 편의 캐시 컬럼 동기화 (department_id, job_title)
+-- departments FK 때문에 tenant_members 초기 INSERT 시엔 NULL이었으나,
+-- OrgTreePicker/결재선 UI가 tenant_members.department_id를 참조하므로 여기서 UPDATE.
+UPDATE public.tenant_members
+SET department_id = 'd0000000-0000-0000-0000-000000000001', job_title = '부장'
+WHERE tenant_id = 'b0000000-0000-0000-0000-000000000001'
+  AND user_id = 'a0000000-0000-0000-0000-000000000001';
+UPDATE public.tenant_members
+SET department_id = 'd0000000-0000-0000-0000-000000000002', job_title = '과장'
+WHERE tenant_id = 'b0000000-0000-0000-0000-000000000001'
+  AND user_id = 'a0000000-0000-0000-0000-000000000002';
+UPDATE public.tenant_members
+SET department_id = 'd0000000-0000-0000-0000-000000000003', job_title = '사원'
+WHERE tenant_id = 'b0000000-0000-0000-0000-000000000001'
+  AND user_id = 'a0000000-0000-0000-0000-000000000003';
+
 -- ─── 6. 시스템 양식 → 테넌트 복사 ─────────────────────────
 
 SELECT public.fn_copy_system_forms('b0000000-0000-0000-0000-000000000001');
