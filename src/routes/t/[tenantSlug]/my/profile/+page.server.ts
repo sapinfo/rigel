@@ -64,6 +64,21 @@ export const actions: Actions = {
     if (!tenantId) return fail(404, { message: 'Tenant not found' });
 
     const fd = await request.formData();
+
+    // 이름 수정: profiles.display_name 은 RLS profiles_self_update 로 본인만 가능.
+    // trim 후 1~50자 검증. 빈값 저장 금지.
+    const displayNameRaw = (fd.get('display_name') as string) ?? '';
+    const displayName = displayNameRaw.trim();
+    if (displayName.length < 1 || displayName.length > 50) {
+      return fail(400, { message: '이름은 1~50자 사이로 입력해주세요.' });
+    }
+
+    const { error: nameErr } = await locals.supabase
+      .from('profiles')
+      .update({ display_name: displayName, updated_at: new Date().toISOString() })
+      .eq('id', locals.user.id);
+    if (nameErr) return fail(400, { message: nameErr.message });
+
     const payload = {
       user_id: locals.user.id,
       tenant_id: tenantId,

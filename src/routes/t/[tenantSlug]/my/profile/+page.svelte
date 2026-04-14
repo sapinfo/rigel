@@ -14,21 +14,35 @@
 {/if}
 
 <div class="rounded-lg border bg-white p-6 max-w-lg">
-  <!-- Basic info (read-only) -->
-  <div class="mb-6 space-y-2">
-    <div class="flex items-center gap-2">
-      <span class="text-sm text-gray-500 w-20">이름</span>
-      <span class="text-sm font-medium">{data.fullName}</span>
+  {#if form?.message}
+    <div class="mb-4 rounded bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700">
+      {form.message}
     </div>
-    <div class="flex items-center gap-2">
-      <span class="text-sm text-gray-500 w-20">이메일</span>
-      <span class="text-sm">{data.email}</span>
-    </div>
-  </div>
-
-  <hr class="mb-4" />
+  {/if}
 
   <form method="POST" action="?/save" use:enhance class="space-y-4">
+    <!-- Identity: 이름은 수정 가능, 이메일은 auth 레벨이라 읽기 전용 -->
+    <div class="grid grid-cols-2 gap-4">
+      <label class="block">
+        <span class="block text-xs text-gray-500 mb-1">이름</span>
+        <input
+          name="display_name"
+          value={data.fullName}
+          required
+          maxlength="50"
+          class="w-full rounded border px-2 py-1.5 text-sm"
+        />
+      </label>
+      <div class="block">
+        <span class="block text-xs text-gray-500 mb-1">이메일</span>
+        <div class="w-full rounded border bg-gray-50 px-2 py-1.5 text-sm text-gray-700">
+          {data.email}
+        </div>
+      </div>
+    </div>
+
+    <hr class="my-2" />
+
     <div class="grid grid-cols-2 gap-4">
       <label class="block">
         <span class="block text-xs text-gray-500 mb-1">사번</span>
