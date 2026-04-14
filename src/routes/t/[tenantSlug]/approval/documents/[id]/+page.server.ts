@@ -474,7 +474,9 @@ export const actions: Actions = {
       .single();
 
     const code = (formRow?.code as string) ?? 'general';
-    return { resubmitRedirect: `/t/${currentTenant.slug}/approval/drafts/new/${code}` };
+    // fn_save_draft로 복사한 신규 draft id를 ?draft= 로 넘겨 기존 내용이 프리필되도록 한다.
+    // 누락 시 drafts/new/[formCode]가 빈 양식으로 열려 내용이 날아간 것처럼 보임 (v2.2 재기안 버그).
+    return { resubmitRedirect: `/t/${currentTenant.slug}/approval/drafts/new/${code}?draft=${newId}` };
   },
 
   // v2.2 M6: 결재 독촉
