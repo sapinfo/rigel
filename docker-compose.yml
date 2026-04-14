@@ -1,21 +1,25 @@
-# ─── Rigel 프로덕션 Docker Compose ───
-# Supabase는 공식 CLI(supabase start)로 별도 실행.
-# 이 파일은 Rigel 앱(SvelteKit)만 컨테이너로 실행합니다.
+# ─── Rigel App Container (단독) ───
+# Supabase는 supabase-docker/에서 별도 실행
 #
-# 사용법:
-#   1. supabase start (Supabase 서비스 실행)
-#   2. docker compose up -d (Rigel 앱 실행)
-#   3. http://localhost:3000 접속
+# 사용 순서:
+#   1. cd supabase-docker && docker compose up -d  (Supabase 실행)
+#   2. cd .. && docker compose up -d --build       (Rigel 앱 실행)
+
+name: rigel
 
 services:
   app:
+    container_name: rigel-app
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        PUBLIC_SUPABASE_URL: ${PUBLIC_SUPABASE_URL:-http://localhost:8000}
+        PUBLIC_SUPABASE_ANON_KEY: ${PUBLIC_SUPABASE_ANON_KEY:-}
     restart: unless-stopped
     network_mode: host
     environment:
-      PUBLIC_SUPABASE_URL: ${PUBLIC_SUPABASE_URL:-http://localhost:54321}
+      PUBLIC_SUPABASE_URL: ${PUBLIC_SUPABASE_URL:-http://localhost:8000}
       PUBLIC_SUPABASE_ANON_KEY: ${PUBLIC_SUPABASE_ANON_KEY}
       ORIGIN: ${SITE_URL:-http://localhost:3000}
       PORT: ${APP_PORT:-3000}

@@ -2,10 +2,15 @@
 set -euo pipefail
 
 # ============================================================
-# Rigel 원클릭 설치 스크립트
+# Rigel 원클릭 설치 스크립트 (프로덕션)
 #
 # 사용법:
 #   curl -fsSL https://raw.githubusercontent.com/sapinfo/rigel/main/install.sh | bash
+#
+# 구조:
+#   - supabase-docker/  Supabase 공식 셀프호스팅 (그대로 사용)
+#   - docker-compose.yml  Rigel 앱 컨테이너
+#   - 두 docker compose를 순서대로 실행
 # ============================================================
 
 REPO="https://github.com/sapinfo/rigel.git"
@@ -17,137 +22,161 @@ echo "  Rigel - Installation Start"
 echo "=========================================="
 echo ""
 
-# ─── 1. Check prerequisites ───────────────────────────────
+# ─── 1. Prerequisites ─────────────────────────────────────
 
-# Docker or Podman
 COMPOSE_CMD=""
-if command -v docker &>/dev/null; then
-  echo "[OK] Docker found: $(docker --version)"
-  if docker compose version &>/dev/null; then
-    COMPOSE_CMD="docker compose"
-  elif command -v docker-compose &>/dev/null; then
-    COMPOSE_CMD="docker-compose"
+if command -v docker &>/dev/null && docker compose version &>/dev/null; then
+  COMPOSE_CMD="docker compose"
+elif command -v podman-compose &>/dev/null; then
+  COMPOSE_CMD="podman-compose"
+else
+  echo "[!] Docker Compose not found. Install Docker: https://docs.docker.com/get-docker/"
+  exit 1
+fi
+echo "[OK] Compose: $COMPOSE_CMD"
+
+for cmd in git curl openssl; do
+  if ! command -v $cmd &>/dev/null; then
+    echo "[!] $cmd not found. Please install it."
+    exit 1
   fi
-elif command -v podman &>/dev/null; then
-  echo "[OK] Podman found: $(podman --version)"
-  if command -v podman-compose &>/dev/null; then
-    COMPOSE_CMD="podman-compose"
-  fi
-fi
-
-if [ -z "$COMPOSE_CMD" ]; then
-  echo "[!] Docker/Podman + Compose not found."
-  echo "    https://docs.docker.com/get-docker/"
-  exit 1
-fi
-
-# Node.js
-if ! command -v node &>/dev/null; then
-  echo "[!] Node.js not found. Install Node.js 22+."
-  echo "    https://nodejs.org/"
-  exit 1
-fi
-echo "[OK] Node.js: $(node --version)"
-
-# Supabase CLI
-if ! command -v supabase &>/dev/null; then
-  echo "[!] Supabase CLI not found."
-  echo "    Mac:   brew install supabase/tap/supabase"
-  echo "    Linux: https://supabase.com/docs/guides/cli/getting-started"
-  exit 1
-fi
-echo "[OK] Supabase CLI: $(supabase --version 2>/dev/null || echo 'installed')"
-
-# Git
-if ! command -v git &>/dev/null; then
-  echo "[!] git not found. https://git-scm.com/downloads"
-  exit 1
-fi
+done
 
 echo ""
 
 # ─── 2. Download source ───────────────────────────────────
 
-if [ -f "docker-compose.yml" ] && [ -d "supabase" ]; then
+if [ -f "docker-compose.yml" ] && [ -d "supabase-docker" ]; then
   echo "[OK] Already in Rigel project directory."
 else
   if [ -d "$INSTALL_DIR" ]; then
-    echo "[OK] $INSTALL_DIR directory exists. Updating..."
     cd "$INSTALL_DIR"
     git pull --quiet
+    echo "[OK] Source updated"
   else
-    echo "[..] Downloading source..."
     git clone --quiet "$REPO" "$INSTALL_DIR"
     cd "$INSTALL_DIR"
+    echo "[OK] Source downloaded"
   fi
-  echo "[OK] Source download complete"
 fi
 
 echo ""
 
-# ─── 3. Start Supabase ─────────────────────────────────────
+# ─── 3. Generate Supabase keys ────────────────────────────
 
-echo "[..] Starting Supabase (DB, Auth, Storage, API)..."
-supabase start 2>&1 | tail -5
+if [ ! -f "supabase-docker/.env" ]; then
+  echo "[..] Generating Supabase secrets..."
 
-echo ""
-echo "[..] Initializing database (migrations + seed)..."
-supabase db reset 2>&1 | tail -3
+  POSTGRES_PASSWORD=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 32)
+  JWT_SECRET=$(openssl rand -base64 48 | tr -dc 'a-zA-Z0-9' | head -c 64)
+  SECRET_KEY_BASE=$(openssl rand -base64 48 | tr -dc 'a-zA-Z0-9' | head -c 64)
+  VAULT_ENC_KEY=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 32)
+  PG_META_CRYPTO_KEY=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 32)
+  DASHBOARD_PASSWORD=$(openssl rand -base64 16 | tr -dc 'a-zA-Z0-9' | head -c 20)
+  LOGFLARE_PUB=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 32)
+  LOGFLARE_PRV=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 32)
 
-echo ""
+  # Generate JWT-based ANON_KEY and SERVICE_ROLE_KEY using JWT_SECRET
+  jwt_b64() { echo -n "$1" | openssl base64 -A | tr '+/' '-_' | tr -d '='; }
+  HEADER=$(jwt_b64 '{"alg":"HS256","typ":"JWT"}')
+  IAT=$(date +%s)
+  EXP=$((IAT + 157680000))  # 5 years
 
-# ─── 4. Configure environment ──────────────────────────────
+  ANON_PAYLOAD=$(jwt_b64 "{\"role\":\"anon\",\"iss\":\"supabase\",\"iat\":$IAT,\"exp\":$EXP}")
+  ANON_SIG=$(echo -n "$HEADER.$ANON_PAYLOAD" | openssl dgst -sha256 -hmac "$JWT_SECRET" -binary | openssl base64 -A | tr '+/' '-_' | tr -d '=')
+  ANON_KEY="$HEADER.$ANON_PAYLOAD.$ANON_SIG"
 
-# Get Supabase keys from CLI
-SUPABASE_URL=$(supabase status --output json 2>/dev/null | grep -o '"API URL":"[^"]*"' | cut -d'"' -f4 || echo "http://localhost:54321")
-ANON_KEY=$(supabase status --output json 2>/dev/null | grep -o '"anon key":"[^"]*"' | cut -d'"' -f4 || echo "")
+  SVC_PAYLOAD=$(jwt_b64 "{\"role\":\"service_role\",\"iss\":\"supabase\",\"iat\":$IAT,\"exp\":$EXP}")
+  SVC_SIG=$(echo -n "$HEADER.$SVC_PAYLOAD" | openssl dgst -sha256 -hmac "$JWT_SECRET" -binary | openssl base64 -A | tr '+/' '-_' | tr -d '=')
+  SERVICE_ROLE_KEY="$HEADER.$SVC_PAYLOAD.$SVC_SIG"
 
-if [ -z "$ANON_KEY" ]; then
-  # Fallback: parse from supabase status text output
-  ANON_KEY=$(supabase status 2>/dev/null | grep "anon key" | awk '{print $NF}' || echo "")
-fi
+  # Copy .env.example and patch values
+  cp supabase-docker/.env.example supabase-docker/.env
+  sed -i.bak "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$POSTGRES_PASSWORD|" supabase-docker/.env
+  sed -i.bak "s|^JWT_SECRET=.*|JWT_SECRET=$JWT_SECRET|" supabase-docker/.env
+  sed -i.bak "s|^ANON_KEY=.*|ANON_KEY=$ANON_KEY|" supabase-docker/.env
+  sed -i.bak "s|^SERVICE_ROLE_KEY=.*|SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY|" supabase-docker/.env
+  sed -i.bak "s|^SECRET_KEY_BASE=.*|SECRET_KEY_BASE=$SECRET_KEY_BASE|" supabase-docker/.env
+  sed -i.bak "s|^VAULT_ENC_KEY=.*|VAULT_ENC_KEY=$VAULT_ENC_KEY|" supabase-docker/.env
+  sed -i.bak "s|^PG_META_CRYPTO_KEY=.*|PG_META_CRYPTO_KEY=$PG_META_CRYPTO_KEY|" supabase-docker/.env
+  sed -i.bak "s|^DASHBOARD_PASSWORD=.*|DASHBOARD_PASSWORD=$DASHBOARD_PASSWORD|" supabase-docker/.env
+  sed -i.bak "s|^LOGFLARE_PUBLIC_ACCESS_TOKEN=.*|LOGFLARE_PUBLIC_ACCESS_TOKEN=$LOGFLARE_PUB|" supabase-docker/.env
+  sed -i.bak "s|^LOGFLARE_PRIVATE_ACCESS_TOKEN=.*|LOGFLARE_PRIVATE_ACCESS_TOKEN=$LOGFLARE_PRV|" supabase-docker/.env
+  rm -f supabase-docker/.env.bak
 
-if [ ! -f ".env.local" ] || [ -z "$(grep PUBLIC_SUPABASE_ANON_KEY .env.local 2>/dev/null)" ]; then
-  cat > .env.local <<EOF
-PUBLIC_SUPABASE_URL=${SUPABASE_URL:-http://localhost:54321}
-PUBLIC_SUPABASE_ANON_KEY=${ANON_KEY}
-EOF
-  echo "[OK] .env.local created"
+  echo "[OK] supabase-docker/.env created"
 else
-  echo "[OK] .env.local already exists"
+  echo "[OK] supabase-docker/.env already exists"
+  ANON_KEY=$(grep "^ANON_KEY=" supabase-docker/.env | cut -d= -f2-)
 fi
 
-# Docker env
+echo ""
+
+# ─── 4. Start Supabase ────────────────────────────────────
+
+echo "[..] Starting Supabase stack..."
+cd supabase-docker
+$COMPOSE_CMD up -d 2>&1 | tail -3
+
+echo ""
+echo "[..] Waiting for Supabase DB to be ready (30s)..."
+sleep 30
+
+# ─── 5. Apply Rigel migrations + seed ─────────────────────
+
+echo "[..] Applying Rigel migrations and seed..."
+cd ..
+
+POSTGRES_PW=$(grep "^POSTGRES_PASSWORD=" supabase-docker/.env | cut -d= -f2-)
+
+# Find Supabase DB container
+DB_CONTAINER=$($COMPOSE_CMD -f supabase-docker/docker-compose.yml ps -q db 2>/dev/null || docker ps --filter "name=supabase-db" --format "{{.Names}}" | head -1)
+
+if [ -z "$DB_CONTAINER" ]; then
+  echo "[!] Could not find Supabase DB container"
+  exit 1
+fi
+
+echo "[OK] DB container: $DB_CONTAINER"
+
+# Apply migrations in order
+for f in supabase/migrations/*.sql; do
+  if [ -f "$f" ]; then
+    echo "  - $(basename $f)"
+    docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < "$f" > /dev/null 2>&1 || echo "    (failed — may already exist)"
+  fi
+done
+
+# Apply seed
+if [ -f supabase/seed.sql ]; then
+  echo "  - seed.sql"
+  docker exec -i "$DB_CONTAINER" psql -U postgres -d postgres < supabase/seed.sql > /dev/null 2>&1 || echo "    (failed — may already exist)"
+fi
+
+echo ""
+
+# ─── 6. Configure Rigel app env ───────────────────────────
+
 if [ ! -f ".env" ]; then
   cat > .env <<EOF
-PUBLIC_SUPABASE_URL=${SUPABASE_URL:-http://localhost:54321}
-PUBLIC_SUPABASE_ANON_KEY=${ANON_KEY}
+PUBLIC_SUPABASE_URL=http://localhost:8000
+PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY
 SITE_URL=http://localhost:3000
 APP_PORT=3000
 EOF
-  echo "[OK] .env created for Docker"
+  echo "[OK] .env created for Rigel app"
 fi
 
 echo ""
 
-# ─── 5. Install dependencies + Build ──────────────────────
+# ─── 7. Build and start Rigel app ─────────────────────────
 
-echo "[..] Installing dependencies..."
-npm ci --quiet 2>&1 | tail -1
-
-echo "[..] Building production bundle..."
-npm run build 2>&1 | tail -1
-
-echo ""
-
-# ─── 6. Start Rigel App ───────────────────────────────────
-
-echo "[..] Starting Rigel app..."
+echo "[..] Building and starting Rigel app..."
 $COMPOSE_CMD up -d --build 2>&1 | tail -3
 
 echo ""
 
-# ─── 7. Done ───────────────────────────────────────────────
+# ─── 8. Done ───────────────────────────────────────────────
 
 SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
 
@@ -155,17 +184,20 @@ echo "=========================================="
 echo "  Rigel installation complete!"
 echo "=========================================="
 echo ""
-echo "  URL: http://${SERVER_IP:-localhost}:3000"
+echo "  Rigel App:       http://${SERVER_IP:-localhost}:3000"
+echo "  Supabase Studio: http://${SERVER_IP:-localhost}:8000"
 echo ""
-echo "  Sign up -> Create organization -> Start!"
+echo "  Supabase dashboard login:"
+echo "    username: supabase"
+echo "    password: (see supabase-docker/.env → DASHBOARD_PASSWORD)"
 echo ""
 echo "  --- Commands ---"
-echo "  Stop app:        $COMPOSE_CMD down"
-echo "  Stop Supabase:   supabase stop"
-echo "  Restart app:     $COMPOSE_CMD restart"
-echo "  Logs:            $COMPOSE_CMD logs -f app"
-echo "  Update:          git pull && npm run build && $COMPOSE_CMD up -d --build"
-echo "  DB reset:        supabase db reset"
+echo "  Rigel app:"
+echo "    Stop:      $COMPOSE_CMD down"
+echo "    Logs:      $COMPOSE_CMD logs -f app"
+echo "  Supabase:"
+echo "    Stop:      cd supabase-docker && $COMPOSE_CMD down"
+echo "    Logs:      cd supabase-docker && $COMPOSE_CMD logs -f"
 echo ""
 echo "  Issues: https://github.com/sapinfo/rigel/issues"
 echo "=========================================="
