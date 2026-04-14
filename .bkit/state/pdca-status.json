@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-14T19:34:43.453Z",
+  "lastUpdated": "2026-04-14T19:42:21.872Z",
   "primaryFeature": "Rigel",
   "activeFeatures": [
     "그룹웨어-v3.1-확장",
@@ -46,7 +46,7 @@
   "session": {
     "startedAt": "2026-04-12T00:00:00.000Z",
     "onboardingCompleted": true,
-    "lastActivity": "2026-04-14T19:34:43.453Z"
+    "lastActivity": "2026-04-14T19:42:21.872Z"
   },
   "features": {
     "그룹웨어-v3.1-확장": {
@@ -170,7 +170,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-13T02:33:41.671Z",
-        "lastUpdated": "2026-04-13T04:27:38.469Z"
+        "lastUpdated": "2026-04-14T19:42:21.872Z"
       },
       "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/t/[tenantSlug]/admin/rooms/+page.server.ts"
     },
@@ -1379,6 +1379,12 @@
     {
       "timestamp": "2026-04-14T19:34:43.453Z",
       "feature": "profile",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:42:21.872Z",
+      "feature": "rooms",
       "phase": "do",
       "action": "updated"
     }

@@ -5,11 +5,12 @@
 
   let { data, form: formResult } = $props();
 
-  let schemaJson = $state('');
+  // CLAUDE.md SvelteKit 규칙 §1: 복잡 state는 hidden input bind 대신
+  // use:enhance에서 submit 시점에 formData에 주입 (stale 방지).
+  let pendingSchema: FormSchema | null = null;
 
   function handleSave(schema: FormSchema) {
-    schemaJson = JSON.stringify(schema);
-    // submit form programmatically
+    pendingSchema = schema;
     const formEl = document.getElementById('save-form') as HTMLFormElement;
     formEl?.requestSubmit();
   }
@@ -46,8 +47,19 @@
     </p>
   {/if}
 
-  <form id="save-form" method="POST" action="?/save" use:enhance class="hidden">
-    <input type="hidden" name="schema" bind:value={schemaJson} />
+  <form
+    id="save-form"
+    method="POST"
+    action="?/save"
+    use:enhance={({ formData, cancel }) => {
+      if (!pendingSchema) {
+        cancel();
+        return;
+      }
+      formData.set('schema', JSON.stringify(pendingSchema));
+    }}
+    class="hidden"
+  >
   </form>
 
   <FormBuilder
