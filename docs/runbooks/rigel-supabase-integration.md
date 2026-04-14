@@ -14,11 +14,16 @@
 
 | 항목 | 값 |
 |---|---|
-| Supabase 서버 IP | `192.168.168.118` |
-| Kong 공개 포트 | `8000` (REST / Auth / Studio / Storage 게이트웨이) |
-| Postgres direct | `5432` |
-| Supavisor transaction pooler | `6543` |
+| 서버 IP (LAN) | `192.168.168.118` |
+| 도메인 (apex) | `rigelworks.io` |
+| Rigel 앱 URL | `https://app.rigelworks.io` |
+| Supabase API URL | `https://api.rigelworks.io` |
+| Kong 내부 포트 | `8000` (REST / Auth / Studio / Storage 게이트웨이) |
+| Postgres direct | `5432` (LAN 내부만 노출) |
+| Supavisor transaction pooler | `6543` (LAN 내부만 노출) |
 | `POOLER_TENANT_ID` | `rigel` |
+| HTTPS 제공 | Cloudflare Tunnel (무료, 자동 SSL) |
+| 공개 포트 | 없음 (Tunnel 아웃바운드만) |
 
 ## Rigel `.env` 설정
 
@@ -314,8 +319,55 @@ podman exec supabase-db psql -U postgres -c "DROP TABLE _rigel_installed;"
 - **해결**: `podman restart rigel-app` (DNS 상태 리셋)
 - **예방**: depends_on에 `supabase-kong` healthcheck 조건 추가 고려 (docker-compose.yml, podman-compose 미지원 시 sleep 삽입)
 
+## HTTPS / 도메인 붙이기 (Cloudflare Tunnel)
+
+`http://<서버IP>:3000` 배포가 안정됐으면 도메인 + HTTPS로 승격. 동적 IP/NAT 환경에서 포트포워딩 없이 가능.
+
+### 핵심 변경 사항
+
+1. **Supabase `.env`** 3개 URL을 도메인으로:
+   ```bash
+   cd ~/supabase/docker
+   sed -i 's|^SITE_URL=.*|SITE_URL=https://app.rigelworks.io|' .env
+   sed -i 's|^API_EXTERNAL_URL=.*|API_EXTERNAL_URL=https://api.rigelworks.io|' .env
+   sed -i 's|^SUPABASE_PUBLIC_URL=.*|SUPABASE_PUBLIC_URL=https://api.rigelworks.io|' .env
+   # auth + kong은 컨테이너 rm 후 재생성 (--force-recreate가 podman-compose에선 불안정)
+   podman rm -f --depend supabase-kong
+   podman-compose up -d
+   ```
+
+2. **Rigel `.env`** 2개 URL을 도메인으로 + **재빌드 필수** (PUBLIC_* baked):
+   ```bash
+   cd ~/rigel
+   sed -i 's|^PUBLIC_SUPABASE_URL=.*|PUBLIC_SUPABASE_URL=https://api.rigelworks.io|' .env
+   sed -i 's|^SITE_URL=.*|SITE_URL=https://app.rigelworks.io|' .env
+   podman-compose down && podman-compose up -d --build
+   ```
+
+3. **Cloudflare Tunnel** 구성 — 상세 절차는 [cloudflare-tunnel-https.md](./cloudflare-tunnel-https.md) 참조.
+   `ingress` 에 `app.rigelworks.io` → `localhost:3000`, `api.rigelworks.io` → `localhost:8000` 두 라우트만 추가하면 됨.
+
+### 검증
+
+```bash
+curl -sI https://app.rigelworks.io | head -3
+# HTTP/2 200
+
+curl -sI https://api.rigelworks.io/auth/v1/health | head -3
+# HTTP/2 401  (Kong이 apikey 없는 호출 차단 — 정상)
+```
+
+브라우저 `https://app.rigelworks.io/login` → 기존 테스트 계정 로그인 → 대시보드.
+
+### 주의
+
+- **api 공개의 실질 보호**: CF WAF + Kong apikey + Postgres RLS 3중. `ANON_KEY`는 **로그인 안 한 손님**만 쓸 수 있는 키라 공개해도 안전 (브라우저에 이미 전달됨)
+- **Studio는 공개 권장 안 함**: `Basic Auth`만 있어 LAN 또는 CF Access 뒤로
+- **signup 남용 우려**: CF Turnstile 추가하거나 `DISABLE_SIGNUP=true` 로 초대제 운영
+
 ## 관련 문서
 
 - [supabase-selfhost-podman.md](./supabase-selfhost-podman.md) — Supabase 서버 자체 설치/운영
+- [cloudflare-tunnel-https.md](./cloudflare-tunnel-https.md) — Cloudflare Tunnel HTTPS 배포 상세 절차
 - [../archive/2026-04/프로덕션-docker-배포/](../archive/2026-04/프로덕션-docker-배포/) — 이전 Rigel app + Supabase 배포 이력 (rev 2 구조)
 - `CLAUDE.md` — Rigel 프로젝트 규칙 (RLS, Mutation, Migration)
