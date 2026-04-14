@@ -4,6 +4,46 @@
 > Plan: `docs/01-plan/features/프로덕션-docker-배포.plan.md`
 > Date: 2026-04-14
 > Phase: PDCA Design
+> **Revision**: 2026-04-14 (rev 2) — Supabase 수동 설치, install.sh 범위 축소
+
+---
+
+## 📝 Architecture Revision (2026-04-14, rev 2)
+
+v1 통합 install.sh가 `/opt` 권한 문제 등 호스트 환경 이슈로 실패하는 사례 확인 후 방향 전환.
+**아래 본문은 v1 설계 근거로 보존**, 실제 구현은 rev 2 방향성으로 진행됨.
+
+### rev 2 핵심 변경
+
+| 섹션 | v1 | v2 |
+|---|---|---|
+| 설치 구조 | `supabase-docker/` Rigel repo 내 벤더링 | Supabase는 repo 외부 설치 (`~/supabase/`), Rigel은 `~/rigel/` |
+| 보안 키 생성 | install.sh 내부 openssl/JWT | Supabase 공식 `sh ./utils/generate-keys.sh` |
+| install.sh 범위 | 8단계 (Supabase 전체 기동 포함) | 4단계 (Supabase 기동 확인 → migration → 앱 .env 검증 → 앱 빌드/기동) |
+| 네트워크 | Rigel 앱이 `supabase_default` external 가입 | 동일 (유지) |
+| 안내 문서 | 랜딩/README에 `curl \| bash` 1줄 | 랜딩/README에 2-Step inline 가이드 + 트러블슈팅 `<details>` |
+| 필수 경고 | `prune/volume rm` 금지 | + 설치 경로 `$HOME` 필수 (`/opt` 금지) + 기동 후 비번 변경 금지 |
+
+### rev 2 install.sh 흐름
+
+```
+install.sh (Rigel 앱 전용)
+├─ 1. docker/compose/git 확인
+├─ 2. Supabase 기동 상태 확인 (supabase-db 컨테이너 + supabase_default 네트워크)
+│    └─ 미기동 시 공식 설치 가이드 출력 후 exit
+├─ 3. Rigel 소스 준비 (이미 안에 있으면 skip, 아니면 clone/pull)
+├─ 4. migration + seed (멱등: _rigel_installed 테이블 체크)
+├─ 5. .env 검증 (PUBLIC_SUPABASE_ANON_KEY 필수)
+└─ 6. Rigel 앱 빌드 + 기동 (docker compose up -d --build)
+```
+
+### rev 2 파일 삭제/변경
+
+- ❌ **git에서 제거**: `supabase-docker/` 전체 (14 파일) — `.gitignore`에 `supabase-docker/` 추가
+- 🔄 **대폭 축소**: `install.sh` (260줄 → 약 170줄, 키 생성·sed 로직 제거)
+- 🔄 **재작성**: `src/routes/+page.svelte` #install 섹션, `README.md` 프로덕션 설치 섹션
+- 🔄 **정비**: `.env.production.example` — Supabase 연결 필드 명확화 (generate-keys.sh 안내 포함)
+- ✅ **유지**: `docker-compose.yml`, `Dockerfile`, `supabase/migrations/*`, `supabase/seed.sql`
 
 ---
 
@@ -11,20 +51,20 @@
 
 | 항목 | 내용 |
 |---|---|
-| **Supabase 컨테이너** | 공식 supabase/docker 세트 (20+ 서비스, 건드리지 않음) |
+| **Supabase 컨테이너** | 공식 supabase/docker 세트 (20+ 서비스, 사용자가 직접 설치) |
 | **Rigel 앱 컨테이너** | 1개 (rigel-app, SvelteKit adapter-node) |
 | **통신** | Rigel 앱 → `http://kong:8000` (Supabase 네트워크 가입) |
 | **Migration 적용** | install.sh가 `docker exec supabase-db psql` 방식으로 실행 |
-| **보안 키** | install.sh가 openssl로 자동 생성 + JWT 서명 |
+| **보안 키** | **Supabase 공식 `sh ./utils/generate-keys.sh`** (rev 2) |
 
 ### Value Delivered (4관점)
 
 | 관점 | 내용 |
 |---|---|
-| **Problem** | Supabase 직접 구성 실패 반복 → 검증 시간 수십 시간 낭비 |
-| **Solution** | 공식 supabase/docker 보존 + 앱 분리 + install.sh로 자동화 |
-| **Function UX** | `curl \| bash` 한 줄 → Supabase + Rigel 전체 기동 |
-| **Core Value** | 파괴적 명령(`prune`) 제거, 이미지 캐시 유지 → 재실행 1분 |
+| **Problem** | Supabase 직접 구성 실패 반복 + 환경별 호스트 권한/파일공유 이슈 예측 불가 |
+| **Solution** | Supabase는 공식 가이드에 위임 + Rigel 앱만 install.sh로 자동화 + 트러블슈팅 inline 문서화 |
+| **Function UX** | 2-Step 설치 (~8분 소요) + 문제 발생 시 랜딩 페이지 `<details>` 트러블슈팅으로 자력 해결 |
+| **Core Value** | Rigel이 Supabase 호스팅 이슈에서 해방됨 → 공식 Supabase 업그레이드·패치 자동 수혜 |
 
 ---
 

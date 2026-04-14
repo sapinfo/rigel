@@ -81,77 +81,130 @@ Rigel은:
 
 ## 프로덕션 설치 (Linux 권장)
 
-Supabase 공식 셀프호스팅 + Rigel 앱 컨테이너 분리 구조. Docker만 있으면 됩니다.
+**구조**: Supabase 공식 셀프호스팅 + Rigel 앱 분리. Supabase를 공식 가이드대로 직접 설치한 뒤 Rigel이 해당 Supabase에 연결합니다.
 
 ### 사전 요구
 
 - **Linux** (Ubuntu 24.04+ 권장) 또는 macOS
 - **Docker** + Docker Compose — https://docs.docker.com/get-docker/
-- **Git**, **curl**, **openssl** (대부분 OS 기본 탑재)
+- **Git**
 - 서버 또는 PC (CPU 4코어, RAM 16GB 이상, 디스크 40GB 이상)
 
 > Node.js와 Supabase CLI는 **불필요**합니다. 모두 컨테이너로 실행됩니다.
 
-### 원클릭 설치
+> ⚠️ **설치 경로 주의**: 반드시 **일반 유저 홈 디렉토리**(`$HOME`)에 설치하세요.
+> `/opt`, `/usr/local` 같은 시스템 경로는 **권한 문제로 Supabase 초기화 실패**합니다
+> (bind mount된 init 스크립트 read 실패 → `_supabase` DB 생성 안 됨 → analytics 컨테이너 crashloop).
+> macOS Docker Desktop은 Settings → Resources → File Sharing에 설치 경로가 포함되어 있어야 합니다
+> (기본 `/Users`는 포함).
+
+---
+
+### Step 1. Supabase 공식 셀프호스팅 설치
+
+공식 가이드 그대로 따릅니다: https://supabase.com/docs/guides/self-hosting/docker
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sapinfo/rigel/main/install.sh | bash
+# 공식 저장소 클론 ($HOME 같은 일반 유저 경로에서)
+cd ~
+git clone --depth 1 https://github.com/supabase/supabase
+cd supabase/docker
+cp .env.example .env
+
+# ⚡ 보안 키 자동 생성 (공식 유틸리티, 매우 편리)
+sh ./utils/generate-keys.sh
+
+# 기동
+docker compose pull
+docker compose up -d
+
+# 검증: 모든 컨테이너 Healthy 인지 확인 (약 30~60초 소요)
+docker compose ps
 ```
 
-스크립트가 자동으로:
-1. 사전 요구 체크 + 디스크 공간 체크 (10GB+)
-2. 소스 다운로드
-3. Supabase 보안 키 자동 생성 (openssl)
-4. Supabase 공식 스택 기동 (`supabase-docker/`)
-5. DB healthcheck 대기
-6. Rigel migration 71개 + seed 적용 (멱등성 보장)
-7. Rigel 앱 `.env` 생성
-8. Rigel 앱 빌드 + 기동
+> 💡 **`generate-keys.sh` 사용 권장**: Supabase 공식 유틸리티가
+> `POSTGRES_PASSWORD`, `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY`,
+> `DASHBOARD_PASSWORD` 등 모든 시크릿을 자동 생성해 `.env`에 주입합니다.
+> 실행 후 `.env` 내용을 한 번 검토하세요.
 
-완료 후 `http://서버IP:3000` 접속 → 회원가입 → 조직 생성 → 사용 시작.
+> ❌ **기동 이후 비밀번호 변경 금지**: 최초 `docker compose up` 이후
+> `POSTGRES_PASSWORD`를 바꾸면 supabase-analytics 컨테이너가 깨집니다.
+> 키는 *기동 전에* 최종 확정하세요.
 
-### 구조
+---
 
+### Step 2. Rigel 앱 설치
+
+Supabase가 기동 중인 상태에서 Rigel 소스를 받고 `install.sh`를 실행합니다.
+스크립트가 Supabase 기동 확인 → migration + seed 적용 → 앱 빌드/기동을 순차 수행합니다.
+
+```bash
+# Rigel 소스 (Supabase 디렉토리와 별도 위치)
+cd ~
+git clone https://github.com/sapinfo/rigel.git
+cd rigel
+
+# .env 생성 + Supabase 연결 정보 입력
+cp .env.production.example .env
+nano .env
+# → PUBLIC_SUPABASE_ANON_KEY에 ~/supabase/docker/.env 의 ANON_KEY 값 붙여넣기
+
+# 설치 실행
+./install.sh
 ```
-rigel/
-├── supabase-docker/        ★ Supabase 공식 셀프호스팅 (수정하지 말 것)
-│   ├── docker-compose.yml
-│   ├── .env                 (auto-generated)
-│   └── volumes/             (DB, storage 데이터)
-│
-├── docker-compose.yml       ★ Rigel 앱 전용 (1 컨테이너)
-├── .env                     (auto-generated)
-├── install.sh               원클릭 설치
-│
-└── supabase/
-    ├── migrations/          71 files (DB 스키마)
-    └── seed.sql             테스트 데이터
-```
+
+**.env에 입력할 값**:
+- `PUBLIC_SUPABASE_URL` = `http://localhost:8000` (같은 호스트) 또는 서버 IP/도메인
+- `PUBLIC_SUPABASE_ANON_KEY` = `~/supabase/docker/.env`의 `ANON_KEY` 값 복사
+- `SITE_URL` = 브라우저 접속 주소 (기본 `http://localhost:3000`)
+
+---
+
+### Step 3. 접속
+
+- **Rigel**: `http://서버IP:3000` → 회원가입 → 조직 생성 → 양식 등록
+- **Supabase Studio**: `http://서버IP:8000` (아이디 `supabase`, 비번은 `~/supabase/docker/.env`의 `DASHBOARD_PASSWORD`)
+
+---
 
 ### 자주 쓰는 명령어
 
-**Rigel 앱**:
+**Rigel 앱** (`cd ~/rigel`):
 ```bash
-docker compose down                    # 중지
-docker compose restart                 # 재시작
-docker compose logs -f app             # 로그
+docker compose down                       # 중지
+docker compose restart                    # 재시작
+docker compose logs -f app                # 로그
 git pull && docker compose up -d --build  # 업데이트
 ```
 
-**Supabase**:
+**Supabase** (`cd ~/supabase/docker`):
 ```bash
-cd supabase-docker
-docker compose down                    # 중지
-docker compose logs -f                 # 로그
+docker compose down                       # 중지
+docker compose restart                    # 재시작
+docker compose logs -f                    # 로그
 ```
 
 ### ⚠ 금지 사항
 
 - ❌ `docker system prune` — 이미지 캐시 전부 삭제됨 (재설치 시 수 GB 재다운로드)
 - ❌ `docker volume rm` — **모든 데이터 소실** (복구 불가)
-- ❌ `supabase-docker/` 디렉토리 수정 — 공식 파일 (업그레이드 충돌)
 
 > **재실행 안전**: `docker compose down` 해도 데이터는 volume에 보존됩니다.
+
+### 🔧 문제 해결
+
+**`supabase-analytics` unhealthy / `_supabase` DB 없음 에러**
+→ 대부분 **설치 경로 권한 문제**. `/opt` 등 root 소유 경로에 설치한 경우 bind mount된 `volumes/db/*.sql` init 스크립트를 postgres 컨테이너가 읽지 못해 `_supabase` DB가 생성되지 않습니다.
+→ **해결**: 전체 디렉토리를 `$HOME` 하위로 이동 → 재기동.
+
+**`POSTGRES_PASSWORD` 변경 후 analytics 깨짐**
+→ 최초 기동 이후 비밀번호 변경은 지원 X. 복구: `cd ~/supabase/docker && docker compose down` → `sudo rm -rf volumes/db/data` (데이터 손실!) → `docker compose up -d`.
+
+**macOS bind mount 에러**
+→ Docker Desktop → Settings → Resources → File Sharing에 설치 경로 포함되어 있어야 함.
+
+**Rigel 앱 "Supabase not running" 에러**
+→ `install.sh`는 `supabase-db` 컨테이너와 `supabase_default` 네트워크가 있어야 동작. `docker compose ps`로 Supabase 기동 먼저 확인.
 
 ---
 

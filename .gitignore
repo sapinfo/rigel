@@ -7,12 +7,9 @@ build
 !.env.example
 !.env.production.example
 
-# Supabase self-hosting (runtime data, auto-generated secrets)
-supabase-docker/.env
-supabase-docker/volumes/db/data/
-supabase-docker/volumes/storage/
-supabase-docker/volumes/pooler/
-supabase-docker/volumes/functions/
+# Supabase self-hosting is now installed separately (official repo at ~/supabase)
+# — do NOT vendor it under the Rigel repo anymore.
+supabase-docker/
 package-lock.json.bak
 *.log
 .vite

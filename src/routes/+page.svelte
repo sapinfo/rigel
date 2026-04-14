@@ -71,7 +71,7 @@
             데모 사이트 체험
           </a>
         </div>
-        <p class="mt-4 text-xs text-gray-400">서버 한 대 + Docker만 있으면 10분 안에 설치 완료</p>
+        <p class="mt-4 text-xs text-gray-400">서버 한 대 + Docker만 있으면 설치 완료</p>
       </div>
       <!-- 우: 스크린샷 -->
       <div class="mt-10 lg:mt-0 lg:w-1/2">
@@ -181,7 +181,7 @@
   <section id="install" class="mx-auto max-w-6xl px-6 py-20">
     <div class="text-center mb-10">
       <h2 class="text-3xl font-bold">설치 가이드</h2>
-      <p class="mt-3 text-gray-600">Docker만 설치되어 있으면 됩니다</p>
+      <p class="mt-3 text-gray-600">Supabase 공식 셀프호스팅 + Rigel 앱, 2단계로 설치</p>
     </div>
 
     <div class="max-w-3xl mx-auto">
@@ -197,12 +197,15 @@
 
       {#if installTab === 'prod'}
         <div class="mb-6 rounded-lg border-l-4 border-blue-500 bg-blue-50 p-4 text-sm text-gray-700">
-          Supabase 공식 셀프호스팅 + Rigel 앱 컨테이너 분리 구조. <strong>Docker만 있으면 됩니다.</strong>
+          <p class="font-medium text-blue-900">Supabase 셀프호스팅 + Rigel 앱 분리 구조</p>
+          <p class="mt-1">Supabase는 <strong>공식 가이드대로 직접 설치</strong>, Rigel 앱은 해당 Supabase에 연결합니다. Docker만 있으면 됩니다.</p>
         </div>
+
+        <!-- 사전 요구 -->
         <div class="mb-8 rounded-lg border bg-gray-50 p-5">
           <h3 class="font-bold text-sm text-gray-500 mb-3">사전 요구 사항</h3>
           <div class="flex flex-wrap gap-3">
-            <span class="rounded bg-white border px-3 py-1.5 text-sm">Linux (Ubuntu 24.04+)</span>
+            <span class="rounded bg-white border px-3 py-1.5 text-sm">Linux (Ubuntu 24.04+) 권장</span>
             <span class="rounded bg-white border px-3 py-1.5 text-sm">Docker + Docker Compose</span>
             <span class="rounded bg-white border px-3 py-1.5 text-sm">Git</span>
             <span class="rounded bg-white border px-3 py-1.5 text-sm">서버 (CPU 4코어, RAM 16GB, 디스크 40GB)</span>
@@ -211,32 +214,154 @@
             <p>Docker 설치: <a href="https://docs.docker.com/get-docker/" class="text-blue-600 hover:underline" target="_blank" rel="noopener">docs.docker.com/get-docker</a></p>
             <p class="mt-1">Node.js, Supabase CLI는 <strong>불필요</strong>합니다 (컨테이너로 실행).</p>
           </div>
+
+          <div class="mt-4 rounded-md border-l-4 border-amber-400 bg-amber-50 p-3 text-xs text-amber-900">
+            <p class="font-semibold mb-1">⚠️ 설치 경로 주의</p>
+            <p>반드시 <strong>일반 유저 홈 디렉토리</strong>(<code class="bg-white px-1 rounded">$HOME</code>)에 설치하세요.</p>
+            <p class="mt-1"><code class="bg-white px-1 rounded">/opt</code>, <code class="bg-white px-1 rounded">/usr/local</code> 같은 시스템 경로는 <strong>권한 문제로 Supabase 초기화 실패</strong>합니다 (bind mount된 init 스크립트 read 실패 → <code class="bg-white px-1 rounded">_supabase</code> DB 생성 안 됨).</p>
+            <p class="mt-1">macOS Docker Desktop은 Settings → Resources → File Sharing에 설치 경로가 포함되어 있어야 합니다 (기본 <code class="bg-white px-1 rounded">/Users</code>는 포함됨).</p>
+          </div>
         </div>
 
-        <!-- 원클릭 설치 -->
+        <!-- Step 1: Supabase 공식 셀프호스팅 설치 -->
         <div class="mb-8">
-          <h3 class="font-bold text-lg mb-3">원클릭 설치 (권장)</h3>
-          <p class="text-sm text-gray-600 mb-4">사전 요구 사항이 설치된 상태에서, 터미널에 아래 한 줄만 실행하세요.</p>
-
-          <div>
-            <p class="text-xs font-medium text-gray-500 mb-1">Linux / macOS 터미널에서:</p>
-            <code class="block rounded bg-gray-900 text-green-400 px-4 py-3 text-sm">curl -fsSL https://raw.githubusercontent.com/sapinfo/rigel/main/install.sh | bash</code>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white font-bold">1</div>
+            <h3 class="font-bold text-lg">Supabase 공식 셀프호스팅 설치</h3>
           </div>
 
-          <p class="mt-3 text-xs text-gray-500">스크립트가 자동으로: 소스 다운로드 → Supabase 시작 → DB 초기화 → 앱 빌드 → 서버 실행</p>
+          <p class="text-sm text-gray-600 mb-3">
+            Supabase 공식 가이드를 그대로 따릅니다:
+            <a href="https://supabase.com/docs/guides/self-hosting/docker" class="text-blue-600 hover:underline" target="_blank" rel="noopener">supabase.com/docs/guides/self-hosting/docker</a>
+          </p>
+
+          <div class="rounded bg-gray-900 text-sm font-mono text-green-400 px-4 py-3 space-y-1 overflow-x-auto">
+            <div><span class="text-gray-500"># 공식 저장소 클론 ($HOME 같은 일반 유저 경로에서)</span></div>
+            <div>git clone --depth 1 https://github.com/supabase/supabase</div>
+            <div>cd supabase/docker</div>
+            <div>cp .env.example .env</div>
+            <div class="mt-2"><span class="text-gray-500"># ⚡ 보안 키 자동 생성 (공식 유틸리티, 매우 편리)</span></div>
+            <div><span class="text-yellow-300">sh ./utils/generate-keys.sh</span></div>
+            <div class="mt-2"><span class="text-gray-500"># 기동</span></div>
+            <div>docker compose pull</div>
+            <div>docker compose up -d</div>
+            <div class="mt-2"><span class="text-gray-500"># 검증: 모든 컨테이너 Healthy 인지 확인 (약 30~60초 소요)</span></div>
+            <div>docker compose ps</div>
+          </div>
+
+          <div class="mt-4 rounded-md border-l-4 border-green-500 bg-green-50 p-3 text-xs text-green-900">
+            <p class="font-semibold mb-1">💡 <code class="bg-white px-1 rounded">generate-keys.sh</code> 사용 권장</p>
+            <p>Supabase 공식 유틸리티가 <code class="bg-white px-1 rounded">POSTGRES_PASSWORD</code>, <code class="bg-white px-1 rounded">JWT_SECRET</code>, <code class="bg-white px-1 rounded">ANON_KEY</code>, <code class="bg-white px-1 rounded">SERVICE_ROLE_KEY</code>, <code class="bg-white px-1 rounded">DASHBOARD_PASSWORD</code> 등 모든 시크릿을 자동 생성해 <code class="bg-white px-1 rounded">.env</code>에 주입합니다.</p>
+            <p class="mt-1">실행 후 <code class="bg-white px-1 rounded">.env</code> 내용을 한 번 검토하세요.</p>
+          </div>
+
+          <div class="mt-3 rounded-md border-l-4 border-red-500 bg-red-50 p-3 text-xs text-red-900">
+            <p class="font-semibold mb-1">❌ 기동 이후 비밀번호 변경 금지</p>
+            <p>최초 <code class="bg-white px-1 rounded">docker compose up</code> 이후 <code class="bg-white px-1 rounded">POSTGRES_PASSWORD</code>를 바꾸면 <strong>supabase-analytics 컨테이너가 깨집니다</strong>. 키는 <em>기동 전에</em> 최종 확정하세요.</p>
+          </div>
         </div>
 
+        <!-- Step 2: Rigel 앱 설치 -->
+        <div class="mb-8">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white font-bold">2</div>
+            <h3 class="font-bold text-lg">Rigel 앱 설치</h3>
+          </div>
+
+          <p class="text-sm text-gray-600 mb-3">
+            Supabase가 기동 중인 상태에서 Rigel 소스를 받고 <code class="bg-gray-100 px-1 rounded">install.sh</code>를 실행합니다.
+            스크립트가 Supabase 기동 확인 → migration 71개 + seed 적용 → 앱 빌드/기동을 순차 수행합니다.
+          </p>
+
+          <div class="rounded bg-gray-900 text-sm font-mono text-green-400 px-4 py-3 space-y-1 overflow-x-auto">
+            <div><span class="text-gray-500"># Rigel 소스 다운로드 (Supabase 디렉토리와 별도 위치)</span></div>
+            <div>cd ~</div>
+            <div>git clone https://github.com/sapinfo/rigel.git</div>
+            <div>cd rigel</div>
+            <div class="mt-2"><span class="text-gray-500"># .env 생성 + Supabase 연결 정보 입력</span></div>
+            <div>cp .env.production.example .env</div>
+            <div>nano .env <span class="text-gray-500"># PUBLIC_SUPABASE_ANON_KEY에 supabase/docker/.env의 ANON_KEY 값 붙여넣기</span></div>
+            <div class="mt-2"><span class="text-gray-500"># 설치 실행</span></div>
+            <div>./install.sh</div>
+          </div>
+
+          <div class="mt-4 rounded-md border-l-4 border-blue-500 bg-blue-50 p-3 text-xs text-blue-900">
+            <p class="font-semibold mb-1">📋 .env에 입력할 값</p>
+            <ul class="mt-1 space-y-0.5 list-disc list-inside">
+              <li><code class="bg-white px-1 rounded">PUBLIC_SUPABASE_URL</code>=http://localhost:8000 (같은 호스트) 또는 서버 IP/도메인</li>
+              <li><code class="bg-white px-1 rounded">PUBLIC_SUPABASE_ANON_KEY</code>=<code class="bg-white px-1 rounded">supabase/docker/.env</code>의 <code class="bg-white px-1 rounded">ANON_KEY</code> 값 복사</li>
+              <li><code class="bg-white px-1 rounded">SITE_URL</code>=브라우저 접속 주소 (기본 http://localhost:3000)</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Step 3: 접속 -->
+        <div class="mb-8">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white font-bold">3</div>
+            <h3 class="font-bold text-lg">접속 및 초기 설정</h3>
+          </div>
+
+          <div class="rounded border bg-gray-50 p-4 text-sm space-y-2">
+            <p><strong>Rigel:</strong> <code class="bg-white px-2 py-0.5 rounded">http://서버IP:3000</code> → 회원가입 → 조직 생성 → 양식 등록</p>
+            <p><strong>Supabase Studio:</strong> <code class="bg-white px-2 py-0.5 rounded">http://서버IP:8000</code> → DB 관리 (아이디 <code>supabase</code>, 비번은 <code>supabase/docker/.env</code>의 <code>DASHBOARD_PASSWORD</code>)</p>
+          </div>
+        </div>
+
+        <!-- 자주 쓰는 명령어 -->
         <div class="mt-8 rounded-lg border bg-gray-50 p-5 text-sm">
           <h3 class="font-bold text-gray-700 mb-2">자주 쓰는 명령어</h3>
-          <div class="space-y-1 text-xs font-mono text-gray-600">
-            <p><span class="text-gray-400">Rigel 중지:</span> docker compose down</p>
-            <p><span class="text-gray-400">Rigel 재시작:</span> docker compose restart</p>
-            <p><span class="text-gray-400">Rigel 로그:</span> docker compose logs -f app</p>
-            <p><span class="text-gray-400">Rigel 업데이트:</span> git pull && docker compose up -d --build</p>
-            <p class="mt-2"><span class="text-gray-400">Supabase 중지:</span> cd supabase-docker && docker compose down</p>
+
+          <div class="mb-3">
+            <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Rigel 앱 (<code>cd ~/rigel</code>)</p>
+            <div class="space-y-1 text-xs font-mono text-gray-700">
+              <p>docker compose down <span class="text-gray-400"># 중지</span></p>
+              <p>docker compose restart <span class="text-gray-400"># 재시작</span></p>
+              <p>docker compose logs -f app <span class="text-gray-400"># 로그</span></p>
+              <p>git pull && docker compose up -d --build <span class="text-gray-400"># 업데이트</span></p>
+            </div>
           </div>
-          <p class="mt-3 text-xs text-red-600">⚠ docker system prune / docker volume rm 절대 금지 (데이터 손실)</p>
+
+          <div>
+            <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Supabase (<code>cd ~/supabase/docker</code>)</p>
+            <div class="space-y-1 text-xs font-mono text-gray-700">
+              <p>docker compose down <span class="text-gray-400"># 중지</span></p>
+              <p>docker compose restart <span class="text-gray-400"># 재시작</span></p>
+              <p>docker compose logs -f <span class="text-gray-400"># 로그</span></p>
+            </div>
+          </div>
+
+          <p class="mt-3 text-xs text-red-600">⚠ <code class="bg-red-50 px-1 rounded">docker system prune</code> / <code class="bg-red-50 px-1 rounded">docker volume rm</code> 절대 금지 (데이터 손실)</p>
         </div>
+
+        <!-- 트러블슈팅 -->
+        <details class="mt-6 rounded-lg border bg-white p-5 text-sm">
+          <summary class="cursor-pointer font-bold text-gray-700">🔧 문제 해결 (펼치기)</summary>
+
+          <div class="mt-4 space-y-4">
+            <div>
+              <p class="font-semibold text-gray-900"><code>supabase-analytics</code> 컨테이너가 unhealthy / <code>_supabase</code> DB 없음 에러</p>
+              <p class="mt-1 text-xs text-gray-600">대부분 <strong>설치 경로 권한 문제</strong>입니다. <code>/opt</code> 등에 sudo로 설치한 경우 bind mount된 <code>volumes/db/*.sql</code> init 스크립트를 postgres 컨테이너가 읽지 못해 <code>_supabase</code> DB가 생성되지 않습니다.</p>
+              <p class="mt-1 text-xs text-gray-600"><strong>해결</strong>: 전체 디렉토리를 <code>$HOME</code> 하위로 이동 → <code>docker compose down && docker compose up -d</code> 재기동.</p>
+            </div>
+
+            <div>
+              <p class="font-semibold text-gray-900"><code>POSTGRES_PASSWORD</code>를 변경했더니 analytics가 깨졌어요</p>
+              <p class="mt-1 text-xs text-gray-600">최초 기동 이후 비밀번호 변경은 지원되지 않습니다. <strong>기동 전</strong>에 <code>generate-keys.sh</code> 또는 수동으로 값을 확정하세요.</p>
+              <p class="mt-1 text-xs text-gray-600">복구: <code>supabase/docker</code>에서 <code>docker compose down</code> → <code>sudo rm -rf volumes/db/data</code> (데이터 손실!) → <code>docker compose up -d</code>.</p>
+            </div>
+
+            <div>
+              <p class="font-semibold text-gray-900">macOS에서 bind mount 에러</p>
+              <p class="mt-1 text-xs text-gray-600">Docker Desktop → Settings → Resources → File Sharing에 설치 경로가 포함되어 있어야 합니다. <code>/Users</code>는 기본 포함, <code>/opt</code>는 미포함입니다.</p>
+            </div>
+
+            <div>
+              <p class="font-semibold text-gray-900">Rigel 앱에서 "Supabase not running" 에러</p>
+              <p class="mt-1 text-xs text-gray-600"><code>install.sh</code>는 <code>supabase-db</code> 컨테이너와 <code>supabase_default</code> 네트워크가 있어야 동작합니다. Supabase 공식 스택이 기동 중인지 <code>docker compose ps</code>로 먼저 확인하세요.</p>
+            </div>
+          </div>
+        </details>
 
       {:else}
         <div class="mb-8 rounded-lg border bg-gray-50 p-5">

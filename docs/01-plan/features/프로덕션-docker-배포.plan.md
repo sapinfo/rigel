@@ -3,6 +3,25 @@
 > Feature: `프로덕션-docker-배포`
 > Date: 2026-04-14
 > Phase: PDCA Plan
+> **Revision**: 2026-04-14 (rev 2) — Supabase 설치 수동화, install.sh는 Rigel 앱 전용으로 축소
+
+---
+
+## 📝 Architecture Revision (2026-04-14, rev 2)
+
+**변경 이유**: v1 구조(Supabase + Rigel 통합 install.sh)를 실제 맥북·우분투에서 검증하는 과정에서 `/opt` 권한 문제로 `_supabase` DB 생성이 실패 → analytics 컨테이너 crashloop → 무한 기동 대기 발생. 환경별 호스트 권한·Docker Desktop 파일 공유·bind mount 등이 install.sh로 예측·처리하기 어렵다는 점 확인.
+
+**변경 요약**:
+| 항목 | v1 (초안) | v2 (현재) |
+|---|---|---|
+| Supabase 설치 | install.sh가 자동 (`supabase-docker/` 벤더링) | **사용자가 공식 가이드대로 직접 설치** (Rigel repo 외부) |
+| 보안 키 생성 | install.sh 내부 openssl/JWT | **Supabase 공식 `sh ./utils/generate-keys.sh`** 사용 |
+| install.sh 범위 | 전체 스택 8단계 | **Rigel 앱 전용 4단계** (Supabase 기동 확인 → migration → 앱 빌드/기동) |
+| Rigel repo 내 `supabase-docker/` | git tracked | **git에서 제거, .gitignore 추가** |
+| 랜딩/README 안내 | "원클릭 1줄" | **2-Step 가이드** (공식 Supabase 설치 → Rigel) |
+| 설치 경로 | 임의 | **일반 유저 홈 필수** (/opt 금지) |
+
+**아래 본문은 v1 설계 근거로 보존**. 실제 구현은 위 v2 방향성 기준. PDCA Design rev 2 참조.
 
 ---
 
@@ -11,9 +30,9 @@
 | 관점 | 내용 |
 |---|---|
 | **Problem** | 오픈소스 그룹웨어 사용자가 비개발자도 쉽게 자사 서버에 설치·운영할 수 있어야 함. Supabase CLI 방식은 Windows에서 Docker Desktop 강제, 프로덕션 검증 안 됨 |
-| **Solution** | Supabase 공식 셀프호스팅 docker-compose를 **그대로** 사용 + Rigel 앱 컨테이너 **완전 분리**. 두 docker-compose를 install.sh로 순차 실행 |
-| **Function UX** | `curl ... \| bash` 한 줄로 전체 스택 기동. Docker만 있으면 OS 무관. Rigel migration은 Supabase DB 기동 후 자동 적용 |
-| **Core Value** | 재미 한국기업 IT 담당자가 1시간 내 자사 서버에 설치 완료. Supabase 공식 구성이므로 업그레이드/이슈 대응 가능 |
+| **Solution** | Supabase 공식 셀프호스팅 docker-compose를 **공식 가이드대로 사용자가 직접 설치** + Rigel 앱 컨테이너 별도 설치 (install.sh). 보안 키는 Supabase 공식 `generate-keys.sh` 활용 |
+| **Function UX** | 2-Step 설치 (Supabase 5분 + Rigel 3분). Docker만 있으면 OS 무관. 랜딩/README에 전체 단계 inline 안내 |
+| **Core Value** | 재미 한국기업 IT 담당자가 1시간 내 자사 서버에 설치 완료. Supabase 공식 구성이므로 업그레이드·이슈 대응·환경별 트러블슈팅이 Supabase 커뮤니티에 위임됨 |
 
 ---
 

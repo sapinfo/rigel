@@ -2,17 +2,26 @@
 set -euo pipefail
 
 # ============================================================
-# Rigel 원클릭 설치 (프로덕션)
+# Rigel 앱 설치 스크립트 (프로덕션)
 #
-# 사용법:
-#   curl -fsSL https://raw.githubusercontent.com/sapinfo/rigel/main/install.sh | bash
+# 사전 요구: Supabase 공식 셀프호스팅이 이미 기동 중이어야 합니다.
+#   https://supabase.com/docs/guides/self-hosting/docker
 #
-# 구조 (Design §1.1):
-#   supabase-docker/        Supabase 공식 셀프호스팅 (건드리지 않음)
-#   docker-compose.yml      Rigel 앱 컨테이너 전용
+#   git clone --depth 1 https://github.com/supabase/supabase
+#   cd supabase/docker
+#   cp .env.example .env
+#   sh ./utils/generate-keys.sh   # ★ 공식 키 자동 생성 유틸
+#   docker compose pull
+#   docker compose up -d
 #
-# 재실행 안전: 이미지 캐시 유지, 데이터 보존, migration 중복 방지.
-# 절대 금지: docker system prune, docker volume rm (데이터 파괴).
+# 이 스크립트는:
+#   1. Supabase 기동 상태 확인
+#   2. Rigel 소스 준비
+#   3. Rigel DB migration + seed 적용 (멱등)
+#   4. Rigel 앱 .env 확인
+#   5. Rigel 앱 컨테이너 빌드 + 기동
+#
+# 재실행 안전. 절대 금지: docker system prune, docker volume rm.
 # ============================================================
 
 REPO="https://github.com/sapinfo/rigel.git"
@@ -22,12 +31,11 @@ log()  { echo "$@"; }
 ok()   { echo "[OK] $@"; }
 run()  { echo "[..] $@"; }
 err()  { echo "[!]  $@" >&2; }
-
-hr() { echo "=========================================="; }
+hr()   { echo "=========================================="; }
 
 echo ""
 hr
-echo "  Rigel - Installation Start"
+echo "  Rigel App - Installation"
 hr
 echo ""
 
@@ -44,30 +52,60 @@ else
 fi
 ok "Compose: $COMPOSE_CMD"
 
-for cmd in git curl openssl; do
+for cmd in git curl; do
   if ! command -v $cmd &>/dev/null; then
     err "$cmd not found. Please install."
     exit 1
   fi
 done
-ok "Prerequisites: git, curl, openssl"
-
-# 디스크 공간 체크 (최소 10GB)
-if command -v df &>/dev/null; then
-  AVAIL_KB=$(df / 2>/dev/null | tail -1 | awk '{print $4}')
-  AVAIL_GB=$((AVAIL_KB / 1024 / 1024))
-  if [ "$AVAIL_GB" -lt 10 ]; then
-    err "Disk space: ${AVAIL_GB}GB free (need 10GB+). Aborting."
-    exit 1
-  fi
-  ok "Disk: ${AVAIL_GB}GB free"
-fi
+ok "Prerequisites: git, curl"
 
 echo ""
 
-# ─── 2. 소스 다운로드 ─────────────────────────────────────
+# ─── 2. Supabase 기동 상태 확인 (필수) ────────────────────
 
-if [ -f "docker-compose.yml" ] && [ -d "supabase-docker" ] && [ -d "src" ]; then
+run "Checking Supabase (expected: supabase-db container running)..."
+
+if ! docker ps --format '{{.Names}}' | grep -q '^supabase-db$'; then
+  err "Supabase is not running."
+  err ""
+  err "  Install Supabase first (official self-hosting guide):"
+  err "    https://supabase.com/docs/guides/self-hosting/docker"
+  err ""
+  err "  Quick start:"
+  err "    git clone --depth 1 https://github.com/supabase/supabase"
+  err "    cd supabase/docker"
+  err "    cp .env.example .env"
+  err "    sh ./utils/generate-keys.sh   # auto-generate secrets"
+  err "    docker compose pull"
+  err "    docker compose up -d"
+  err ""
+  err "  ⚠ Install under your home directory (NOT /opt or /usr/local)"
+  err "    — root-owned paths break bind-mounted init scripts."
+  exit 1
+fi
+
+if ! docker exec supabase-db pg_isready -U postgres &>/dev/null; then
+  err "supabase-db container exists but not ready. Wait and retry, or check:"
+  err "  docker logs supabase-db --tail 50"
+  exit 1
+fi
+ok "Supabase is running"
+
+# kong 네트워크 확인 (Rigel 앱이 supabase_default에 join)
+NETWORK=$(docker network ls --format '{{.Name}}' | grep -E '^supabase(_default)?$' | head -1 || echo "")
+if [ -z "$NETWORK" ]; then
+  err "Supabase docker network not found (expected: supabase_default)."
+  err "Is Supabase really running via official docker-compose?"
+  exit 1
+fi
+ok "Supabase network: $NETWORK"
+
+echo ""
+
+# ─── 3. Rigel 소스 준비 ───────────────────────────────────
+
+if [ -f "docker-compose.yml" ] && [ -d "src" ] && [ -d "supabase/migrations" ]; then
   ok "Already in Rigel project directory"
 else
   if [ -d "$INSTALL_DIR" ]; then
@@ -85,103 +123,18 @@ fi
 
 echo ""
 
-# ─── 3. Supabase .env 생성 (조건부) ───────────────────────
-
-if [ ! -f "supabase-docker/.env" ]; then
-  run "Generating Supabase secrets..."
-
-  gen_str() { openssl rand -base64 $1 | tr -dc 'a-zA-Z0-9' | head -c $2; }
-
-  POSTGRES_PASSWORD=$(gen_str 32 32)
-  JWT_SECRET=$(gen_str 48 64)
-  SECRET_KEY_BASE=$(gen_str 48 64)
-  VAULT_ENC_KEY=$(gen_str 32 32)
-  PG_META_CRYPTO_KEY=$(gen_str 32 32)
-  DASHBOARD_PASSWORD=$(gen_str 16 20)
-  LOGFLARE_PUB=$(gen_str 32 32)
-  LOGFLARE_PRV=$(gen_str 32 32)
-
-  # JWT (HS256) for ANON_KEY, SERVICE_ROLE_KEY
-  jwt_b64() { echo -n "$1" | openssl base64 -A | tr '+/' '-_' | tr -d '='; }
-  HEADER=$(jwt_b64 '{"alg":"HS256","typ":"JWT"}')
-  IAT=$(date +%s); EXP=$((IAT + 157680000))
-
-  ANON_PAYLOAD=$(jwt_b64 "{\"role\":\"anon\",\"iss\":\"supabase\",\"iat\":$IAT,\"exp\":$EXP}")
-  ANON_SIG=$(echo -n "$HEADER.$ANON_PAYLOAD" | openssl dgst -sha256 -hmac "$JWT_SECRET" -binary | openssl base64 -A | tr '+/' '-_' | tr -d '=')
-  ANON_KEY="$HEADER.$ANON_PAYLOAD.$ANON_SIG"
-
-  SVC_PAYLOAD=$(jwt_b64 "{\"role\":\"service_role\",\"iss\":\"supabase\",\"iat\":$IAT,\"exp\":$EXP}")
-  SVC_SIG=$(echo -n "$HEADER.$SVC_PAYLOAD" | openssl dgst -sha256 -hmac "$JWT_SECRET" -binary | openssl base64 -A | tr '+/' '-_' | tr -d '=')
-  SERVICE_ROLE_KEY="$HEADER.$SVC_PAYLOAD.$SVC_SIG"
-
-  cp supabase-docker/.env.example supabase-docker/.env
-
-  # BSD/GNU sed 호환 (macOS는 -i ''  필요, Linux는 -i 만)
-  sedi() {
-    if sed --version &>/dev/null; then
-      sed -i "$@"
-    else
-      sed -i '' "$@"
-    fi
-  }
-
-  sedi "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$POSTGRES_PASSWORD|" supabase-docker/.env
-  sedi "s|^JWT_SECRET=.*|JWT_SECRET=$JWT_SECRET|" supabase-docker/.env
-  sedi "s|^ANON_KEY=.*|ANON_KEY=$ANON_KEY|" supabase-docker/.env
-  sedi "s|^SERVICE_ROLE_KEY=.*|SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY|" supabase-docker/.env
-  sedi "s|^SECRET_KEY_BASE=.*|SECRET_KEY_BASE=$SECRET_KEY_BASE|" supabase-docker/.env
-  sedi "s|^VAULT_ENC_KEY=.*|VAULT_ENC_KEY=$VAULT_ENC_KEY|" supabase-docker/.env
-  sedi "s|^PG_META_CRYPTO_KEY=.*|PG_META_CRYPTO_KEY=$PG_META_CRYPTO_KEY|" supabase-docker/.env
-  sedi "s|^DASHBOARD_PASSWORD=.*|DASHBOARD_PASSWORD=$DASHBOARD_PASSWORD|" supabase-docker/.env
-  sedi "s|^LOGFLARE_PUBLIC_ACCESS_TOKEN=.*|LOGFLARE_PUBLIC_ACCESS_TOKEN=$LOGFLARE_PUB|" supabase-docker/.env
-  sedi "s|^LOGFLARE_PRIVATE_ACCESS_TOKEN=.*|LOGFLARE_PRIVATE_ACCESS_TOKEN=$LOGFLARE_PRV|" supabase-docker/.env
-
-  ok "supabase-docker/.env created"
-else
-  ok "supabase-docker/.env already exists"
-  ANON_KEY=$(grep "^ANON_KEY=" supabase-docker/.env | cut -d= -f2-)
-fi
-
-echo ""
-
-# ─── 4. Supabase 기동 ─────────────────────────────────────
-
-run "Starting Supabase stack (this may take several minutes on first run)..."
-cd supabase-docker
-$COMPOSE_CMD up -d
-cd ..
-ok "Supabase started"
-
-echo ""
-
-# ─── 5. DB 기동 대기 ──────────────────────────────────────
-
-run "Waiting for Supabase DB..."
-for i in $(seq 1 60); do
-  if docker exec supabase-db pg_isready -U postgres &>/dev/null; then
-    ok "DB ready after ${i}s"
-    break
-  fi
-  if [ "$i" = "60" ]; then
-    err "DB not ready after 60s. Check: docker logs supabase-db"
-    exit 1
-  fi
-  sleep 1
-done
-
-echo ""
-
-# ─── 6. Rigel migration + seed (idempotent) ───────────────
+# ─── 4. Rigel migration + seed (idempotent) ───────────────
 
 MIGRATED=$(docker exec supabase-db psql -U postgres -tA -c "SELECT 1 FROM information_schema.tables WHERE table_name = '_rigel_installed' LIMIT 1" 2>/dev/null || echo "")
 
 if [ -z "$MIGRATED" ]; then
-  run "Applying Rigel migrations (71 files)..."
+  run "Applying Rigel migrations..."
   FAILED=0
+  COUNT=0
   for f in supabase/migrations/*.sql; do
     if [ -f "$f" ]; then
       if docker exec -i supabase-db psql -U postgres -v ON_ERROR_STOP=1 < "$f" > /dev/null 2>&1; then
-        :
+        COUNT=$((COUNT + 1))
       else
         err "Migration failed: $(basename $f)"
         FAILED=1
@@ -193,10 +146,12 @@ if [ -z "$MIGRATED" ]; then
   if [ $FAILED -eq 0 ]; then
     if [ -f supabase/seed.sql ]; then
       run "Applying seed data..."
-      docker exec -i supabase-db psql -U postgres -v ON_ERROR_STOP=1 < supabase/seed.sql > /dev/null 2>&1 || err "Seed warning (non-fatal)"
+      docker exec -i supabase-db psql -U postgres -v ON_ERROR_STOP=1 < supabase/seed.sql > /dev/null 2>&1 \
+        || err "Seed warning (non-fatal)"
     fi
-    docker exec supabase-db psql -U postgres -c "CREATE TABLE IF NOT EXISTS _rigel_installed (at timestamptz DEFAULT now())" > /dev/null
-    ok "Migrations + seed applied"
+    docker exec supabase-db psql -U postgres \
+      -c "CREATE TABLE IF NOT EXISTS _rigel_installed (at timestamptz DEFAULT now())" > /dev/null
+    ok "Applied $COUNT migrations + seed"
   else
     exit 1
   fi
@@ -206,23 +161,32 @@ fi
 
 echo ""
 
-# ─── 7. Rigel 앱 .env 생성 ────────────────────────────────
+# ─── 5. Rigel 앱 .env 확인 ────────────────────────────────
 
 if [ ! -f ".env" ]; then
-  cat > .env <<EOF
-PUBLIC_SUPABASE_URL=http://localhost:8000
-PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY
-SITE_URL=http://localhost:3000
-APP_PORT=3000
-EOF
-  ok ".env created for Rigel app"
-else
-  ok ".env already exists"
+  err ".env not found."
+  err ""
+  err "  Create .env from template:"
+  err "    cp .env.production.example .env"
+  err ""
+  err "  Then fill in Supabase connection info from your supabase/docker/.env:"
+  err "    PUBLIC_SUPABASE_URL      (e.g. http://localhost:8000)"
+  err "    PUBLIC_SUPABASE_ANON_KEY (copy from supabase/docker/.env ANON_KEY)"
+  err ""
+  err "  Rerun this script after .env is ready."
+  exit 1
 fi
+
+if ! grep -q "^PUBLIC_SUPABASE_ANON_KEY=.\+" .env; then
+  err ".env: PUBLIC_SUPABASE_ANON_KEY is empty."
+  err "  Copy ANON_KEY value from your supabase/docker/.env to Rigel .env."
+  exit 1
+fi
+ok ".env configured"
 
 echo ""
 
-# ─── 8. Rigel 앱 빌드 + 기동 ──────────────────────────────
+# ─── 6. Rigel 앱 빌드 + 기동 ──────────────────────────────
 
 run "Building and starting Rigel app..."
 $COMPOSE_CMD up -d --build
@@ -232,28 +196,26 @@ echo ""
 
 # ─── Done ─────────────────────────────────────────────────
 
+APP_PORT=$(grep "^APP_PORT=" .env 2>/dev/null | cut -d= -f2- || echo "3000")
 SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
-DASH_PW=$(grep "^DASHBOARD_PASSWORD=" supabase-docker/.env | cut -d= -f2-)
 
 hr
 echo "  Installation complete!"
 hr
 echo ""
-echo "  Rigel:            http://${SERVER_IP:-localhost}:3000"
-echo "  Supabase Studio:  http://${SERVER_IP:-localhost}:8000"
-echo "                    (username: supabase / password: $DASH_PW)"
+echo "  Rigel:            http://${SERVER_IP:-localhost}:${APP_PORT}"
 echo ""
 echo "  --- Commands ---"
-echo "  Rigel 중지:    $COMPOSE_CMD down"
-echo "  Rigel 재시작:  $COMPOSE_CMD restart"
-echo "  Rigel 로그:    $COMPOSE_CMD logs -f app"
+echo "  Rigel 중지:     $COMPOSE_CMD down"
+echo "  Rigel 재시작:   $COMPOSE_CMD restart"
+echo "  Rigel 로그:     $COMPOSE_CMD logs -f app"
 echo "  Rigel 업데이트: git pull && $COMPOSE_CMD up -d --build"
 echo ""
-echo "  Supabase 중지: cd supabase-docker && $COMPOSE_CMD down"
-echo "  Supabase 로그: cd supabase-docker && $COMPOSE_CMD logs -f"
+echo "  Supabase 관리는 공식 docker compose 디렉토리에서:"
+echo "    cd path/to/supabase/docker && docker compose {down|restart|logs}"
 echo ""
-echo "  ⚠  docker system prune 금지 (이미지 캐시 삭제됨)"
-echo "  ⚠  docker volume rm 금지 (데이터 삭제됨)"
+echo "  ⚠ docker system prune 금지 (이미지 캐시 삭제됨)"
+echo "  ⚠ docker volume rm 금지 (데이터 삭제됨)"
 echo ""
 echo "  Issues: https://github.com/sapinfo/rigel/issues"
 hr
