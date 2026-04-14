@@ -49,30 +49,65 @@ async function loadPendingDocs(
   );
 }
 
-async function loadCountsExcludingPending(
+/**
+ * 내가 approver로 참여한 모든 문서 ID (status 무관).
+ * in_progress/completed/rejected 탭에서 "참여자 시점"을 열기 위해 사용.
+ * drafts 탭은 기안자 전용이라 미포함.
+ */
+async function fetchMyParticipatedDocIds(
   supabase: SupabaseClient,
   tenantId: string,
   userId: string
+): Promise<string[]> {
+  const { data } = await supabase
+    .from('approval_steps')
+    .select('document_id')
+    .eq('tenant_id', tenantId)
+    .eq('approver_user_id', userId);
+  return Array.from(new Set((data ?? []).map((s) => s.document_id as string)));
+}
+
+/**
+ * drafter_id 또는 참여 문서 ID 목록으로 or 필터 적용.
+ * 참여 문서가 없으면 drafter_id 단일 조건으로 fallback.
+ */
+function applyMineOrParticipated<T extends { or: Function; eq: Function }>(
+  q: T,
+  userId: string,
+  participatedIds: string[]
+): T {
+  if (participatedIds.length === 0) {
+    return q.eq('drafter_id', userId);
+  }
+  return q.or(`drafter_id.eq.${userId},id.in.(${participatedIds.join(',')})`);
+}
+
+async function loadCountsExcludingPending(
+  supabase: SupabaseClient,
+  tenantId: string,
+  userId: string,
+  participatedIds: string[]
 ): Promise<Omit<InboxCounts, 'pending'>> {
+  const inProgressQ = supabase
+    .from('approval_documents')
+    .select('id', { count: 'exact', head: true })
+    .eq('tenant_id', tenantId)
+    .in('status', ['in_progress', 'pending_post_facto']);
+  const completedQ = supabase
+    .from('approval_documents')
+    .select('id', { count: 'exact', head: true })
+    .eq('tenant_id', tenantId)
+    .in('status', ['completed', 'withdrawn']);
+  const rejectedQ = supabase
+    .from('approval_documents')
+    .select('id', { count: 'exact', head: true })
+    .eq('tenant_id', tenantId)
+    .eq('status', 'rejected');
+
   const [inProgress, completed, rejected, drafts] = await Promise.all([
-    supabase
-      .from('approval_documents')
-      .select('id', { count: 'exact', head: true })
-      .eq('tenant_id', tenantId)
-      .eq('drafter_id', userId)
-      .in('status', ['in_progress', 'pending_post_facto']),
-    supabase
-      .from('approval_documents')
-      .select('id', { count: 'exact', head: true })
-      .eq('tenant_id', tenantId)
-      .eq('drafter_id', userId)
-      .in('status', ['completed', 'withdrawn']),
-    supabase
-      .from('approval_documents')
-      .select('id', { count: 'exact', head: true })
-      .eq('tenant_id', tenantId)
-      .eq('drafter_id', userId)
-      .eq('status', 'rejected'),
+    applyMineOrParticipated(inProgressQ, userId, participatedIds),
+    applyMineOrParticipated(completedQ, userId, participatedIds),
+    applyMineOrParticipated(rejectedQ, userId, participatedIds),
     supabase
       .from('approval_documents')
       .select('id', { count: 'exact', head: true })
@@ -126,8 +161,12 @@ async function loadDocumentsForTab(
   supabase: SupabaseClient,
   tenantId: string,
   userId: string,
-  tab: InboxTab
+  tab: InboxTab,
+  participatedIds: string[]
 ): Promise<DocRow[]> {
+  const DOC_COLS =
+    'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency, content';
+
   switch (tab) {
     case 'pending': {
       return loadPendingDocs(supabase, tenantId, userId);
@@ -135,40 +174,37 @@ async function loadDocumentsForTab(
 
     case 'in_progress': {
       // v1.1 M13: pending_post_facto 도 진행 중으로 분류
-      const { data } = await supabase
+      // 기안자 OR 결재 참여자 시점 통합
+      const base = supabase
         .from('approval_documents')
-        .select(
-          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency, content'
-        )
+        .select(DOC_COLS)
         .eq('tenant_id', tenantId)
-        .eq('drafter_id', userId)
-        .in('status', ['in_progress', 'pending_post_facto'])
+        .in('status', ['in_progress', 'pending_post_facto']);
+      const { data } = await applyMineOrParticipated(base, userId, participatedIds)
         .order('submitted_at', { ascending: false });
       return (data as unknown as DocRow[]) ?? [];
     }
 
     case 'completed': {
-      const { data } = await supabase
+      // 기안자 OR 결재 참여자 시점 통합
+      const base = supabase
         .from('approval_documents')
-        .select(
-          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency, content'
-        )
+        .select(DOC_COLS)
         .eq('tenant_id', tenantId)
-        .eq('drafter_id', userId)
-        .in('status', ['completed', 'withdrawn'])
+        .in('status', ['completed', 'withdrawn']);
+      const { data } = await applyMineOrParticipated(base, userId, participatedIds)
         .order('updated_at', { ascending: false });
       return (data as unknown as DocRow[]) ?? [];
     }
 
     case 'rejected': {
-      const { data } = await supabase
+      // 기안자 OR 결재 참여자 시점 통합
+      const base = supabase
         .from('approval_documents')
-        .select(
-          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency, content'
-        )
+        .select(DOC_COLS)
         .eq('tenant_id', tenantId)
-        .eq('drafter_id', userId)
-        .eq('status', 'rejected')
+        .eq('status', 'rejected');
+      const { data } = await applyMineOrParticipated(base, userId, participatedIds)
         .order('updated_at', { ascending: false });
       return (data as unknown as DocRow[]) ?? [];
     }
@@ -176,9 +212,7 @@ async function loadDocumentsForTab(
     case 'drafts': {
       const { data } = await supabase
         .from('approval_documents')
-        .select(
-          'id, doc_number, status, current_step_index, drafter_id, submitted_at, completed_at, updated_at, form_id, urgency, content'
-        )
+        .select(DOC_COLS)
         .eq('tenant_id', tenantId)
         .eq('drafter_id', userId)
         .eq('status', 'draft')
@@ -198,11 +232,14 @@ export const load: PageServerLoad = async ({ locals, url, parent }) => {
   // pending helper는 counts와 list 양쪽에서 쓰이므로 1회만 계산
   const pendingDocs = await loadPendingDocs(locals.supabase, tenantId, userId);
 
+  // "한 번이라도 결재함에 들어왔으면 계속 노출" — 참여 문서 ID는 counts + list 양쪽에서 재사용
+  const participatedIds = await fetchMyParticipatedDocIds(locals.supabase, tenantId, userId);
+
   const [nonPendingCounts, otherTabDocs] = await Promise.all([
-    loadCountsExcludingPending(locals.supabase, tenantId, userId),
+    loadCountsExcludingPending(locals.supabase, tenantId, userId, participatedIds),
     tab === 'pending'
       ? Promise.resolve(null)
-      : loadDocumentsForTab(locals.supabase, tenantId, userId, tab)
+      : loadDocumentsForTab(locals.supabase, tenantId, userId, tab, participatedIds)
   ]);
 
   const docs = tab === 'pending' ? pendingDocs : (otherTabDocs ?? []);
