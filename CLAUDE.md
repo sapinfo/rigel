@@ -60,6 +60,27 @@
    - 관련 RLS/RPC에서 WHERE 절 / IN() 사용 지점
    - 검사: `grep -rn "'<기존 enum 값>'" src/` 로 누락 지점 확인
 
+### Migration SQL 본문 필수 규칙 (2026-04-14 프로덕션 장애 교훈)
+1. **`CREATE/ALTER` DDL은 migration 파일 본문에 반드시 포함** — "MCP로 직접 적용 완료" 주석만 두는 stub migration 금지. stub은 신규 환경(프로덕션/CI/새 개발자 머신)에서 재현 불가, runtime 장애 유발
+   - 2026-04-14 발견 사례:
+     - `0054` fn_submit_draft v5 delegation column 수정 → 주석만 → 프로덕션 "column delegator_id does not exist"
+     - `0055` fn_submit_draft step_type cast → ALTER TYPE만 있고 함수 본문 누락
+     - 복구: `0073` + `0074`로 완전 본문 포함 재정의
+2. **INSERT 컬럼 목록 변경 시 NOT NULL 컬럼 검증 필수**
+   - 2026-04-14 회귀 사례: `0045` fn_submit_draft에서 `approval_steps.tenant_id` 누락 → 0035까지는 포함돼 있었으나 컬럼 재정렬 시 실수 탈락
+3. **함수 재정의 시 예전 버전의 컬럼 사용 패턴 보존**
+   - 기존 `::public.step_type` 같은 명시 캐스트 유지 (implicit cast 동작하나 설계 의도 보존 원칙)
+4. **MCP로 개발 DB에 핫픽스 적용 시 즉시 migration 파일 본문에 동기화**
+   - MCP 변경은 개발 DB에만 존재 → 신규 설치에는 적용 안 됨
+   - 반드시 `apply_migration` 으로 MCP에 공식 migration 등록 (SQL 본문 포함)
+5. **감사 스크립트**:
+   ```bash
+   # MCP-only stub 탐지
+   grep -l "MCP로 직접\|MCP로 적용\|이 파일은.*이력 기록용" supabase/migrations/*.sql
+   # 함수 정의 파일 카탈로그
+   grep -l "CREATE OR REPLACE FUNCTION public\.fn_" supabase/migrations/*.sql
+   ```
+
 ### pg_cron 규칙 (v1.1 M14 교훈)
 1. **UTC 기준** — KST 00:00은 `0 15 * * *` (UTC 15:00 전날). cron expression에 주석 필수
 2. **Idempotent migration** — 재실행 안전하도록 `unschedule` 후 재등록:
