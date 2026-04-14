@@ -42,10 +42,15 @@
         <span class="block text-xs text-gray-500 mb-1">직책</span>
         <input name="job_title" value={p?.job_title ?? ''} placeholder="팀장, 파트장" class="w-full rounded border px-2 py-1.5 text-sm" />
       </label>
-      <label class="block">
+      <div class="block">
         <span class="block text-xs text-gray-500 mb-1">직급</span>
-        <input name="job_position" value={p?.job_position ?? ''} placeholder="과장, 차장" class="w-full rounded border px-2 py-1.5 text-sm" />
-      </label>
+        <div class="w-full rounded border bg-gray-50 px-2 py-1.5 text-sm text-gray-700">
+          {data.assignedJobTitle ? `${data.assignedJobTitle.name} (Lv.${data.assignedJobTitle.level})` : '미지정'}
+        </div>
+        <span class="mt-1 block text-xs text-gray-400">
+          직급은 관리자가 `관리 &gt; 조직 관리 &gt; 멤버 배정`에서 지정합니다.
+        </span>
+      </div>
       <label class="block">
         <span class="block text-xs text-gray-500 mb-1">사무실 전화</span>
         <input name="phone_office" value={p?.phone_office ?? ''} class="w-full rounded border px-2 py-1.5 text-sm" />

@@ -35,10 +35,24 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
     .eq('id', locals.user.id)
     .maybeSingle();
 
+  // 직급은 admin이 `관리 > 조직 관리 > 멤버 배정` 에서 할당 (tenant_members.job_title_id).
+  // 내 프로필에서는 읽기 전용 표시만.
+  const { data: tm } = await locals.supabase
+    .from('tenant_members')
+    .select('job_title:job_titles(name, level)')
+    .eq('user_id', locals.user.id)
+    .eq('tenant_id', currentTenant.id)
+    .maybeSingle();
+
+  const assignedJobTitle = tm?.job_title as unknown as { name: string; level: number } | null;
+
   return {
     profile: profile ?? null,
     fullName: (baseProfile?.display_name as string) ?? '',
-    email: locals.user.email ?? ''
+    email: locals.user.email ?? '',
+    assignedJobTitle: assignedJobTitle
+      ? { name: assignedJobTitle.name, level: assignedJobTitle.level }
+      : null
   };
 };
 
@@ -58,7 +72,8 @@ export const actions: Actions = {
       phone_office: (fd.get('phone_office') as string) || null,
       phone_mobile: (fd.get('phone_mobile') as string) || null,
       job_title: (fd.get('job_title') as string) || null,
-      job_position: (fd.get('job_position') as string) || null,
+      // job_position은 프로필에서 편집 불가. admin이 tenant_members.job_title_id로 관리.
+      // 폼에서 필드 제거했으므로 payload에서도 제외 (기존 값 보존).
       bio: (fd.get('bio') as string) || null,
       updated_at: new Date().toISOString()
     };
