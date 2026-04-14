@@ -1,9 +1,10 @@
-# ─── Rigel App Container (단독) ───
-# Supabase는 supabase-docker/에서 별도 실행
+# ─── Rigel App Container (ONLY) ───
+# Supabase는 supabase-docker/ 에서 별도 compose로 실행됨.
+# 이 파일은 절대 Supabase 서비스를 포함하지 않음.
 #
-# 사용 순서:
-#   1. cd supabase-docker && docker compose up -d  (Supabase 실행)
-#   2. cd .. && docker compose up -d --build       (Rigel 앱 실행)
+# 사용 순서 (install.sh가 자동):
+#   1. cd supabase-docker && docker compose up -d
+#   2. cd .. && docker compose up -d --build
 
 name: rigel
 
@@ -17,9 +18,17 @@ services:
         PUBLIC_SUPABASE_URL: ${PUBLIC_SUPABASE_URL:-http://localhost:8000}
         PUBLIC_SUPABASE_ANON_KEY: ${PUBLIC_SUPABASE_ANON_KEY:-}
     restart: unless-stopped
-    network_mode: host
     environment:
       PUBLIC_SUPABASE_URL: ${PUBLIC_SUPABASE_URL:-http://localhost:8000}
       PUBLIC_SUPABASE_ANON_KEY: ${PUBLIC_SUPABASE_ANON_KEY}
+      SUPABASE_INTERNAL_URL: http://kong:8000
       ORIGIN: ${SITE_URL:-http://localhost:3000}
-      PORT: ${APP_PORT:-3000}
+      PORT: 3000
+    ports:
+      - "${APP_PORT:-3000}:3000"
+
+# supabase compose가 생성한 네트워크에 가입
+networks:
+  default:
+    name: supabase_default
+    external: true

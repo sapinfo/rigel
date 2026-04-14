@@ -197,21 +197,19 @@
 
       {#if installTab === 'prod'}
         <div class="mb-6 rounded-lg border-l-4 border-blue-500 bg-blue-50 p-4 text-sm text-gray-700">
-          개발 환경과 동일한 구조입니다. Supabase CLI + Docker로 실행합니다.
+          Supabase 공식 셀프호스팅 + Rigel 앱 컨테이너 분리 구조. <strong>Docker만 있으면 됩니다.</strong>
         </div>
         <div class="mb-8 rounded-lg border bg-gray-50 p-5">
           <h3 class="font-bold text-sm text-gray-500 mb-3">사전 요구 사항</h3>
           <div class="flex flex-wrap gap-3">
-            <span class="rounded bg-white border px-3 py-1.5 text-sm">Docker (또는 Podman)</span>
-            <span class="rounded bg-white border px-3 py-1.5 text-sm">Node.js 22+</span>
-            <span class="rounded bg-white border px-3 py-1.5 text-sm">Supabase CLI</span>
+            <span class="rounded bg-white border px-3 py-1.5 text-sm">Linux (Ubuntu 24.04+)</span>
+            <span class="rounded bg-white border px-3 py-1.5 text-sm">Docker + Docker Compose</span>
             <span class="rounded bg-white border px-3 py-1.5 text-sm">Git</span>
-            <span class="rounded bg-white border px-3 py-1.5 text-sm">서버 또는 PC (CPU 4코어, RAM 16GB 이상)</span>
+            <span class="rounded bg-white border px-3 py-1.5 text-sm">서버 (CPU 4코어, RAM 16GB, 디스크 40GB)</span>
           </div>
-          <div class="mt-3 text-xs text-gray-500 space-y-1">
-            <p>Docker: <a href="https://docs.docker.com/get-docker/" class="text-blue-600 hover:underline" target="_blank" rel="noopener">docs.docker.com/get-docker</a></p>
-            <p>Node.js: <a href="https://nodejs.org/" class="text-blue-600 hover:underline" target="_blank" rel="noopener">nodejs.org</a></p>
-            <p>Supabase CLI: <a href="https://supabase.com/docs/guides/cli/getting-started" class="text-blue-600 hover:underline" target="_blank" rel="noopener">supabase.com/docs/guides/cli</a></p>
+          <div class="mt-3 text-xs text-gray-500">
+            <p>Docker 설치: <a href="https://docs.docker.com/get-docker/" class="text-blue-600 hover:underline" target="_blank" rel="noopener">docs.docker.com/get-docker</a></p>
+            <p class="mt-1">Node.js, Supabase CLI는 <strong>불필요</strong>합니다 (컨테이너로 실행).</p>
           </div>
         </div>
 
@@ -231,12 +229,13 @@
         <div class="mt-8 rounded-lg border bg-gray-50 p-5 text-sm">
           <h3 class="font-bold text-gray-700 mb-2">자주 쓰는 명령어</h3>
           <div class="space-y-1 text-xs font-mono text-gray-600">
-            <p><span class="text-gray-400">앱 중지:</span> docker compose down</p>
-            <p><span class="text-gray-400">Supabase 중지:</span> supabase stop</p>
-            <p><span class="text-gray-400">재시작:</span> docker compose restart</p>
-            <p><span class="text-gray-400">업데이트:</span> git pull && npm run build && docker compose up -d --build</p>
-            <p><span class="text-gray-400">DB 초기화:</span> supabase db reset</p>
+            <p><span class="text-gray-400">Rigel 중지:</span> docker compose down</p>
+            <p><span class="text-gray-400">Rigel 재시작:</span> docker compose restart</p>
+            <p><span class="text-gray-400">Rigel 로그:</span> docker compose logs -f app</p>
+            <p><span class="text-gray-400">Rigel 업데이트:</span> git pull && docker compose up -d --build</p>
+            <p class="mt-2"><span class="text-gray-400">Supabase 중지:</span> cd supabase-docker && docker compose down</p>
           </div>
+          <p class="mt-3 text-xs text-red-600">⚠ docker system prune / docker volume rm 절대 금지 (데이터 손실)</p>
         </div>
 
       {:else}

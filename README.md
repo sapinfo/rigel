@@ -81,47 +81,77 @@ Rigel은:
 
 ## 프로덕션 설치 (Linux 권장)
 
-Linux 서버(Ubuntu 24.04 검증) 한 대에서 Supabase CLI + Docker로 운영합니다.
+Supabase 공식 셀프호스팅 + Rigel 앱 컨테이너 분리 구조. Docker만 있으면 됩니다.
 
 ### 사전 요구
 
 - **Linux** (Ubuntu 24.04+ 권장) 또는 macOS
 - **Docker** + Docker Compose — https://docs.docker.com/get-docker/
-- **Node.js 22+** — https://nodejs.org/
-- **Supabase CLI** — https://supabase.com/docs/guides/cli/getting-started
-- **Git**
+- **Git**, **curl**, **openssl** (대부분 OS 기본 탑재)
 - 서버 또는 PC (CPU 4코어, RAM 16GB 이상, 디스크 40GB 이상)
 
-### 원클릭 설치
+> Node.js와 Supabase CLI는 **불필요**합니다. 모두 컨테이너로 실행됩니다.
 
-사전 요구가 설치된 상태에서 터미널에 아래 한 줄만 실행하세요.
+### 원클릭 설치
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/sapinfo/rigel/main/install.sh | bash
 ```
 
-스크립트가 자동으로 수행:
-1. 소스 다운로드 (`git clone`)
-2. Supabase 시작 (`supabase start`)
-3. DB 초기화 (`supabase db reset` — 71 migrations + seed)
-4. 환경변수 자동 생성 (`.env`, `.env.local`)
-5. 앱 빌드 (`npm ci && npm run build`)
-6. 앱 실행 (`docker compose up -d`)
+스크립트가 자동으로:
+1. 사전 요구 체크 + 디스크 공간 체크 (10GB+)
+2. 소스 다운로드
+3. Supabase 보안 키 자동 생성 (openssl)
+4. Supabase 공식 스택 기동 (`supabase-docker/`)
+5. DB healthcheck 대기
+6. Rigel migration 71개 + seed 적용 (멱등성 보장)
+7. Rigel 앱 `.env` 생성
+8. Rigel 앱 빌드 + 기동
 
 완료 후 `http://서버IP:3000` 접속 → 회원가입 → 조직 생성 → 사용 시작.
 
-### 자주 쓰는 명령어
+### 구조
 
-```bash
-docker compose down                         # 앱 중지
-supabase stop                               # Supabase 중지
-docker compose restart                      # 앱 재시작
-docker compose logs -f app                  # 로그 확인
-supabase db reset                           # DB 초기화 (seed 재적용)
-git pull && npm run build && docker compose up -d --build  # 업데이트
+```
+rigel/
+├── supabase-docker/        ★ Supabase 공식 셀프호스팅 (수정하지 말 것)
+│   ├── docker-compose.yml
+│   ├── .env                 (auto-generated)
+│   └── volumes/             (DB, storage 데이터)
+│
+├── docker-compose.yml       ★ Rigel 앱 전용 (1 컨테이너)
+├── .env                     (auto-generated)
+├── install.sh               원클릭 설치
+│
+└── supabase/
+    ├── migrations/          71 files (DB 스키마)
+    └── seed.sql             테스트 데이터
 ```
 
-> **데이터 영속성**: Supabase는 Docker volume에 데이터 저장. `supabase stop` 해도 유지됩니다.
+### 자주 쓰는 명령어
+
+**Rigel 앱**:
+```bash
+docker compose down                    # 중지
+docker compose restart                 # 재시작
+docker compose logs -f app             # 로그
+git pull && docker compose up -d --build  # 업데이트
+```
+
+**Supabase**:
+```bash
+cd supabase-docker
+docker compose down                    # 중지
+docker compose logs -f                 # 로그
+```
+
+### ⚠ 금지 사항
+
+- ❌ `docker system prune` — 이미지 캐시 전부 삭제됨 (재설치 시 수 GB 재다운로드)
+- ❌ `docker volume rm` — **모든 데이터 소실** (복구 불가)
+- ❌ `supabase-docker/` 디렉토리 수정 — 공식 파일 (업그레이드 충돌)
+
+> **재실행 안전**: `docker compose down` 해도 데이터는 volume에 보존됩니다.
 
 ---
 
