@@ -2,6 +2,7 @@
 
 | Feature | Status | Match | Archived | Path |
 |---|---|---|---|---|
+| 프로덕션-docker-배포 | completed | 94% | 2026-04-14 | [프로덕션-docker-배포/](./프로덕션-docker-배포/) |
 | 그룹웨어-v3.1-확장 | completed | 98% | 2026-04-12 | [그룹웨어-v3.1-확장/](./그룹웨어-v3.1-확장/) |
 | 결재선-v3.0-polish-final | completed | 95% | 2026-04-13 | [결재선-v3.0-polish-final/](./결재선-v3.0-polish-final/) |
 | 결재선-v2.3-polish | completed | 92% | 2026-04-12 | [결재선-v2.3-polish/](./결재선-v2.3-polish/) |
@@ -11,6 +12,26 @@
 | 전자결재-v1.3-realtime-notification | completed | 91% | 2026-04-12 | [전자결재-v1.3-realtime-notification/](./전자결재-v1.3-realtime-notification/) |
 | 전자결재-v1.2-parallel-pdf-hash-signature | completed | 90% | 2026-04-11 | [전자결재-v1.2-parallel-pdf-hash-signature/](./전자결재-v1.2-parallel-pdf-hash-signature/) |
 | 전자결재-v1.1-korean-exceptions | completed | 94% | 2026-04-11 | [전자결재-v1.1-korean-exceptions/](./전자결재-v1.1-korean-exceptions/) |
+
+## 프로덕션-docker-배포
+
+**Match Rate 94%** · 2026-04-13 ~ 2026-04-14 · 2 commits
+
+v1 통합 install.sh (맥북/우분투 `/opt` 권한 문제로 실패) → **v2 pivot**: Supabase는 공식 가이드에 위임, Rigel 앱만 `install.sh` 자동화. 2-Step 설치 (~8분), 재실행 안전, `_rigel_installed` 마커로 멱등성 보장.
+
+**산출물**:
+- [plan.md](./프로덕션-docker-배포/plan.md) — v1→v2 Architecture Revision 포함
+- [design.md](./프로덕션-docker-배포/design.md) — install.sh 6단계 흐름 + kong 라우팅
+- [analysis.md](./프로덕션-docker-배포/analysis.md) — 17/17 요건 중 16 ✅, G1 패치 완료
+- [report.md](./프로덕션-docker-배포/report.md) — 완료 보고서
+
+**핵심 메트릭**: +416/-2309 (rev 2 refactor) · +193 (G1 docs patch) · install.sh 260→170줄 · `supabase-docker/` 14 파일 git 제거 · E2E 6/7 통과 (macOS+Colima)
+
+**교훈**: 자신이 통제 불가능한 환경 변수(호스트 권한·Docker Desktop 파일공유)를 설치 스크립트로 예측하지 말 것. 공식 가이드에 위임이 최선.
+
+**후속 feature 후보**: `boards-ux-fix` (use:enhance reset), `rls-admin-scope-fix` (admin 부서 가시성)
+
+---
 
 ## 결재선-v2.1-보강
 
