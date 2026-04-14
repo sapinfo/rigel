@@ -22,7 +22,10 @@ services:
       PUBLIC_SUPABASE_URL: ${PUBLIC_SUPABASE_URL:-http://localhost:8000}
       PUBLIC_SUPABASE_ANON_KEY: ${PUBLIC_SUPABASE_ANON_KEY}
       SUPABASE_INTERNAL_URL: http://kong:8000
-      ORIGIN: ${SITE_URL:-http://localhost:3000}
+      # ORIGIN 고정 대신 reverse proxy (Cloudflare Tunnel 등)의 헤더에서 동적 해석.
+      # apex + 서브도메인 + localhost 접근 모두 CSRF origin check 통과.
+      PROTOCOL_HEADER: x-forwarded-proto
+      HOST_HEADER: x-forwarded-host
       PORT: 3000
     ports:
       - "${APP_PORT:-3000}:3000"
