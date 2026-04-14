@@ -324,14 +324,122 @@ cat backup.sql | podman exec -i supabase-db psql -U supabase_admin
 
 ### Q10. 재부팅 후 컨테이너 자동 기동 안 됨
 
-- 원인: `podman.socket`이 user systemd에 등록되지 않았거나 linger 미설정
-- 해결:
-  ```bash
-  systemctl --user enable --now podman.socket
-  loginctl enable-linger $USER
-  # 컨테이너 자동 기동은 별도로 generate systemd 필요
-  ```
-  각 컨테이너에 `--restart=always` 가 붙어있는지 확인 (compose는 기본값 `no`)
+- 원인 (중요): **rootless Podman은 docker와 달리 재부팅 시 `podman-compose up` 을 자동 호출하지 않음**. Docker는 system 데몬이 자동 기동되며 이전 컨테이너 상태를 복원하지만, rootless Podman은 데몬이 없고 사용자 세션에서 실행되기 때문.
+- 필요 조건 3단계:
+  1. `systemctl --user enable --now podman.socket` (소켓만 열림)
+  2. `loginctl enable-linger $USER` (로그아웃 후에도 user systemd 유지)
+  3. **compose project 별 systemd user service 등록** — 아래 [자동 기동 설정](#자동-기동-설정-재부팅정전-복구) 섹션 참조
+- `docker-compose.yml` 의 `restart: unless-stopped` 는 podman 세션이 살아있는 동안만 동작. 세션 자체를 부팅 시 살리는 게 위 3단계.
+
+## 자동 기동 설정 (재부팅·정전 복구)
+
+rootless Podman + compose 프로젝트를 부팅 시 자동 기동하려면 **systemd user unit**을 별도로 만들어야 함. Rigel 배포의 2개 프로젝트(Supabase self-host + Rigel 앱) 기준 절차.
+
+### 1단계: linger 및 podman 소켓 확인 (설치 시 수행)
+
+```bash
+loginctl enable-linger $USER
+systemctl --user enable --now podman.socket
+```
+
+### 2단계: compose 프로젝트별 user service 파일 생성
+
+`~/.config/systemd/user/supabase-compose.service`:
+
+```ini
+[Unit]
+Description=Supabase self-host (podman-compose)
+After=network-online.target podman.socket
+Wants=podman.socket
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/home/<USER>/supabase/docker
+ExecStart=/usr/bin/podman-compose up -d
+ExecStop=/usr/bin/podman-compose stop
+TimeoutStartSec=600
+
+[Install]
+WantedBy=default.target
+```
+
+`~/.config/systemd/user/rigel-compose.service` (Rigel 앱 있으면):
+
+```ini
+[Unit]
+Description=Rigel app (podman-compose)
+After=network-online.target podman.socket supabase-compose.service
+Wants=podman.socket
+Requires=supabase-compose.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/home/<USER>/rigel
+ExecStart=/usr/bin/podman-compose up -d
+ExecStop=/usr/bin/podman-compose stop
+TimeoutStartSec=600
+
+[Install]
+WantedBy=default.target
+```
+
+- `Requires=supabase-compose.service` — Rigel 앱은 Supabase 의존 → 순서 보장
+- `Type=oneshot + RemainAfterExit=yes` — `up -d` 후 종료해도 systemd에게 "active" 상태로 표시됨
+- `WorkingDirectory` 는 **절대경로** 필수 (`~` 확장 안 됨)
+
+### 3단계: 등록 및 검증
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable supabase-compose.service rigel-compose.service
+systemctl --user start supabase-compose.service rigel-compose.service
+
+# 상태 확인
+systemctl --user is-active supabase-compose.service rigel-compose.service
+# → active, active
+systemctl --user is-enabled supabase-compose.service rigel-compose.service
+# → enabled, enabled
+```
+
+### 4단계: 실전 검증 (선택)
+
+유휴 시간에 실제 재부팅으로 검증:
+
+```bash
+sudo reboot
+# 2~3분 대기 후
+ssh <server>    # Tailscale 또는 LAN 경유
+podman ps --format "table {{.Names}}\t{{.Status}}"
+# 14개(Supabase 13 + Rigel 1) 전부 Up 이어야 정상
+```
+
+### 5단계 (물리 서버): BIOS AC Recovery 설정
+
+OS/systemd 설정만으론 **머신 전원이 꺼진 상태에서 복전** 시 부팅 안 됨. BIOS 레벨 설정 필수:
+
+1. 서버 물리 접근 → 재부팅 시 BIOS (F2/Del/F12 등) 진입
+2. 메뉴: Power Management / Advanced / Chipset (제조사별 상이)
+3. **Restore on AC Power Loss** 또는 **AC Recovery** → `Power On` / `Always On`
+4. Save + Exit
+
+| 설정값 | 복전 후 동작 |
+|---|---|
+| Power Off / Stay Off (기본 많음) | 수동 전원 버튼 필요 ❌ |
+| **Power On / Always On** | **전자동 부팅 ✅** |
+| Last State | 나가기 전 상태 복귀 (불확실) |
+
+### 완전 자동 복구 조합
+
+| 계층 | 구성 | 효과 |
+|---|---|---|
+| BIOS | AC Recovery = Power On | 복전 자동 부팅 |
+| OS | ssh.socket / tailscaled / cloudflared systemd enabled | 네트워크·원격 접속 자동 |
+| User systemd | linger + podman.socket + supabase-compose + rigel-compose | 컨테이너 자동 기동 |
+| (선택) UPS | 무정전 전원장치 | 정전 시 grace shutdown + 복전 시 중단 최소화 |
+
+위 조합으로 **정전 → 복전 시 사람 개입 없이 서비스 완전 복구** 구현 가능.
 
 ## 파괴적 명령 금지 규칙
 
@@ -354,6 +462,8 @@ cat backup.sql | podman exec -i supabase-db psql -U supabase_admin
 - [ ] `loginctl show-user $USER | grep Linger` → `Linger=yes`
 - [ ] `podman ps` → 13개 컨테이너 Up (healthcheck 있는 10개는 healthy)
 - [ ] Studio 로그인 성공 (`http://<SERVER_IP>:8000`)
+- [ ] `systemctl --user is-enabled supabase-compose.service` → enabled (재부팅 자동 기동)
+- [ ] (물리 서버) BIOS "Restore on AC Power Loss" = Power On (정전 자동 복구)
 
 ## 참고
 
