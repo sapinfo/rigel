@@ -4,8 +4,7 @@
    * 사용: <ProfileCard userId={id} name={name} tenantSlug={slug} />
    * employee_profiles 데이터가 있으면 직책/연락처 표시.
    */
-  import { createBrowserClient } from '@supabase/ssr';
-  import { env } from '$env/dynamic/public';
+  import { createRigelBrowserClient } from '$lib/client/supabase';
 
   interface Props {
     userId: string;
@@ -27,7 +26,7 @@
   async function loadProfile() {
     if (loaded) return;
     loaded = true;
-    const supabase = createBrowserClient(env.PUBLIC_SUPABASE_URL!, env.PUBLIC_SUPABASE_ANON_KEY!);
+    const supabase = createRigelBrowserClient();
     const { data } = await supabase
       .from('employee_profiles')
       .select('job_title, job_position, phone_mobile, phone_office')

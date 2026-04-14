@@ -1,8 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { onMount } from 'svelte';
-  import { createBrowserClient } from '@supabase/ssr';
-  import { env } from '$env/dynamic/public';
+  import { createRigelBrowserClient } from '$lib/client/supabase';
   import NotificationBell from '$lib/components/NotificationBell.svelte';
   import Sidebar from '$lib/components/Sidebar.svelte';
   import AnnouncementPopup from '$lib/components/AnnouncementPopup.svelte';
@@ -30,7 +29,7 @@
   }
 
   onMount(() => {
-    const supabase = createBrowserClient(env.PUBLIC_SUPABASE_URL!, env.PUBLIC_SUPABASE_ANON_KEY!);
+    const supabase = createRigelBrowserClient();
 
     supabase
       .rpc('get_notifications', { p_tenant_id: data.currentTenant.id })

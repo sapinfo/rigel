@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { createBrowserClient } from '@supabase/ssr';
-  import { env } from '$env/dynamic/public';
+  import { createRigelBrowserClient } from '$lib/client/supabase';
 
   interface PopupAnnouncement {
     id: string;
@@ -24,7 +23,7 @@
   const hasMore = $derived(currentIndex < total - 1);
 
   async function markRead(id: string) {
-    const supabase = createBrowserClient(env.PUBLIC_SUPABASE_URL!, env.PUBLIC_SUPABASE_ANON_KEY!);
+    const supabase = createRigelBrowserClient();
     await supabase.from('announcement_reads').insert({
       announcement_id: id,
       user_id: (await supabase.auth.getUser()).data.user?.id,

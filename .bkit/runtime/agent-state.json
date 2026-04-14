@@ -1,35 +1,14 @@
 {
   "version": "1.0",
-  "enabled": true,
+  "enabled": false,
   "teamName": "",
-  "feature": "전자결재-v1.1-korean-exceptions",
-  "pdcaPhase": "archived",
+  "feature": "Rigel",
+  "pdcaPhase": "do",
   "orchestrationPattern": "leader",
   "ctoAgent": "opus",
-  "startedAt": "2026-04-12T05:10:14.744Z",
-  "lastUpdated": "2026-04-12T05:16:45.284Z",
-  "teammates": [
-    {
-      "name": "a067786e7ae8ab67f",
-      "role": "bkit:gap-detector",
-      "model": "sonnet",
-      "status": "completed",
-      "currentTask": null,
-      "taskId": null,
-      "startedAt": "2026-04-12T05:10:14.745Z",
-      "lastActivityAt": "2026-04-12T05:12:25.122Z"
-    },
-    {
-      "name": "aa9fa0334e6cbac83",
-      "role": "bkit:report-generator",
-      "model": "sonnet",
-      "status": "completed",
-      "currentTask": null,
-      "taskId": null,
-      "startedAt": "2026-04-12T05:15:02.684Z",
-      "lastActivityAt": "2026-04-12T05:16:45.283Z"
-    }
-  ],
+  "startedAt": "2026-04-14T03:46:22.119Z",
+  "lastUpdated": "2026-04-14T03:50:25.052Z",
+  "teammates": [],
   "progress": {
     "totalTasks": 0,
     "completedTasks": 0,
@@ -38,5 +17,5 @@
     "pendingTasks": 0
   },
   "recentMessages": [],
-  "sessionId": "ee387e39-9a62-41a2-9593-3cf50334073f"
+  "sessionId": "e4b8870a-e417-4744-9332-f061e0442f8f"
 }

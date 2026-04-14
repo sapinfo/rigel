@@ -30,6 +30,13 @@ const supabase: Handle = async ({ event, resolve }) => {
     serverUrl,
     env.PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // cookieOptions.name 명시 → 서버/클라이언트가 같은 쿠키 이름 사용.
+      // 기본값은 URL의 첫 서브도메인으로 naming됨 (예: http://kong:8000 → sb-kong-auth-token).
+      // 서버는 SUPABASE_INTERNAL_URL=http://kong:8000, 클라이언트는 PUBLIC_SUPABASE_URL=https://api.x 로
+      // URL이 달라지면 쿠키 이름 미스매치 → 클라이언트가 세션 못 읽음.
+      cookieOptions: {
+        name: 'sb-rigel-auth-token'
+      },
       cookies: {
         getAll: () => event.cookies.getAll(),
         setAll: (cookiesToSet: { name: string; value: string; options: CookieOptions }[]) => {

@@ -35,3 +35,18 @@ Exec Summary 5번째 불릿: Next.js → SvelteKit
 변경 diff 요약 보고
 대기합니다.
 
+이전 세션에서 v4.0 후보 4가지가 결정되어 있습니다:
+
+#	후보	성격
+1	AI 문서 요약/결재선 추천 (Claude API)	차별화 — AI Native
+2	Webhook/API 외부 연동	확장성 — 외부 시스템 통합
+3	사내 메신저 (WebSocket)	Retention — 일상 소통
+4	React Native 모바일 앱	접근성 — 모바일 결재
+어떤 방향으로 갈지 결정이 필요합니다. 4개 중 골라주시면 바로 /pdca plan으로 진행하겠습니다. 혹은 전체를 v4.0 범위로 묶을 수도 있습니다.
+
+─────────────────────────────────────────────────
+📊 bkit Feature Usage
+─────────────────────────────────────────────────
+✅ Used: Read (memory), Write (memory update)
+⏭️ Not Used: /pdca pm (사용자 선택 대기), /pdca plan (다음 단계)
+💡 Recommended: 후보 선택 → /pdca plan {feature} 또는 /pdca pm {feature} (PM 분석 포함)

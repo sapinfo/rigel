@@ -1,6 +1,5 @@
 import { browser } from '$app/environment';
-import { createBrowserClient } from '@supabase/ssr';
-import { env } from '$env/dynamic/public';
+import { createRigelBrowserClient } from '$lib/client/supabase';
 
 /**
  * Client-side attachment upload.
@@ -47,10 +46,7 @@ export async function uploadAttachment(
 ): Promise<UploadedAttachment> {
   if (!browser) throw new Error('Client only');
 
-  const supabase = createBrowserClient(
-    env.PUBLIC_SUPABASE_URL!,
-    env.PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createRigelBrowserClient();
 
   const uploadUuid = crypto.randomUUID();
   const ext = extractExt(file.name);
