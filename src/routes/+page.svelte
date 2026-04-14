@@ -360,6 +360,20 @@
               <p class="font-semibold text-gray-900">Rigel 앱에서 "Supabase not running" 에러</p>
               <p class="mt-1 text-xs text-gray-600"><code>install.sh</code>는 <code>supabase-db</code> 컨테이너와 <code>supabase_default</code> 네트워크가 있어야 동작합니다. Supabase 공식 스택이 기동 중인지 <code>docker compose ps</code>로 먼저 확인하세요.</p>
             </div>
+
+            <div>
+              <p class="font-semibold text-gray-900">회원가입 시 "Error sending confirmation email" 에러</p>
+              <p class="mt-1 text-xs text-gray-600">SMTP가 구성되지 않은 상태에서 Supabase auth가 이메일 확인을 요구하기 때문입니다. 사내 그룹웨어라면 이메일 확인을 끄는 게 간단합니다.</p>
+              <p class="mt-1 text-xs text-gray-600">해결: <code class="bg-gray-100 px-1 rounded">~/supabase/docker/.env</code>에 <code class="bg-gray-100 px-1 rounded">ENABLE_EMAIL_AUTOCONFIRM=true</code> (기본 <code>false</code>) 설정 후 auth 컨테이너 재기동:</p>
+              <pre class="mt-1 text-xs bg-gray-900 text-green-400 rounded p-2 overflow-x-auto">cd ~/supabase/docker
+docker compose up -d auth   # ⚠ restart 아님 — .env 재로드 필요</pre>
+              <p class="mt-1 text-xs text-gray-600">실제 이메일 확인을 쓰려면 <code>.env</code>의 <code>SMTP_HOST/PORT/USER/PASS/ADMIN_EMAIL/SENDER_NAME</code>을 실제 SMTP 서버 값으로 구성.</p>
+            </div>
+
+            <div>
+              <p class="font-semibold text-gray-900"><code>.env</code> 변경이 반영되지 않음</p>
+              <p class="mt-1 text-xs text-gray-600"><code>docker compose restart</code>는 env를 재로드하지 않습니다. 반드시 <code>docker compose up -d &lt;service&gt;</code> (또는 전체 <code>up -d</code>)로 컨테이너를 재생성해야 새 env가 주입됩니다.</p>
+            </div>
           </div>
         </details>
 

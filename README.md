@@ -206,6 +206,20 @@ docker compose logs -f                    # 로그
 **Rigel 앱 "Supabase not running" 에러**
 → `install.sh`는 `supabase-db` 컨테이너와 `supabase_default` 네트워크가 있어야 동작. `docker compose ps`로 Supabase 기동 먼저 확인.
 
+**회원가입 시 "Error sending confirmation email" 에러**
+→ SMTP가 구성되지 않은 상태에서 Supabase auth가 이메일 확인을 요구하기 때문. 사내 그룹웨어라면 이메일 확인을 끄는 것이 간단합니다.
+→ 해결: `~/supabase/docker/.env`에 `ENABLE_EMAIL_AUTOCONFIRM=true` (기본값 `false`에서 변경) 후 auth 컨테이너 재기동:
+
+```bash
+cd ~/supabase/docker
+docker compose up -d auth   # ⚠ restart 아님 — compose restart는 .env 변경을 재로드하지 않음
+```
+
+→ 실제 이메일 확인을 쓰려면 대신 `.env`의 `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_ADMIN_EMAIL`, `SMTP_SENDER_NAME`을 실제 SMTP 서버 값으로 구성.
+
+**`.env` 변경이 반영되지 않음**
+→ `docker compose restart`는 env를 재로드하지 않습니다. 반드시 `docker compose up -d <service>` (또는 전체 `up -d`)로 컨테이너를 재생성해야 새 env가 주입됩니다.
+
 ---
 
 ## 개발 환경 설치
