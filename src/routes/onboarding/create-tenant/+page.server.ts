@@ -49,6 +49,7 @@ export const actions: Actions = {
     }
 
     const { slug, name } = parsed.data;
+    const withSample = formData.get('withSample') === 'on';
 
     const { data: tenant, error } = await locals.supabase
       .rpc('fn_create_tenant', { p_slug: slug, p_name: name })
@@ -62,6 +63,20 @@ export const actions: Actions = {
       return fail(400, { errors: formError(msg), values });
     }
 
-    redirect(303, `/t/${(tenant as { slug: string }).slug}/approval/inbox`);
+    const tenantData = tenant as { id: string; slug: string };
+
+    // 샘플 데이터 생성 요청 시 — 실패해도 조직 생성은 이미 완료된 상태이므로
+    // fatal로 처리하지 않고 warning만 콘솔에 남기고 inbox로 진행.
+    if (withSample) {
+      const { error: seedErr } = await locals.supabase.rpc('fn_seed_sample_data', {
+        p_tenant_id: tenantData.id
+      });
+      if (seedErr) {
+        // eslint-disable-next-line no-console
+        console.warn('[onboarding] sample data seeding failed:', seedErr.message);
+      }
+    }
+
+    redirect(303, `/t/${tenantData.slug}/approval/inbox`);
   }
 };

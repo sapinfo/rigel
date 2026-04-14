@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-14T19:42:21.872Z",
+  "lastUpdated": "2026-04-14T19:51:45.742Z",
   "primaryFeature": "Rigel",
   "activeFeatures": [
     "그룹웨어-v3.1-확장",
@@ -20,7 +20,8 @@
     "profile",
     "login",
     "routes",
-    "signup"
+    "signup",
+    "create-tenant"
   ],
   "pipeline": {
     "currentPhase": 3,
@@ -46,7 +47,7 @@
   "session": {
     "startedAt": "2026-04-12T00:00:00.000Z",
     "onboardingCompleted": true,
-    "lastActivity": "2026-04-14T19:42:21.872Z"
+    "lastActivity": "2026-04-14T19:51:45.742Z"
   },
   "features": {
     "그룹웨어-v3.1-확장": {
@@ -283,6 +284,19 @@
       "matchRate": 94,
       "archivedAt": "2026-04-14T03:49:18.277768Z",
       "archivedTo": "docs/archive/2026-04/프로덕션-docker-배포/"
+    },
+    "create-tenant": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-14T19:51:26.397Z",
+        "lastUpdated": "2026-04-14T19:51:45.741Z"
+      },
+      "lastFile": "/Users/inseokko/Downloads/Rigel/src/routes/onboarding/create-tenant/+page.svelte"
     }
   },
   "history": [
@@ -1385,6 +1399,18 @@
     {
       "timestamp": "2026-04-14T19:42:21.872Z",
       "feature": "rooms",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:51:26.397Z",
+      "feature": "create-tenant",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-14T19:51:45.741Z",
+      "feature": "create-tenant",
       "phase": "do",
       "action": "updated"
     }

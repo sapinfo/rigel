@@ -85,6 +85,18 @@
       {/if}
     </label>
 
+    <label class="flex items-start gap-2 rounded border bg-blue-50 px-3 py-2">
+      <input type="checkbox" name="withSample" checked class="mt-1" />
+      <span class="text-sm text-gray-700">
+        <span class="font-medium">샘플 데이터 함께 생성</span>
+        <span class="ml-1 text-xs text-gray-500">(체험용)</span>
+        <br />
+        <span class="text-xs text-gray-500">
+          부서·게시판·공지·회의실·근무설정을 미리 채워 바로 둘러볼 수 있게 합니다. 나중에 관리 메뉴에서 수정·삭제 가능.
+        </span>
+      </span>
+    </label>
+
     {#if form?.errors?.form}
       <p class="text-sm text-red-600">{form.errors.form}</p>
     {/if}
