@@ -123,6 +123,21 @@
             onMarkRead={markReadFn}
             onMarkAllRead={markAllReadFn}
           />
+          <a
+            href={`/t/${data.currentTenant.slug}/my/profile`}
+            class="hidden sm:inline text-sm text-gray-600 hover:text-gray-900"
+          >
+            내 프로필
+          </a>
+          <form method="POST" action="/logout">
+            <button
+              type="submit"
+              class="text-sm text-gray-500 hover:text-gray-800"
+              aria-label="로그아웃"
+            >
+              로그아웃
+            </button>
+          </form>
         </div>
       </header>
 
