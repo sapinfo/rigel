@@ -117,7 +117,7 @@
     <!-- v2.2 M5: 재기안 / M6: 독촉 -->
     {#if data.document.drafter_id === data.user?.id}
       <div class="flex items-center gap-2">
-        {#if data.document.status === 'rejected'}
+        {#if data.document.status === 'rejected' || data.document.status === 'withdrawn'}
           <form method="POST" action="?/resubmit" use:enhance={({ }) => {
             return async ({ result }) => {
               if (result.type === 'success' && result.data?.resubmitRedirect) {

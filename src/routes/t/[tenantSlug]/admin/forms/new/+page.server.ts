@@ -93,17 +93,22 @@ export const actions: Actions = {
     }
 
     const { code, name, description, schema, is_published } = parsed.data;
+    const next = fd.get('next')?.toString() === 'builder' ? 'builder' : 'list';
 
-    const { error: err } = await locals.supabase.from('approval_forms').insert({
-      tenant_id: tenant.id,
-      code,
-      name,
-      description,
-      schema,
-      default_approval_line: [],
-      is_published,
-      version: 1
-    });
+    const { data: inserted, error: err } = await locals.supabase
+      .from('approval_forms')
+      .insert({
+        tenant_id: tenant.id,
+        code,
+        name,
+        description,
+        schema,
+        default_approval_line: [],
+        is_published,
+        version: 1
+      })
+      .select('id')
+      .single();
 
     if (err) {
       const msg =
@@ -121,6 +126,9 @@ export const actions: Actions = {
       });
     }
 
+    if (next === 'builder' && inserted?.id) {
+      redirect(303, `/t/${params.tenantSlug}/admin/forms/builder/${inserted.id}`);
+    }
     redirect(303, `/t/${params.tenantSlug}/admin/forms`);
   }
 };

@@ -109,7 +109,7 @@
         onconsider={handleDndConsider}
         onfinalize={handleDndFinalize}
       >
-        {#each fields as field, i (field.dndId)}
+        {#each fields as field, i (field.id)}
           <button
             type="button"
             class="flex w-full items-center gap-3 rounded border bg-white px-4 py-3 text-left text-sm shadow-sm transition hover:shadow"

@@ -38,52 +38,64 @@
 
   onMount(() => {
     const supabase = createRigelBrowserClient();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    supabase
-      .rpc('get_notifications', { p_tenant_id: data.currentTenant.id })
-      .then(({ data: rows }) => {
-        if (rows) notifications = (rows as Record<string, unknown>[]).map(mapRow);
-      });
+    // IIFE: onMount 는 cleanup 동기 반환이 필요하지만 supabase.auth.getSession() 은 async.
+    // 즉시 실행 async 로 내부 세팅, 바깥 cleanup 은 channel 참조로 해제.
+    (async () => {
+      // 구독 전 세션 확인 — realtime client 에 JWT 주입 보장.
+      // 미주입 시 WS 는 열리지만 channel join 이 인증 없이 서버에서 무시됨
+      // ("Killing N transport pids with no channels open" 증상).
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
 
-    const userId = page.data.session?.user?.id ?? '';
-    const channel = supabase
-      .channel(`notif:${data.currentTenant.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${userId}`
-        },
-        (payload: { new: Record<string, unknown> }) => {
-          const notif = mapRow(payload.new);
-          notif.read = false;
-          notifications = [notif, ...notifications];
-          unreadCount++;
-        }
-      )
-      .subscribe();
+      supabase
+        .rpc('get_notifications', { p_tenant_id: data.currentTenant.id })
+        .then(({ data: rows }) => {
+          if (rows) notifications = (rows as Record<string, unknown>[]).map(mapRow);
+          // 배지를 SSR 값 → 로컬 notifications.filter 결과 기준으로 전환.
+          // 이후 n.read=true 변이에 $derived 가 자동 재계산되어 클릭 시 즉시 배지 갱신.
+          notifLoaded = true;
+        });
+
+      const userId = session.user.id;
+      channel = supabase
+        .channel(`notif:${data.currentTenant.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${userId}`
+          },
+          (payload: { new: Record<string, unknown> }) => {
+            const notif = mapRow(payload.new);
+            notif.read = false;
+            notifications = [notif, ...notifications];
+            // unreadCount 는 $derived — notifications 변화로 자동 재계산.
+          }
+        )
+        .subscribe();
+    })();
 
     markReadFn = async (id: string) => {
       const n = notifications.find((n) => n.id === id);
       if (n && !n.read) {
-        n.read = true;
-        unreadCount = Math.max(0, unreadCount - 1);
+        n.read = true; // $state proxy 변이 → unreadCount $derived 자동 재계산
         await supabase.rpc('mark_notification_read', { p_notification_id: id });
       }
     };
 
     markAllReadFn = async () => {
       notifications.forEach((n) => (n.read = true));
-      unreadCount = 0;
       await supabase.rpc('mark_all_notifications_read', {
         p_tenant_id: data.currentTenant.id
       });
     };
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   });
 
@@ -131,6 +143,15 @@
             onMarkRead={markReadFn}
             onMarkAllRead={markAllReadFn}
           />
+          <div class="hidden sm:flex items-center gap-1.5 text-sm">
+            <span class="font-medium text-gray-900">{data.currentUser.displayName}</span>
+            {#if data.currentUser.jobPosition}
+              <span class="text-xs text-gray-500">{data.currentUser.jobPosition}</span>
+            {/if}
+            {#if data.currentUser.email}
+              <span class="text-xs text-gray-400 hidden md:inline">· {data.currentUser.email}</span>
+            {/if}
+          </div>
           <a
             href={`/t/${data.currentTenant.slug}/my/profile`}
             class="hidden sm:inline text-sm text-gray-600 hover:text-gray-900"

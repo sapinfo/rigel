@@ -475,7 +475,7 @@ export const actions: Actions = {
       .eq('tenant_id', currentTenant.id)
       .single();
 
-    if (!doc || doc.status !== 'rejected') return fail(400, { actionError: '반려된 문서만 재기안할 수 있습니다' });
+    if (!doc || !['rejected', 'withdrawn'].includes(doc.status as string)) return fail(400, { actionError: '반려·회수된 문서만 재기안할 수 있습니다' });
     if (doc.drafter_id !== locals.user.id) return fail(403, { actionError: '본인이 기안한 문서만 재기안할 수 있습니다' });
 
     // 새 draft 생성

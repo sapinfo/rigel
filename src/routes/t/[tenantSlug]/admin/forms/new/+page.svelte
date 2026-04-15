@@ -108,10 +108,22 @@
       </a>
       <button
         type="submit"
+        name="next"
+        value="list"
         disabled={submitting}
-        class="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+        class="rounded border border-blue-600 px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 disabled:opacity-50"
       >
         {submitting ? '생성 중…' : '양식 생성'}
+      </button>
+      <button
+        type="submit"
+        name="next"
+        value="builder"
+        disabled={submitting}
+        class="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+        title="생성 후 빌더로 이동"
+      >
+        {submitting ? '생성 중…' : '빌더로 생성 →'}
       </button>
     </div>
   </form>

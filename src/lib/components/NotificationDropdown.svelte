@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Notification, NotificationType } from '$lib/types/approval';
   import { NOTIFICATION_TYPE_LABEL } from '$lib/notificationLabels';
+  import { goto } from '$app/navigation';
 
   type Props = {
     notifications: Notification[];
@@ -53,9 +54,14 @@
           href="/t/{tenantSlug}/approval/documents/{notif.documentId}"
           class="flex gap-3 px-4 py-3 hover:bg-gray-50"
           class:bg-blue-50={!notif.read}
-          onclick={() => {
+          onclick={(e) => {
+            // 기본 nav을 막고 markRead 먼저 실행 후 SPA goto.
+            // 브라우저 즉시 nav는 진행 중인 RPC fetch를 abort 시켜 DB 업데이트를 실패시킴.
+            // + full-page reload 시 layout이 remount 되며 낙관적 UI 상태가 소실됨.
+            e.preventDefault();
             if (!notif.read) onMarkRead(notif.id);
             onClose();
+            goto(`/t/${tenantSlug}/approval/documents/${notif.documentId}`);
           }}
         >
           <span class="text-lg">{TYPE_ICON[notif.type]}</span>

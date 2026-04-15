@@ -51,6 +51,27 @@ export const load: LayoutServerLoad = async ({ locals, params }) => {
     .eq('tenant_id', currentTenant.id)
     .eq('read', false);
 
+  // Header에 노출할 현재 사용자 정보 (이름·직급·직책·이메일)
+  const [{ data: profileRow }, { data: empRow }] = await Promise.all([
+    locals.supabase
+      .from('profiles')
+      .select('display_name')
+      .eq('id', locals.user.id)
+      .maybeSingle(),
+    locals.supabase
+      .from('employee_profiles')
+      .select('job_position, job_title')
+      .eq('user_id', locals.user.id)
+      .eq('tenant_id', currentTenant.id)
+      .maybeSingle()
+  ]);
+  const currentUser = {
+    displayName: (profileRow?.display_name as string) ?? locals.user.email ?? '',
+    jobPosition: (empRow?.job_position as string | null) ?? null,
+    jobTitle: (empRow?.job_title as string | null) ?? null,
+    email: locals.user.email ?? ''
+  };
+
   // v3.1: popup announcements for modal
   const { data: popupRows } = await locals.supabase.rpc('get_popup_announcements', {
     p_tenant_id: currentTenant.id
@@ -62,5 +83,5 @@ export const load: LayoutServerLoad = async ({ locals, params }) => {
     publishedAt: a.published_at as string
   }));
 
-  return { currentTenant, forms, unreadCount: unreadCount ?? 0, popupAnnouncements };
+  return { currentTenant, currentUser, forms, unreadCount: unreadCount ?? 0, popupAnnouncements };
 };
