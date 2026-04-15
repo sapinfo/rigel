@@ -270,7 +270,18 @@
           members={data.members.map(m => ({ id: m.id, displayName: m.displayName, email: m.email, departmentId: m.departmentId, jobTitle: m.jobTitle }))}
           onSelect={(m) => {
             if (!approvalLine.some(item => item.userId === m.id)) {
-              approvalLine = [...approvalLine, { userId: m.id, stepType: 'approval' }];
+              // ApproverPicker 경로와 동일하게 명시 groupOrder 부여 (항상 새 그룹).
+              // groupOrder 없이 추가 후 submit 시 idx fallback 을 쓰면 ApproverPicker
+              // 로 추가한 항목들과 섞여 [0, 0, 2] 같은 띄엄띄엄 배열이 생기고
+              // refine 실패(상신 불가) 로 이어짐.
+              const maxGroup = approvalLine.reduce(
+                (max, i, idx) => Math.max(max, i.groupOrder ?? idx),
+                -1
+              );
+              approvalLine = [
+                ...approvalLine,
+                { userId: m.id, stepType: 'approval', groupOrder: maxGroup + 1 }
+              ];
             }
           }}
           onClose={() => showOrgPicker = false}
