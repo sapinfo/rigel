@@ -24,15 +24,16 @@ async function resolveTenant(
   return { id: t.id, role: data.role };
 }
 
-function toInputDateTime(iso: string | null): string {
+function toInputDate(iso: string | null): string {
   if (!iso) return '';
-  // HTML datetime-local은 초 없는 local time (YYYY-MM-DDTHH:mm)
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return (
-    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T` +
-    `${pad(d.getHours())}:${pad(d.getMinutes())}`
-  );
+  // HTML <input type="date"> 는 YYYY-MM-DD. 저장 시 KST 하루 경계로 저장하므로
+  // 같은 타임존(KST)에서 다시 날짜 부분만 추출해야 역변환이 일관됨.
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(new Date(iso));
 }
 
 export const load: PageServerLoad = async ({ locals, parent, params }) => {
@@ -82,8 +83,8 @@ export const load: PageServerLoad = async ({ locals, parent, params }) => {
       delegate_user_id: rule.delegate_user_id,
       form_id: rule.form_id ?? '',
       amount_limit: rule.amount_limit === null ? '' : String(rule.amount_limit),
-      effective_from: toInputDateTime(rule.effective_from),
-      effective_to: toInputDateTime(rule.effective_to)
+      effective_from: toInputDate(rule.effective_from),
+      effective_to: toInputDate(rule.effective_to)
     }
   };
 };
