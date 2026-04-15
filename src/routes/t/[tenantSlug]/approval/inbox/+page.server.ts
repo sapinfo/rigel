@@ -19,9 +19,13 @@ async function loadPendingDocs(
   tenantId: string,
   userId: string
 ): Promise<DocRow[]> {
+  // v1.2 M15 이후 approval_documents.current_step_index 는 group_order 포인터다
+  // (0031_fn_advance_document.sql COMMENT 참조). step_index 로 비교하면 병렬 그룹이나
+  // 결재선 배열 순서와 group_order 가 어긋난 문서에서 다음 그룹 결재자에게 문서가
+  // 미리 보이는 버그(APP-20260415-0009)가 발생한다. group_order 기준으로 비교해야 맞다.
   const { data: steps } = await supabase
     .from('approval_steps')
-    .select('document_id, step_index')
+    .select('document_id, group_order')
     .eq('tenant_id', tenantId)
     .eq('approver_user_id', userId)
     .eq('status', 'pending');
@@ -39,13 +43,16 @@ async function loadPendingDocs(
     .in('status', ['in_progress', 'pending_post_facto'])
     .order('submitted_at', { ascending: false });
 
-  // 내 step이 실제로 current step과 일치하는 문서만
-  const stepByDoc = new Map<string, number>();
+  // 내 pending step 의 group_order 들 (병렬이면 한 문서에 동일 값 중복)
+  const myGroupsByDoc = new Map<string, Set<number>>();
   for (const s of steps ?? []) {
-    stepByDoc.set(s.document_id as string, s.step_index as number);
+    const docId = s.document_id as string;
+    const g = s.group_order as number;
+    if (!myGroupsByDoc.has(docId)) myGroupsByDoc.set(docId, new Set<number>());
+    myGroupsByDoc.get(docId)!.add(g);
   }
-  return ((docs as unknown as DocRow[]) ?? []).filter(
-    (d) => stepByDoc.get(d.id) === d.current_step_index
+  return ((docs as unknown as DocRow[]) ?? []).filter((d) =>
+    myGroupsByDoc.get(d.id)?.has(d.current_step_index) ?? false
   );
 }
 

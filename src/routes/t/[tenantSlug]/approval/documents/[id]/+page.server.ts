@@ -122,8 +122,14 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
   // 8. authorization flags
   const status = doc.status as DocumentStatus;
   const currentStepIndex = doc.current_step_index as number;
-  const currentStep = (stepRows ?? []).find(
-    (s) => (s.step_index as number) === currentStepIndex
+
+  // v1.2 M15: current_step_index 는 group_order 포인터다. 병렬 그룹이면 같은
+  // group_order 에 여러 pending step 이 공존한다. step_index 로만 찾으면 병렬
+  // 중 1명(우연히 step_index == group_order) 만 인식되는 버그가 있다.
+  const currentGroupSteps = (stepRows ?? []).filter(
+    (s) =>
+      (s.group_order as number) === currentStepIndex &&
+      (s.status as StepStatus) === 'pending'
   );
 
   // v1.1 M12: 현재 사용자가 대리할 수 있는 원 approver 목록
@@ -136,21 +142,31 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
 
   // v1.1 M13: pending_post_facto 도 actionable
   const isActionableStatus = status === 'in_progress' || status === 'pending_post_facto';
-  const isCurrentStepPending =
-    isActionableStatus &&
-    (currentStep?.status as StepStatus) === 'pending';
 
-  const isCurrentStepApproval = isCurrentStepPending && (currentStep?.step_type as StepType) === 'approval';
-  const isCurrentStepAgreement = isCurrentStepPending && (currentStep?.step_type as StepType) === 'agreement';
+  // 현재 그룹에서 내가 직접 맡은 pending step
+  const myApprovalStep = currentGroupSteps.find(
+    (s) =>
+      (s.step_type as StepType) === 'approval' &&
+      (s.approver_user_id as string) === userId
+  );
+  const myAgreementStep = currentGroupSteps.find(
+    (s) =>
+      (s.step_type as StepType) === 'agreement' &&
+      (s.approver_user_id as string) === userId
+  );
 
-  const isOwnApproval = isCurrentStepApproval && currentStep?.approver_user_id === userId;
-  const isProxyApproval =
-    isCurrentStepApproval &&
-    currentStep?.approver_user_id !== userId &&
-    activeProxyFor.has(currentStep?.approver_user_id as string);
+  // 현재 그룹에서 내가 부재 대리로 처리 가능한 pending approval step
+  const proxyableStep = currentGroupSteps.find(
+    (s) =>
+      (s.step_type as StepType) === 'approval' &&
+      (s.approver_user_id as string) !== userId &&
+      activeProxyFor.has(s.approver_user_id as string)
+  );
 
-  const canApprove = isOwnApproval || isProxyApproval;
-  const canAgree = isCurrentStepAgreement && currentStep?.approver_user_id === userId;
+  const canApprove = isActionableStatus && (Boolean(myApprovalStep) || Boolean(proxyableStep));
+  const canAgree = isActionableStatus && Boolean(myAgreementStep);
+  // 대리 승인 버튼 표시용 (본인 step 이 없고 부재 대리만 가능한 경우)
+  const isProxyApproval = canApprove && !myApprovalStep && Boolean(proxyableStep);
 
   const canWithdraw = isActionableStatus && doc.drafter_id === userId;
 
