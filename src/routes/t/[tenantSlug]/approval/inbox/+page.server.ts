@@ -57,8 +57,15 @@ async function loadPendingDocs(
 }
 
 /**
- * 내가 approver로 참여한 모든 문서 ID (status 무관).
+ * 내가 approver로 참여하여 **이미 처리한(non-pending)** step 이 있는 문서 ID.
  * in_progress/completed/rejected 탭에서 "참여자 시점"을 열기 위해 사용.
+ *
+ * pending 을 제외하는 이유:
+ *   - 내 차례가 아직 안 온 (앞 그룹 미완료) pending step 만 있는 문서까지 진행 탭에
+ *     노출되면 순서가 안 온 결재자에게 미리 보이는 버그 (APP-20260415-0010 사례).
+ *   - 내 차례가 오면 "대기" 탭에 표시되고 (loadPendingDocs), 처리 후 approved/rejected/agreed/
+ *     skipped 로 전환되면서 참여자 시점에 포함돼 진행/완료/반려 탭에 남는다.
+ *
  * drafts 탭은 기안자 전용이라 미포함.
  */
 async function fetchMyParticipatedDocIds(
@@ -70,7 +77,8 @@ async function fetchMyParticipatedDocIds(
     .from('approval_steps')
     .select('document_id')
     .eq('tenant_id', tenantId)
-    .eq('approver_user_id', userId);
+    .eq('approver_user_id', userId)
+    .neq('status', 'pending');
   return Array.from(new Set((data ?? []).map((s) => s.document_id as string)));
 }
 
