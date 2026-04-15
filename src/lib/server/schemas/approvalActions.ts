@@ -2,7 +2,9 @@ import { z } from 'zod';
 
 export const approvalLineItemSchema = z.object({
   userId: z.string().uuid(),
-  stepType: z.enum(['approval', 'reference']),
+  // v2.2: agreement(합의) 추가. DB step_type enum 은 이미 확장됨 (0052/0055).
+  // fn_agree_step / fn_disagree_step 으로 처리. UI 에서 ApproverPicker 로 선택 가능.
+  stepType: z.enum(['approval', 'agreement', 'reference']),
   // v1.2: 병렬 그룹 pointer. 미지정 시 순차 (index 기반 자동 할당).
   groupOrder: z.number().int().min(0).optional()
 });

@@ -63,12 +63,25 @@
   }
 
   function addApprover(userId: string, stepType: 'approval' | 'agreement' | 'reference') {
-    // 새 item 은 새 그룹으로 (max groupOrder + 1)
-    const maxGroup = normalized.reduce(
-      (m, i) => Math.max(m, i.groupOrder),
-      -1
-    );
-    notify([...line, { userId, stepType, groupOrder: maxGroup + 1 }]);
+    if (stepType === 'approval') {
+      // 결재 = 새 그룹 (순차 진행)
+      const maxGroup = normalized.reduce((m, i) => Math.max(m, i.groupOrder), -1);
+      notify([...line, { userId, stepType, groupOrder: maxGroup + 1 }]);
+    } else {
+      // 합의·참조는 직전 결재 단계와 같은 그룹에 합류시킨다.
+      // 이유:
+      //   1) Zod refine: 각 그룹은 approval 을 1개 이상 포함해야 함
+      //   2) fn_advance_document 는 다음 group 탐색 시 approval 만 고려 —
+      //      합의/참조 단독 그룹은 도달 불가 (dead step) 이 됨
+      const lastApproval = [...normalized]
+        .reverse()
+        .find((i) => i.stepType === 'approval');
+      if (!lastApproval) {
+        alert('합의/참조는 먼저 결재자를 추가한 뒤 등록할 수 있습니다.');
+        return;
+      }
+      notify([...line, { userId, stepType, groupOrder: lastApproval.groupOrder }]);
+    }
     pickerOpen = false;
   }
 
