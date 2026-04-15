@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ApprovalLineItem, ProfileLite } from '$lib/types/approval';
-  import ApproverPicker from './ApproverPicker.svelte';
+  import ApprovalLinePicker from './ApprovalLinePicker.svelte';
 
   // v1.2 M16b: 병렬 그룹 UX.
   // - 각 item 에 groupOrder 필드 (없으면 index 로 자동 할당, 순차).
@@ -9,14 +9,17 @@
   // - 이동 버튼은 v1.3 로 이월 (그룹 기반 이동 복잡성). v1.2 는 add 순서가 곧 결재선 순서.
   // - 삭제/추가 후 자동 recompact (0, 1, ..., N-1 dense rank).
 
+  type Dept = { id: string; name: string; parentId: string | null };
+
   type Props = {
     line: ApprovalLineItem[];
     members: ProfileLite[];
+    departments?: Dept[];
     editable?: boolean;
     onChange?: (next: ApprovalLineItem[]) => void;
   };
 
-  let { line, members, editable = false, onChange }: Props = $props();
+  let { line, members, departments = [], editable = false, onChange }: Props = $props();
   let pickerOpen = $state(false);
   let selected = $state<Set<number>>(new Set());
 
@@ -82,7 +85,7 @@
       }
       notify([...line, { userId, stepType, groupOrder: lastApproval.groupOrder }]);
     }
-    pickerOpen = false;
+    // 연속 추가를 위해 창 유지. 닫기는 × 버튼 또는 ESC 로.
   }
 
   function toggleSelect(idx: number) {
@@ -227,8 +230,9 @@
 </div>
 
 {#if pickerOpen}
-  <ApproverPicker
+  <ApprovalLinePicker
     {members}
+    {departments}
     excludeIds={line.map((l) => l.userId)}
     onPick={addApprover}
     onClose={() => (pickerOpen = false)}

@@ -5,7 +5,6 @@
   import ApprovalLine from '$lib/components/ApprovalLine.svelte';
   import StampLine from '$lib/components/StampLine.svelte';
   import type { StampStep } from '$lib/components/StampLine.svelte';
-  import OrgTreePicker from '$lib/components/OrgTreePicker.svelte';
   import type { ApprovalLineItem } from '$lib/types/approval';
   import type { UploadedAttachment } from '$lib/client/uploadAttachment';
 
@@ -45,9 +44,6 @@
   // 제출 상태
   let submittingSave = $state(false);
   let submittingSubmit = $state(false);
-
-  // v2.3 M2: OrgTreePicker
-  let showOrgPicker = $state(false);
 
   // 즐겨찾기 저장 다이얼로그
   let showFavDialog = $state(false);
@@ -262,40 +258,14 @@
       </div>
     {/if}
 
-    <!-- v2.3 M2: OrgTreePicker 토글 -->
-    {#if showOrgPicker}
-      <div class="mb-3">
-        <OrgTreePicker
-          departments={data.departments ?? []}
-          members={data.members.map(m => ({ id: m.id, displayName: m.displayName, email: m.email, departmentId: m.departmentId, jobTitle: m.jobTitle }))}
-          onSelect={(m) => {
-            if (!approvalLine.some(item => item.userId === m.id)) {
-              // ApproverPicker 경로와 동일하게 명시 groupOrder 부여 (항상 새 그룹).
-              // groupOrder 없이 추가 후 submit 시 idx fallback 을 쓰면 ApproverPicker
-              // 로 추가한 항목들과 섞여 [0, 0, 2] 같은 띄엄띄엄 배열이 생기고
-              // refine 실패(상신 불가) 로 이어짐.
-              const maxGroup = approvalLine.reduce(
-                (max, i, idx) => Math.max(max, i.groupOrder ?? idx),
-                -1
-              );
-              approvalLine = [
-                ...approvalLine,
-                { userId: m.id, stepType: 'approval', groupOrder: maxGroup + 1 }
-              ];
-            }
-          }}
-          onClose={() => showOrgPicker = false}
-        />
-      </div>
-    {/if}
-
-    <!-- 결재선 편집 -->
-    <div class="mb-2 flex items-center gap-2">
-      <button type="button" onclick={() => showOrgPicker = !showOrgPicker} class="text-xs text-blue-600 hover:underline">
-        {showOrgPicker ? '조직도 닫기' : '조직도에서 선택'}
-      </button>
-    </div>
-    <ApprovalLine line={approvalLine} members={data.members} editable onChange={(next) => (approvalLine = next)} />
+    <!-- 결재선 편집 (ApprovalLinePicker 통합 팝업 사용) -->
+    <ApprovalLine
+      line={approvalLine}
+      members={data.members}
+      departments={data.departments ?? []}
+      editable
+      onChange={(next) => (approvalLine = next)}
+    />
   </section>
 
   <!-- ═══ 3. 내용 (FormRenderer) ═══════════════ -->
