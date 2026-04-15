@@ -62,7 +62,7 @@
     notify(line.filter((_, i) => i !== index));
   }
 
-  function addApprover(userId: string, stepType: 'approval' | 'reference') {
+  function addApprover(userId: string, stepType: 'approval' | 'agreement' | 'reference') {
     // 새 item 은 새 그룹으로 (max groupOrder + 1)
     const maxGroup = normalized.reduce(
       (m, i) => Math.max(m, i.groupOrder),
@@ -176,10 +176,16 @@
             class="rounded px-2 py-0.5 text-xs"
             class:bg-blue-100={item.stepType === 'approval'}
             class:text-blue-700={item.stepType === 'approval'}
+            class:bg-emerald-100={item.stepType === 'agreement'}
+            class:text-emerald-700={item.stepType === 'agreement'}
             class:bg-gray-100={item.stepType === 'reference'}
             class:text-gray-700={item.stepType === 'reference'}
           >
-            {item.stepType === 'approval' ? '결재' : '참조'}
+            {item.stepType === 'approval'
+              ? '결재'
+              : item.stepType === 'agreement'
+                ? '합의'
+                : '참조'}
           </span>
           {#if editable}
             <button

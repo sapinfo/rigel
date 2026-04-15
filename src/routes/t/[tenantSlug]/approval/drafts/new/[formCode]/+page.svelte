@@ -225,7 +225,7 @@
             if (preview?.error) {
               previewError = preview.error; previewInfo = null;
             } else if (preview) {
-              approvalLine = preview.approvers.map((a, idx) => ({ userId: a.userId, stepType: a.stepType as 'approval' | 'reference', groupOrder: idx }));
+              approvalLine = preview.approvers.map((a, idx) => ({ userId: a.userId, stepType: a.stepType as 'approval' | 'agreement' | 'reference', groupOrder: idx }));
               previewInfo = preview; previewError = null;
             }
           }

@@ -4,14 +4,14 @@
   type Props = {
     members: ProfileLite[];
     excludeIds?: string[];
-    onPick: (userId: string, stepType: 'approval' | 'reference') => void;
+    onPick: (userId: string, stepType: 'approval' | 'agreement' | 'reference') => void;
     onClose: () => void;
   };
 
   let { members, excludeIds = [], onPick, onClose }: Props = $props();
 
   let query = $state('');
-  let selectedType = $state<'approval' | 'reference'>('approval');
+  let selectedType = $state<'approval' | 'agreement' | 'reference'>('approval');
 
   const filtered = $derived(
     members.filter((m) => {
@@ -38,7 +38,7 @@
       <button type="button" class="text-gray-400 hover:text-gray-600" onclick={onClose}>✕</button>
     </div>
 
-    <div class="mb-3 flex gap-2">
+    <div class="mb-3 flex gap-3">
       <label class="flex items-center gap-1 text-sm">
         <input
           type="radio"
@@ -46,6 +46,14 @@
           value="approval"
         />
         결재
+      </label>
+      <label class="flex items-center gap-1 text-sm">
+        <input
+          type="radio"
+          bind:group={selectedType}
+          value="agreement"
+        />
+        합의
       </label>
       <label class="flex items-center gap-1 text-sm">
         <input
