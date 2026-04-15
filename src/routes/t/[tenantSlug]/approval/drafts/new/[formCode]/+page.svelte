@@ -352,8 +352,31 @@
       formData.set('securityLevel', securityLevel);
       if (isPostFacto) { formData.set('reason', postFactoReason); }
       else if (documentId) { formData.set('documentId', documentId); }
+      // eslint-disable-next-line no-console
+      console.log('[rigel:submit]', { approvalLine: normalizedLine, isPostFacto, urgency });
       submittingSubmit = true;
-      return async ({ update }) => { await update(); submittingSubmit = false; };
+      return async ({ result, update }) => {
+        // 사일런트 실패 방지용 로깅. 실패 시 콘솔 + alert 로 즉시 확인 가능.
+        // eslint-disable-next-line no-console
+        console.log('[rigel:submit:result]', result);
+        if (result.type === 'failure') {
+          const data = result.data as { errors?: { form?: string | null; fields?: Record<string, string> } } | undefined;
+          const formMsg = data?.errors?.form;
+          const fieldMsgs = Object.entries(data?.errors?.fields ?? {})
+            .map(([k, v]) => `${k}: ${v}`)
+            .join('\n');
+          const composed = [formMsg, fieldMsgs].filter(Boolean).join('\n') || `상신 실패 (status ${result.status})`;
+          // eslint-disable-next-line no-console
+          console.warn('[rigel:submit:fail]', composed, data);
+          alert(`상신 실패:\n${composed}`);
+        } else if (result.type === 'error') {
+          // eslint-disable-next-line no-console
+          console.error('[rigel:submit:error]', result.error);
+          alert(`상신 오류:\n${result.error?.message ?? '알 수 없는 에러'}`);
+        }
+        await update();
+        submittingSubmit = false;
+      };
     }}>
       <button type="submit"
         disabled={submittingSubmit || submittingSave || approvalLine.length === 0 || (isPostFacto && !postFactoReason.trim())}
