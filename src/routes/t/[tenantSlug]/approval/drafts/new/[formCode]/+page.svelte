@@ -45,6 +45,9 @@
   let submittingSave = $state(false);
   let submittingSubmit = $state(false);
 
+  // ApprovalLine picker 상태 (헤더 "+ 결재자 추가" 버튼이 직접 open)
+  let pickerOpen = $state(false);
+
   // 즐겨찾기 저장 다이얼로그
   let showFavDialog = $state(false);
   let favName = $state('');
@@ -147,10 +150,39 @@
 
   <!-- ═══ 2. 결재선 선택 (즐겨찾기 > 추천 > 자동) ═══ -->
   <section class="rounded-lg border bg-white p-4">
-    <div class="mb-3 flex items-center justify-between">
+    <div class="mb-3 flex flex-wrap items-center gap-2">
       <h2 class="text-sm font-semibold text-gray-700">결재선</h2>
+      <button type="button" onclick={() => (pickerOpen = true)}
+        class="rounded border border-dashed px-2.5 py-1 text-xs text-gray-700 hover:bg-gray-50">
+        + 결재자 추가
+      </button>
+      <form method="POST" action="?/resolvePreview" use:enhance={({ formData }) => {
+        formData.set('formId', data.form.id);
+        formData.set('content', JSON.stringify(content));
+        resolving = true;
+        return async ({ result, update }) => {
+          if (result.type === 'success' && result.data?.preview) {
+            const preview = result.data.preview as typeof previewInfo;
+            if (preview?.error) { previewError = preview.error; previewInfo = null; }
+            else if (preview) {
+              approvalLine = preview.approvers.map((a, idx) => ({ userId: a.userId, stepType: a.stepType as 'approval' | 'agreement' | 'reference', groupOrder: idx }));
+              previewInfo = preview; previewError = null;
+            }
+          }
+          resolving = false;
+          await update({ reset: false });
+        };
+      }}>
+        <button type="submit" disabled={resolving}
+          class="rounded border bg-gray-50 px-2.5 py-1 text-xs text-gray-700 hover:bg-gray-100 disabled:opacity-50">
+          {resolving ? '구성 중…' : '🤖 자동 구성'}
+        </button>
+      </form>
       {#if approvalLine.length > 0}
-        <button type="button" onclick={() => { showFavDialog = !showFavDialog; }} class="text-xs text-blue-600 hover:underline">
+        <button type="button" onclick={() => { approvalLine = []; previewInfo = null; previewError = null; }}
+          class="text-xs text-gray-400 hover:underline">초기화</button>
+        <button type="button" onclick={() => { showFavDialog = !showFavDialog; }}
+          class="ml-auto text-xs text-blue-600 hover:underline">
           ★ 즐겨찾기 저장
         </button>
       {/if}
@@ -209,35 +241,6 @@
       </div>
     {/if}
 
-    <!-- 자동 구성 -->
-    <div class="mb-3 flex items-center gap-2">
-      <form method="POST" action="?/resolvePreview" use:enhance={({ formData }) => {
-        formData.set('formId', data.form.id);
-        formData.set('content', JSON.stringify(content));
-        resolving = true;
-        return async ({ result, update }) => {
-          if (result.type === 'success' && result.data?.preview) {
-            const preview = result.data.preview as typeof previewInfo;
-            if (preview?.error) {
-              previewError = preview.error; previewInfo = null;
-            } else if (preview) {
-              approvalLine = preview.approvers.map((a, idx) => ({ userId: a.userId, stepType: a.stepType as 'approval' | 'agreement' | 'reference', groupOrder: idx }));
-              previewInfo = preview; previewError = null;
-            }
-          }
-          resolving = false;
-          await update({ reset: false });
-        };
-      }}>
-        <button type="submit" disabled={resolving} class="rounded border bg-gray-50 px-3 py-1 text-xs text-gray-600 hover:bg-gray-100 disabled:opacity-50">
-          {resolving ? '구성 중…' : '🤖 자동 구성'}
-        </button>
-      </form>
-      {#if approvalLine.length > 0}
-        <button type="button" onclick={() => { approvalLine = []; previewInfo = null; previewError = null; }} class="text-xs text-gray-400 hover:underline">초기화</button>
-      {/if}
-    </div>
-
     {#if previewInfo && !previewInfo.error}
       <div class="mb-3 rounded border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs text-blue-700">
         규칙 "{previewInfo.ruleName ?? '기본'}" 기반 — 수동 편집 가능
@@ -264,6 +267,7 @@
       members={data.members}
       departments={data.departments ?? []}
       editable
+      bind:pickerOpen
       onChange={(next) => (approvalLine = next)}
     />
   </section>

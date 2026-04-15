@@ -16,11 +16,18 @@
     members: ProfileLite[];
     departments?: Dept[];
     editable?: boolean;
+    pickerOpen?: boolean;
     onChange?: (next: ApprovalLineItem[]) => void;
   };
 
-  let { line, members, departments = [], editable = false, onChange }: Props = $props();
-  let pickerOpen = $state(false);
+  let {
+    line,
+    members,
+    departments = [],
+    editable = false,
+    pickerOpen = $bindable(false),
+    onChange
+  }: Props = $props();
   let selected = $state<Set<number>>(new Set());
 
   const profilesById = $derived(
@@ -127,30 +134,27 @@
 </script>
 
 <div class="flex flex-col gap-2">
-  <div class="flex items-center justify-between">
-    <h3 class="text-sm font-semibold">결재선</h3>
-    {#if editable && line.length >= 2}
-      <div class="flex items-center gap-1 text-xs">
-        <span class="text-gray-500">선택 {selected.size}명</span>
-        <button
-          type="button"
-          class="rounded border px-2 py-0.5 hover:bg-blue-50 disabled:opacity-40"
-          disabled={selected.size < 2}
-          onclick={groupSelected}
-        >
-          병렬 그룹으로 묶기
-        </button>
-        <button
-          type="button"
-          class="rounded border px-2 py-0.5 hover:bg-gray-50 disabled:opacity-40"
-          disabled={selected.size === 0}
-          onclick={ungroupSelected}
-        >
-          그룹 해제
-        </button>
-      </div>
-    {/if}
-  </div>
+  {#if editable && line.length >= 2}
+    <div class="flex items-center justify-end gap-1 text-xs">
+      <span class="text-gray-500">선택 {selected.size}명</span>
+      <button
+        type="button"
+        class="rounded border px-2 py-0.5 hover:bg-blue-50 disabled:opacity-40"
+        disabled={selected.size < 2}
+        onclick={groupSelected}
+      >
+        병렬 그룹으로 묶기
+      </button>
+      <button
+        type="button"
+        class="rounded border px-2 py-0.5 hover:bg-gray-50 disabled:opacity-40"
+        disabled={selected.size === 0}
+        onclick={ungroupSelected}
+      >
+        그룹 해제
+      </button>
+    </div>
+  {/if}
 
   {#if line.length === 0}
     <p class="text-xs text-gray-500">아직 지정된 결재자가 없습니다.</p>
@@ -218,15 +222,6 @@
     </ol>
   {/if}
 
-  {#if editable}
-    <button
-      type="button"
-      class="mt-1 rounded border border-dashed px-3 py-2 text-sm text-gray-600 hover:bg-gray-50"
-      onclick={() => (pickerOpen = true)}
-    >
-      + 결재자 추가
-    </button>
-  {/if}
 </div>
 
 {#if pickerOpen}
