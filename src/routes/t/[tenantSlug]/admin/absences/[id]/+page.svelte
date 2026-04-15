@@ -114,10 +114,10 @@
       <div class="flex flex-col gap-1">
         <label class="flex flex-col gap-1">
           <span class="text-sm font-medium">
-            시작일시 <span class="text-red-500">*</span>
+            시작일 <span class="text-red-500">*</span>
           </span>
           <input
-            type="datetime-local"
+            type="date"
             name="start_at"
             value={values.start_at}
             class="rounded border px-3 py-2 text-sm"
@@ -131,10 +131,10 @@
       <div class="flex flex-col gap-1">
         <label class="flex flex-col gap-1">
           <span class="text-sm font-medium">
-            종료일시 <span class="text-red-500">*</span>
+            종료일 <span class="text-red-500">*</span>
           </span>
           <input
-            type="datetime-local"
+            type="date"
             name="end_at"
             value={values.end_at}
             class="rounded border px-3 py-2 text-sm"

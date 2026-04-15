@@ -21,13 +21,15 @@ async function resolveTenant(
   return { id: t.id, role: data.role };
 }
 
-function toInputDateTime(iso: string): string {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return (
-    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T` +
-    `${pad(d.getHours())}:${pad(d.getMinutes())}`
-  );
+function toInputDate(iso: string): string {
+  // HTML <input type="date"> 는 YYYY-MM-DD. KST 기준으로 추출해 저장 시
+  // 경계 확장과 일관성 유지 (coerceAbsenceFormData 참조).
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(new Date(iso));
 }
 
 export const load: PageServerLoad = async ({ locals, parent, params }) => {
@@ -77,8 +79,8 @@ export const load: PageServerLoad = async ({ locals, parent, params }) => {
       delegate_user_id: absence.delegate_user_id,
       absence_type: absence.absence_type,
       scope_form_id: absence.scope_form_id ?? '',
-      start_at: toInputDateTime(absence.start_at),
-      end_at: toInputDateTime(absence.end_at),
+      start_at: toInputDate(absence.start_at),
+      end_at: toInputDate(absence.end_at),
       reason: absence.reason ?? ''
     }
   };
