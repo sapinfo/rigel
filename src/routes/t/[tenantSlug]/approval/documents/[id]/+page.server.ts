@@ -83,6 +83,10 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
   ];
   const profileMap = await fetchProfilesByIds(locals.supabase, allUserIds);
 
+  // fn_submit_draft v6가 전결 comment를 '[전결] <uuid>' 로 저장하는데,
+  // 화면에는 UUID를 노출할 필요가 없으므로 '[전결]' 로만 표기한다.
+  const DELEGATION_UUID_RE = /^\[전결\]\s+[0-9a-f-]{36}\s*$/i;
+
   // v1.2: approver 의 signature_storage_path 조회 + signed URL 생성 (60s TTL)
   const approverIds = Array.from(
     new Set((stepRows ?? []).map((s) => s.approver_user_id as string))
@@ -158,6 +162,10 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
 
   const steps = (stepRows ?? []).map((s) => {
     const p = profileMap.get(s.approver_user_id as string);
+    const rawComment = (s.comment as string | null) ?? null;
+    // 전결 자동 skip 코멘트는 UUID 숨기고 '[전결]' 로만 표기.
+    const displayComment =
+      rawComment && DELEGATION_UUID_RE.test(rawComment) ? '[전결]' : rawComment;
     return {
       id: s.id as string,
       step_index: s.step_index as number,
@@ -168,7 +176,7 @@ export const load: PageServerLoad = async ({ locals, params, parent }) => {
       approver_email: p?.email ?? '',
       status: s.status as StepStatus,
       acted_at: (s.acted_at as string | null) ?? null,
-      comment: (s.comment as string | null) ?? null,
+      comment: displayComment,
       acted_by_proxy_user_id: (s.acted_by_proxy_user_id as string | null) ?? null,
       signature_url: signedSigUrls.get(s.approver_user_id as string) ?? null
     };
